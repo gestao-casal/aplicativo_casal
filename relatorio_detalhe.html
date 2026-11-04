@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detalhes do Relatório</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+  .summary-card { padding: 20px; border-radius: 12px; color: #fff; display: flex; flex-direction: column; gap: 5px; }
+  .summary-card.receita { background: #16a34a; }
+  .summary-card.despesa { background: #dc2626; }
+  .summary-card.saldo { background: #2563eb; }
+  .summary-card span { font-size: 0.9rem; font-weight: 600; opacity: 0.9; }
+  .summary-card strong { font-size: 1.8rem; font-weight: 800; }
+  
+  .person-summary { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+  .person-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 15px; flex: 1; min-width: 250px; }
+  .person-card h4 { margin: 0 0 10px 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+  .person-card p { margin: 5px 0; font-size: 0.9rem; display: flex; justify-content: space-between; }
+
+  .mov-list { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  .mov-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; transition: opacity 0.2s; }
+  .mov-item:last-child { border-bottom: none; }
+  
+  .mov-item.pago { opacity: 0.6; }
+  .mov-item.pago strong { text-decoration: line-through; color: #666; }
+
+  .mov-item-left { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .mov-item-left strong { font-size: 1rem; color: #333; }
+  .mov-item-left span { font-size: 0.8rem; color: #666; }
+  .mov-item-right { display: flex; align-items: center; gap: 10px; }
+  .mov-item-val { font-size: 1.1rem; font-weight: 700; }
+  .val-receita { color: #16a34a; }
+  .val-despesa { color: #dc2626; }
+  
+  .btn-edit-icon { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; border-radius: 4px; transition: background 0.2s; }
+  .btn-edit-icon:hover { background: #f3f4f6; }
+  
+  .btn-warning { background: #f59e0b; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 5px; }
+  .btn-warning:hover { background: #d97706; }
+  
+  .badge-status { font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; }
+  .badge-fechado { background: #dcfce7; color: #166534; }
+  .badge-pendente { background: #fef9c3; color: #854d0e; }
+
+  .calc-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+  .calc-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .calc-row input.desc { flex: 2; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; }
+  .calc-row input.val { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; max-width: 100px; }
+  .btn-remove-calc { background: #fee2e2; color: #dc2626; border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+  .btn-add-calc { background: transparent; color: #4f46e5; border: 1px dashed #4f46e5; padding: 6px 10px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.8rem; width: 100%; transition: background 0.2s; }
+  .btn-add-calc:hover { background: #eef2ff; }
+  .calc-total-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #cbd5e1; font-weight: bold; font-size: 1.1rem; color: #111827; }
+</style>
+</head>
+<body data-page="financeiro">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <button class="btn btn-secondary" onclick="go('financeiro')" style="margin-bottom: 10px;">&larr; Voltar</button>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <h1 id="tituloRelatorio">Carregando...</h1>
+          <span id="badgeStatus" class="badge-status"></span>
+        </div>
+      </div>
+      <div>
+        <button id="btnReabrir" class="btn-warning" style="display: none;" onclick="reabrirRelatorio()">🔓 Reabrir Mês</button>
+      </div>
+    </div>
+
+    <!-- FILTRO POR PESSOA -->
+    <div style="background: #fff; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+      <label style="margin: 0; font-weight: 700; color: #333;">Filtrar por pessoa:</label>
+      <select id="filtroPessoa" onchange="renderTudo()" style="width: 250px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; font-weight: 600;">
+        <option value="todos">Mostrar Todos</option>
+      </select>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card receita"><span>Receita Total</span><strong id="totalReceita">R$ 0,00</strong></div>
+      <div class="summary-card despesa"><span>Despesa Total</span><strong id="totalDespesa">R$ 0,00</strong></div>
+      <div class="summary-card saldo"><span>Saldo do Mês</span><strong id="totalSaldo">R$ 0,00</strong></div>
+    </div>
+
+    <div class="person-summary" id="resumoPessoas"></div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3>Movimentações do Mês</h3>
+      <button id="btnNovaMov" class="btn btn-primary" onclick="abrirModalMovimentacao()">+ Nova Movimentação</button>
+    </div>
+
+    <div class="mov-list" id="listaReceitas"></div>
+    <div class="mov-list" id="listaDespesas"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalMovimentacao">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2 id="modalMovTitle">Nova Movimentação</h2>
+      <button class="btn-close" onclick="closeModal('modalMovimentacao')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="movForm">
+        <input type="hidden" id="movEditId">
+        
+        <div class="field"><label>Descrição Principal (Ex: Cartão de Crédito)</label><input type="text" id="movDesc" required></div>
+        
+        <div class="field">
+          <label>Responsável</label>
+          <select id="movResp" required></select>
+        </div>
+
+        <div class="field">
+          <label>Calculadora de Valores (Opcional)</label>
+          <div class="calc-box">
+            <div id="calcRows"></div>
+            <button type="button" class="btn-add-calc" onclick="adicionarLinhaCalc()">+ Adicionar Item</button>
+            <div class="calc-total-box">
+              <span>TOTAL CALCULADO:</span>
+              <span id="calcTotalDisplay">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="movValorTotal">
+
+        <div class="field"><label>Tipo</label><select id="movTipo" required onchange="atualizarCalculadora()"><option value="despesa">Despesa</option><option value="receita">Receita</option></select></div>
+        <div class="field"><label>Data (Opcional)</label><input type="date" id="movData"></div>
+        
+        <div class="field" style="display: flex; align-items: center; gap: 10px; margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 8px;">
+          <input type="checkbox" id="movPago" style="width: 20px; height: 20px; cursor: pointer;">
+          <label for="movPago" style="margin: 0; cursor: pointer; font-size: 0.95rem;">Já está <strong>Pago / Recebido</strong>?</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Movimentação</button>
+        <button type="button" class="btn-danger" id="btnExcluirMovModal" style="display:none; width: 100%; margin-top: 10px;" onclick="excluirMovDoModal()">Excluir Movimentação</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let relatorioId = null;
+  let relatorioInfo = null;
+  let movimentacoes = [];
+
+  function getQueryParam(param) {
+    const val = new URLSearchParams(window.location.search).get(param);
+    if (!val) return null;
+    return val.replace('.html', '');
+  }
+
+  async function init() {
+    relatorioId = getQueryParam('id');
+    if (!relatorioId || isNaN(Number(relatorioId))) {
+      alert("Relatório não encontrado ou ID inválido.");
+      go('financeiro');
+      return;
+    }
+    
+    // Carrega membros para o select do modal e para o filtro
+    const { data: mems } = await db.from('gestao_casal_membros').select('*').eq('user_id', window.currentUser.id).order('nome');
+    const selectResp = document.getElementById('movResp');
+    const filtroPessoa = document.getElementById('filtroPessoa');
+    
+    if (mems && mems.length > 0) {
+      selectResp.innerHTML = mems.map(m => `<option value="${m.nome}">${m.nome}</option>`).join('');
+      filtroPessoa.innerHTML = '<option value="todos">Mostrar Todos</option>' + mems.map(m => `<option value="${m.nome}">${m.nome}</option>`).join('');
+    } else {
+      selectResp.innerHTML = '<option value="">Nenhum membro cadastrado</option>';
+    }
+
+    await carregarRelatorio();
+  }
+
+  async function carregarRelatorio() {
+    const { data: rel, error: errRel } = await db.from('gestao_casal_relatorios').select('*').eq('id', relatorioId).single();
+    if (errRel) return alert("Erro: " + errRel.message);
+    
+    relatorioInfo = rel;
+    document.getElementById('tituloRelatorio').textContent = `Família - ${rel.mes_ano}`;
+    
+    const badge = document.getElementById('badgeStatus');
+    const btnNovaMov = document.getElementById('btnNovaMov');
+    const btnReabrir = document.getElementById('btnReabrir');
+
+    if (rel.status === 'fechado') {
+      badge.textContent = 'CONCLUÍDO';
+      badge.className = 'badge-status badge-fechado';
+      btnNovaMov.style.display = 'none';
+      btnReabrir.style.display = 'flex';
+    } else {
+      badge.textContent = 'PENDENTE';
+      badge.className = 'badge-status badge-pendente';
+      btnNovaMov.style.display = 'block';
+      btnReabrir.style.display = 'none';
+    }
+
+    const { data: movs, error: errMov } = await db.from('gestao_casal_movimentacoes').select('*').eq('relatorio_id', relatorioId).order('created_at', { ascending: false });
+    if (!errMov) movimentacoes = movs;
+
+    renderTudo();
+  }
+
+  function renderTudo() {
+    const filtro = document.getElementById('filtroPessoa').value;
+    const isFechado = relatorioInfo.status === 'fechado';
+
+    // 1. Filtra as movimentações que serão exibidas
+    const movsFiltradas = filtro === 'todos' 
+      ? movimentacoes 
+      : movimentacoes.filter(m => m.responsavel === filtro);
+
+    // 2. Recalcula os totais apenas com as movimentações filtradas
+    let totalRec = 0, totalDesp = 0;
+    const pessoas = {};
+
+    movsFiltradas.forEach(m => {
+      const v = Number(m.valor);
+      const resp = m.responsavel;
+      const isPago = m.pago;
+      const isRec = m.tipo === 'receita';
+
+      if (!pessoas[resp]) {
+        pessoas[resp] = { recPaga: 0, recPendente: 0, despPaga: 0, despPendente: 0 };
+      }
+
+      if (isRec) totalRec += v;
+      else totalDesp += v;
+
+      if (isRec) {
+        if (isPago) pessoas[resp].recPaga += v;
+        else pessoas[resp].recPendente += v;
+      } else {
+        if (isPago) pessoas[resp].despPaga += v;
+        else pessoas[resp].despPendente += v;
+      }
+    });
+
+    const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    document.getElementById('totalReceita').textContent = fmt(totalRec);
+    document.getElementById('totalDespesa').textContent = fmt(totalDesp);
+    
+    const saldo = totalRec - totalDesp;
+    const elSaldo = document.getElementById('totalSaldo');
+    elSaldo.textContent = fmt(saldo);
+    elSaldo.parentElement.style.background = saldo >= 0 ? '#16a34a' : '#dc2626';
+
+    // 3. Renderiza o Resumo (apenas das pessoas filtradas)
+    const divPessoas = document.getElementById('resumoPessoas');
+    divPessoas.innerHTML = Object.keys(pessoas).map(nome => {
+      const p = pessoas[nome];
+      const totalRecPessoa = p.recPaga + p.recPendente;
+      const totalDespPessoa = p.despPaga + p.despPendente;
+      const saldoTotal = totalRecPessoa - totalDespPessoa;
+      const saldoPago = p.recPaga - p.despPaga;
+      const saldoPendente = p.recPendente - p.despPendente;
+
+      return `
+        <div class="person-card">
+          <h4>👤 ${nome}</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <div style="background: #f0fdf4; padding: 10px; border-radius: 8px; border: 1px solid #dcfce7;">
+              <div style="font-size: 0.8rem; color: #166534; font-weight: bold; margin-bottom: 5px;">RECEITAS</div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem;"><span>Pagas:</span> <strong>${fmt(p.recPaga)}</strong></div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #854d0e;"><span>Pendentes:</span> <strong>${fmt(p.recPendente)}</strong></div>
+            </div>
+            <div style="background: #fef2f2; padding: 10px; border-radius: 8px; border: 1px solid #fee2e2;">
+              <div style="font-size: 0.8rem; color: #991b1b; font-weight: bold; margin-bottom: 5px;">DESPESAS</div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem;"><span>Pagas:</span> <strong>${fmt(p.despPaga)}</strong></div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #854d0e;"><span>Pendentes:</span> <strong>${fmt(p.despPendente)}</strong></div>
+            </div>
+          </div>
+          <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;"><span>Saldo Pago:</span> <strong style="color: ${saldoPago >= 0 ? '#16a34a' : '#dc2626'};">${fmt(saldoPago)}</strong></div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;"><span>Saldo Pendente:</span> <strong style="color: ${saldoPendente >= 0 ? '#16a34a' : '#dc2626'};">${fmt(saldoPendente)}</strong></div>
+            <div style="display: flex; justify-content: space-between; font-size: 1rem; border-top: 1px dashed #cbd5e1; padding-top: 5px; margin-top: 5px;"><strong>Saldo Total:</strong> <strong style="color: ${saldoTotal >= 0 ? '#16a34a' : '#dc2626'};">${fmt(saldoTotal)}</strong></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 4. Separa as listas para renderizar
+    const recs = movsFiltradas.filter(m => m.tipo === 'receita');
+    const desps = movsFiltradas.filter(m => m.tipo === 'despesa');
+
+    const renderCheckbox = (m) => {
+      if (isFechado) return m.pago ? `<span style="font-size: 1.2rem; margin-right: 10px;">✅</span>` : `<span style="font-size: 1.2rem; margin-right: 10px;">⏳</span>`;
+      return `<input type="checkbox" style="width: 20px; height: 20px; cursor: pointer; margin-right: 15px; accent-color: #16a34a;" ${m.pago ? 'checked' : ''} onchange="togglePagoRapido('${m.id}', this.checked)">`;
+    };
+
+    const renderDetalhes = (m) => {
+      if (!m.subitens || m.subitens.length === 0) return '';
+      const detalhes = m.subitens.map(s => `${s.descricao} (${fmt(s.valor)})`).join(' • ');
+      return `<span style="display: block; font-size: 0.75rem; color: #888; margin-top: 3px;">📝 ${detalhes}</span>`;
+    };
+
+    const divRec = document.getElementById('listaReceitas');
+    divRec.innerHTML = `<h3 style="color: #16a34a; margin-bottom: 15px;">🟢 Receitas</h3>`;
+    if (recs.length === 0) divRec.innerHTML += `<p style="color:#666;">Nenhuma receita registrada.</p>`;
+    else {
+      divRec.innerHTML += recs.map(m => `
+        <div class="mov-item ${m.pago ? 'pago' : ''}">
+          <div style="display: flex; align-items: flex-start; flex: 1;">
+            <div style="margin-top: 3px;">${renderCheckbox(m)}</div>
+            <div class="mov-item-left" ${!isFechado ? `onclick="abrirModalMovimentacao('${m.id}')" style="cursor: pointer;"` : ''}>
+              <strong>${m.descricao}</strong>
+              <span>${m.responsavel} • ${m.data_movimentacao ? new Date(m.data_movimentacao).toLocaleDateString('pt-BR') : 'S/ Data'}</span>
+              ${renderDetalhes(m)}
+            </div>
+          </div>
+          <div class="mov-item-right">
+            <span class="mov-item-val val-receita">+ ${fmt(m.valor)}</span>
+            ${!isFechado ? `<button class="btn-edit-icon" onclick="abrirModalMovimentacao('${m.id}')">✏️</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const divDesp = document.getElementById('listaDespesas');
+    divDesp.innerHTML = `<h3 style="color: #dc2626; margin-bottom: 15px;">🔴 Despesas</h3>`;
+    if (desps.length === 0) divDesp.innerHTML += `<p style="color:#666;">Nenhuma despesa registrada.</p>`;
+    else {
+      divDesp.innerHTML += desps.map(m => `
+        <div class="mov-item ${m.pago ? 'pago' : ''}">
+          <div style="display: flex; align-items: flex-start; flex: 1;">
+            <div style="margin-top: 3px;">${renderCheckbox(m)}</div>
+            <div class="mov-item-left" ${!isFechado ? `onclick="abrirModalMovimentacao('${m.id}')" style="cursor: pointer;"` : ''}>
+              <strong>${m.descricao}</strong>
+              <span>${m.responsavel} • ${m.data_movimentacao ? new Date(m.data_movimentacao).toLocaleDateString('pt-BR') : 'S/ Data'}</span>
+              ${renderDetalhes(m)}
+            </div>
+          </div>
+          <div class="mov-item-right">
+            <span class="mov-item-val val-despesa">- ${fmt(m.valor)}</span>
+            ${!isFechado ? `<button class="btn-edit-icon" onclick="abrirModalMovimentacao('${m.id}')">✏️</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  async function togglePagoRapido(id, isChecked) {
+    if (relatorioInfo.status === 'fechado') return;
+    await db.from('gestao_casal_movimentacoes').update({ pago: isChecked }).eq('id', id);
+    const mov = movimentacoes.find(m => String(m.id) === String(id));
+    if (mov) mov.pago = isChecked;
+    renderTudo();
+  }
+
+  async function reabrirRelatorio() {
+    if (!confirm('Deseja reabrir este mês? Ele voltará para a lista de pendentes e poderá ser editado.')) return;
+    await db.from('gestao_casal_relatorios').update({ status: 'pendente' }).eq('id', relatorioId);
+    await carregarRelatorio();
+  }
+
+  function adicionarLinhaCalc(desc = '', val = '') {
+    const div = document.createElement('div');
+    div.className = 'calc-row';
+    div.innerHTML = `
+      <input type="text" class="desc" placeholder="Descrição" value="${desc}">
+      <input type="number" step="0.01" class="val" placeholder="R$" value="${val}" oninput="atualizarCalculadora()">
+      <button type="button" class="btn-remove-calc" onclick="this.parentElement.remove(); atualizarCalculadora()">✕</button>
+    `;
+    document.getElementById('calcRows').appendChild(div);
+    atualizarCalculadora();
+  }
+
+  function atualizarCalculadora() {
+    let total = 0;
+    document.querySelectorAll('.calc-row').forEach(row => {
+      const val = parseFloat(row.querySelector('.val').value) || 0;
+      total += val;
+    });
+    document.getElementById('movValorTotal').value = total;
+    const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('calcTotalDisplay').textContent = fmt(total);
+  }
+
+  function abrirModalMovimentacao(id = null) {
+    if (relatorioInfo.status === 'fechado') return;
+    document.getElementById('movForm').reset();
+    document.getElementById('calcRows').innerHTML = '';
+    document.getElementById('movEditId').value = id || '';
+    document.getElementById('modalMovTitle').textContent = id ? 'Editar Movimentação' : 'Nova Movimentação';
+    document.getElementById('btnExcluirMovModal').style.display = id ? 'block' : 'none';
+
+    if (id) {
+      const m = movimentacoes.find(x => String(x.id) === String(id));
+      if (m) {
+        document.getElementById('movDesc').value = m.descricao;
+        document.getElementById('movTipo').value = m.tipo;
+        document.getElementById('movResp').value = m.responsavel;
+        document.getElementById('movData').value = m.data_movimentacao || '';
+        document.getElementById('movPago').checked = m.pago || false;
+        if (m.subitens && m.subitens.length > 0) {
+          m.subitens.forEach(s => adicionarLinhaCalc(s.descricao, s.valor));
+        } else {
+          adicionarLinhaCalc('Valor Único', m.valor);
+        }
+      }
+    } else {
+      document.getElementById('movData').value = new Date().toISOString().split('T')[0];
+      document.getElementById('movPago').checked = false;
+      adicionarLinhaCalc();
+    }
+    openModal('modalMovimentacao');
+  }
+
+  document.getElementById('movForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (relatorioInfo.status === 'fechado') return;
+    const id = document.getElementById('movEditId').value;
+    const resp = document.getElementById('movResp').value;
+    if(!resp) return alert('Cadastre um membro na aba Membros primeiro.');
+
+    const subitens = [];
+    document.querySelectorAll('#calcRows .calc-row').forEach(row => {
+      const desc = row.querySelector('.desc').value.trim();
+      const val = parseFloat(row.querySelector('.val').value) || 0;
+      if (desc && val > 0) subitens.push({ descricao: desc, valor: val });
+    });
+
+    const valorTotal = parseFloat(document.getElementById('movValorTotal').value) || 0;
+    if (valorTotal <= 0) return alert('O valor total precisa ser maior que 0.');
+
+    const payload = {
+      relatorio_id: Number(relatorioId),
+      user_id: window.currentUser.id,
+      descricao: document.getElementById('movDesc').value,
+      valor: valorTotal,
+      tipo: document.getElementById('movTipo').value,
+      responsavel: resp,
+      data_movimentacao: document.getElementById('movData').value || null,
+      pago: document.getElementById('movPago').checked,
+      subitens: subitens
+    };
+
+    let error;
+    if (id) {
+      const res = await db.from('gestao_casal_movimentacoes').update(payload).eq('id', id);
+      error = res.error;
+    } else {
+      const res = await db.from('gestao_casal_movimentacoes').insert([payload]);
+      error = res.error;
+    }
+
+    if (error) return alert("Erro: " + error.message);
+    closeModal('modalMovimentacao');
+    carregarRelatorio();
+  });
+
+  async function excluirMovDoModal() {
+    if (relatorioInfo.status === 'fechado') return;
+    const id = document.getElementById('movEditId').value;
+    if (!id || !confirm('Excluir esta movimentação?')) return;
+    await db.from('gestao_casal_movimentacoes').delete().eq('id', id);
+    closeModal('modalMovimentacao');
+    carregarRelatorio();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        init();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

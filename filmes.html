@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciador de Filmes</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { background-color: #f5f7fb; }
+  .movies-container { background: #1e1e1e; min-height: 100vh; padding: 20px; border-radius: 10px; color: #fff; font-family: Arial, sans-serif; }
+  
+  .topbar-movies { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+  .topbar-movies h1 { color: #fff; margin: 0; font-size: 1.8rem; }
+  
+  /* Filtros */
+  .filters-wrapper { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; align-items: center; }
+  .filters-bar { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
+  
+  .filter-btn { background: #333; color: #ccc; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
+  .filter-btn:hover { background: #444; }
+  .filter-btn.active { background: #e11d48; color: #fff; font-weight: bold; }
+  
+  .btn-manage { background: #444; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
+  .btn-manage:hover { background: #555; }
+  
+  /* Listas */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px 0; }
+  .section-header h2 { color: #fff; font-size: 1.2rem; margin: 0; }
+  
+  /* Cards de Filme */
+  .movie-card { display: flex; background: #2a2a2a; border-radius: 8px; margin-bottom: 15px; overflow: hidden; border: 1px solid #333; transition: transform 0.2s; }
+  .movie-card:hover { transform: translateY(-2px); border-color: #555; }
+  .movie-img-placeholder { width: 120px; min-width: 120px; background: url('https://via.placeholder.com/120x180/333/fff?text=Filme') center/cover; position: relative; }
+  .movie-info { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+  .movie-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 5px 0; color: #fff; }
+  .movie-synopsis { font-size: 0.85rem; color: #aaa; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .movie-tags { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 0.8rem; color: #888; }
+  .tag-genero { background: #e11d48; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+  .movie-footer { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-top: 1px solid #333; margin-top: 10px; }
+  
+  /* Checkbox de Visto */
+  .checkbox-container { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #aaa; font-size: 0.9rem; }
+  .checkbox-container input { display: none; }
+  .checkmark { width: 18px; height: 18px; border: 2px solid #666; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .checkbox-container input:checked ~ .checkmark { background: #16a34a; border-color: #16a34a; }
+  .checkbox-container input:checked ~ span { color: #16a34a; text-decoration: line-through; }
+  
+  /* Ações */
+  .actions { display: flex; gap: 10px; }
+  .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 5px; transition: opacity 0.2s; }
+  .btn-icon:hover { opacity: 0.7; }
+  .btn-danger-icon { color: #e11d48; }
+  .add-btn { background: #e11d48; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.9rem; }
+  
+  /* Modais (Adaptado para o Tema Escuro) */
+  .modal-content.dark { background: #1e1e1e; color: #fff; border: 1px solid #333; }
+  .modal-content.dark .modal-header { border-bottom: 1px solid #333; }
+  .modal-content.dark .modal-header h2 { color: #fff; }
+  .modal-content.dark .btn-close { color: #fff; }
+  .modal-content.dark label { color: #aaa; }
+  .modal-content.dark input, .modal-content.dark select, .modal-content.dark textarea { background: #2a2a2a; color: #fff; border: 1px solid #444; }
+  
+  /* Lista de Categorias no Modal */
+  .cat-list { list-style: none; padding: 0; margin: 0 0 15px 0; max-height: 200px; overflow-y: auto; border: 1px solid #333; border-radius: 6px; }
+  .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; }
+  .cat-item:last-child { border-bottom: none; }
+  .btn-remove-cat { background: transparent; border: none; color: #e11d48; cursor: pointer; font-size: 1.1rem; }
+</style>
+</head>
+<body data-page="filmes">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    
+    <div class="movies-container">
+      <div class="topbar-movies">
+        <h1>🎬 Gerenciador</h1>
+        <button class="add-btn" style="margin-left: auto;" onclick="abrirModalFilme()">+ Adicionar Filme</button>
+      </div>
+
+      <!-- FILTROS E GERENCIAR -->
+      <div class="filters-wrapper">
+        <div class="filters-bar" id="filtersBar">
+          <!-- Botões gerados via JS -->
+        </div>
+        <button class="btn-manage" onclick="abrirModalCategorias()">⚙️ Gerenciar</button>
+      </div>
+
+      <!-- FILMES PENDENTES -->
+      <div class="section-header">
+        <h2>Filmes Pendentes</h2>
+      </div>
+      <div id="listaPendentes"></div>
+
+      <!-- FILMES VISTOS -->
+      <div class="section-header">
+        <h2>Filmes Vistos</h2>
+      </div>
+      <div id="listaVistos"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL FILME -->
+<div class="modal-overlay" id="modalFilme">
+  <div class="modal-content dark">
+    <div class="modal-header">
+      <h2 id="modalFilmeTitle">Adicionar Filme</h2>
+      <button class="btn-close" onclick="closeModal('modalFilme')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="filmeForm">
+        <input type="hidden" id="filmeEditId">
+        
+        <div class="field"><label>Título do Filme</label><input type="text" id="filmeTitulo" required></div>
+        
+        <div class="field">
+          <label>Gênero</label>
+          <select id="filmeGenero" required>
+            <!-- Preenchido via JS -->
+          </select>
+        </div>
+        
+        <div class="field"><label>Sinopse (Opcional)</label><textarea id="filmeSinopse" rows="3"></textarea></div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; background: #e11d48;">Salvar Filme</button>
+        <button type="button" class="btn-danger" id="btnExcluirFilme" style="display: none; width: 100%; margin-top: 10px;" onclick="excluirFilmeDoModal()">Excluir Filme</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR CATEGORIAS -->
+<div class="modal-overlay" id="modalCategorias">
+  <div class="modal-content dark" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>Gerenciar Categorias</h2>
+      <button class="btn-close" onclick="closeModal('modalCategorias')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <ul class="cat-list" id="listaCategoriasModal"></ul>
+      
+      <form id="categoriaForm" style="display: flex; gap: 10px; margin-top: 15px;">
+        <input type="text" id="novaCategoria" required placeholder="Novo gênero..." style="flex: 1;">
+        <button type="submit" class="btn btn-primary" style="background: #e11d48; padding: 0 15px;">+</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let filmes = [];
+  let categorias = [];
+  let filtroAtual = 'Todos';
+
+  async function carregarDados() {
+    // Carrega categorias
+    const { data: cats } = await db.from('gestao_casal_categorias_filmes').select('*').eq('user_id', window.currentUser.id).order('nome');
+    categorias = cats || [];
+    
+    // Preenche o select do modal de filme
+    const selectGenero = document.getElementById('filmeGenero');
+    selectGenero.innerHTML = categorias.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+    
+    // Preenche os botões de filtro
+    renderBotoesFiltro();
+
+    // Carrega filmes
+    const { data: movies } = await db.from('gestao_casal_filmes').select('*').eq('user_id', window.currentUser.id).order('created_at', { ascending: false });
+    filmes = movies || [];
+    
+    renderFilmes();
+  }
+
+  function renderBotoesFiltro() {
+    const div = document.getElementById('filtersBar');
+    let html = categorias.map(c => 
+      `<button class="filter-btn ${filtroAtual === c.nome ? 'active' : ''}" onclick="mudarFiltro('${c.nome}')">${c.nome}</button>`
+    ).join('');
+    
+    // Adiciona o botão "Todos" no final
+    html += `<button class="filter-btn ${filtroAtual === 'Todos' ? 'active' : ''}" onclick="mudarFiltro('Todos')">Todos</button>`;
+    div.innerHTML = html;
+  }
+
+  function mudarFiltro(genero) {
+    filtroAtual = genero;
+    renderBotoesFiltro();
+    renderFilmes();
+  }
+
+  function renderFilmes() {
+    const filtrados = filtroAtual === 'Todos' 
+      ? filmes 
+      : filmes.filter(f => f.genero === filtroAtual);
+
+    const pendentes = filtrados.filter(f => !f.visto);
+    const vistos = filtrados.filter(f => f.visto);
+
+    const divPend = document.getElementById('listaPendentes');
+    if (pendentes.length === 0) divPend.innerHTML = '<p style="color: #666;">Nenhum filme pendente.</p>';
+    else divPend.innerHTML = pendentes.map(f => renderCard(f)).join('');
+
+    const divVistos = document.getElementById('listaVistos');
+    if (vistos.length === 0) divVistos.innerHTML = '<p style="color: #666;">Nenhum filme visto.</p>';
+    else divVistos.innerHTML = vistos.map(f => renderCard(f)).join('');
+  }
+
+  function renderCard(f) {
+    const dataFormatada = f.data_visto ? new Date(f.data_visto + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    const textoDesc = f.sinopse ? f.sinopse : 'Não informado';
+    
+    const statusTexto = f.visto ? `Assistido • ${dataFormatada}` : 'Na lista';
+    const statusIcone = f.visto ? '👁️' : '⭕';
+    const checkboxHtml = f.visto 
+      ? `<input type="checkbox" checked onchange="toggleVisto('${f.id}', false)">`
+      : `<input type="checkbox" onchange="toggleVisto('${f.id}', true)">`;
+
+    return `
+      <div class="movie-card">
+        <div class="movie-img-placeholder"></div>
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div class="movie-info">
+            <div>
+              <h3 class="movie-title">${f.titulo}</h3>
+              <p class="movie-synopsis">${textoDesc}</p>
+            </div>
+            <div class="movie-tags">
+              <span class="tag-genero">${f.genero}</span>
+            </div>
+          </div>
+          <div class="movie-footer">
+            <label class="checkbox-container">
+              ${checkboxHtml}
+              <span class="checkmark" style="${f.visto ? 'background: transparent; border-color: #666;' : ''}">
+                <span style="color: #666; font-size: 0.8rem;">${statusIcone}</span>
+              </span>
+              <span>${statusTexto}</span>
+            </label>
+            <div class="actions">
+              <button class="btn-icon" onclick="abrirModalFilme('${f.id}')" title="Editar">✏️</button>
+              <button class="btn-icon btn-danger-icon" onclick="excluirFilme('${f.id}')" title="Excluir">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function toggleVisto(id, isChecked) {
+    const dataVisto = isChecked ? new Date().toISOString().split('T')[0] : null;
+    await db.from('gestao_casal_filmes').update({ visto: isChecked, data_visto: dataVisto }).eq('id', id);
+
+    const f = filmes.find(x => String(x.id) === String(id));
+    if (f) { f.visto = isChecked; f.data_visto = dataVisto; }
+    renderFilmes();
+  }
+
+  // ==========================================
+  // MODAL DE FILMES
+  // ==========================================
+  function abrirModalFilme(id = null) {
+    document.getElementById('filmeForm').reset();
+    document.getElementById('filmeEditId').value = id || '';
+    document.getElementById('modalFilmeTitle').textContent = id ? 'Editar Filme' : 'Adicionar Filme';
+    document.getElementById('btnExcluirFilme').style.display = id ? 'block' : 'none';
+
+    if (id) {
+      const f = filmes.find(x => String(x.id) === String(id));
+      if (f) {
+        document.getElementById('filmeTitulo').value = f.titulo;
+        document.getElementById('filmeGenero').value = f.genero;
+        document.getElementById('filmeSinopse').value = f.sinopse || '';
+      }
+    }
+    openModal('modalFilme');
+  }
+
+  document.getElementById('filmeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('filmeEditId').value;
+    const payload = {
+      user_id: window.currentUser.id,
+      titulo: document.getElementById('filmeTitulo').value,
+      genero: document.getElementById('filmeGenero').value,
+      sinopse: document.getElementById('filmeSinopse').value || null
+    };
+
+    let error;
+    if (id) {
+      const res = await db.from('gestao_casal_filmes').update(payload).eq('id', id);
+      error = res.error;
+    } else {
+      const res = await db.from('gestao_casal_filmes').insert([payload]);
+      error = res.error;
+    }
+
+    if (error) return alert("Erro: " + error.message);
+    closeModal('modalFilme');
+    carregarDados();
+  });
+
+  async function excluirFilme(id) {
+    if (!confirm('Excluir este filme?')) return;
+    await db.from('gestao_casal_filmes').delete().eq('id', id);
+    carregarDados();
+  }
+
+  async function excluirFilmeDoModal() {
+    const id = document.getElementById('filmeEditId').value;
+    if (!id || !confirm('Excluir este filme?')) return;
+    await db.from('gestao_casal_filmes').delete().eq('id', id);
+    closeModal('modalFilme');
+    carregarDados();
+  }
+
+  // ==========================================
+  // MODAL DE CATEGORIAS
+  // ==========================================
+  function abrirModalCategorias() {
+    document.getElementById('categoriaForm').reset();
+    renderCategoriasModal();
+    openModal('modalCategorias');
+  }
+
+  function renderCategoriasModal() {
+    const lista = document.getElementById('listaCategoriasModal');
+    if (categorias.length === 0) {
+      lista.innerHTML = '<li class="cat-item" style="justify-content: center; color: #666;">Nenhuma categoria criada.</li>';
+      return;
+    }
+
+    lista.innerHTML = categorias.map(c => `
+      <li class="cat-item">
+        <span>${c.nome}</span>
+        <button type="button" class="btn-remove-cat" onclick="excluirCategoria('${c.id}')">🗑️</button>
+      </li>
+    `).join('');
+  }
+
+  document.getElementById('categoriaForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = document.getElementById('novaCategoria').value.trim();
+    if (!nome) return;
+
+    const { error } = await db.from('gestao_casal_categorias_filmes').insert([{ user_id: window.currentUser.id, nome }]);
+    if (error) return alert("Erro ao criar: " + error.message);
+
+    document.getElementById('novaCategoria').value = '';
+    await carregarDados(); // Recarrega para atualizar o select de filmes
+    renderCategoriasModal(); // Recarrega a lista dentro do modal
+  });
+
+  async function excluirCategoria(id) {
+    if (!confirm('Excluir esta categoria? Os filmes que usam ela não serão apagados, mas ficarão sem categoria.')) return;
+    await db.from('gestao_casal_categorias_filmes').delete().eq('id', id);
+    await carregarDados();
+    renderCategoriasModal();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarDados();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

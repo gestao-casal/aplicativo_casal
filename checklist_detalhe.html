@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itens da Lista</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .section-title { font-size: 1.1rem; font-weight: 700; margin: 20px 0 10px 0; color: #333; }
+  
+  .item-card { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; transition: opacity 0.2s; }
+  .item-card.concluido { opacity: 0.6; }
+  .item-card.concluido .item-text { text-decoration: line-through; color: #666; }
+  
+  .item-left { display: flex; align-items: center; gap: 15px; flex: 1; }
+  .item-left input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #16a34a; }
+  .item-text { font-size: 1rem; font-weight: 600; color: #111827; }
+  
+  .item-actions { display: flex; gap: 8px; }
+  .btn-icon-small { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
+  .btn-icon-small:hover { background: #f3f4f6; }
+  .btn-icon-small.danger { border-color: #fee2e2; color: #ef4444; }
+  .btn-icon-small.danger:hover { background: #fee2e2; }
+
+  /* Botão Flutuante */
+  .fab-btn { position: fixed; bottom: 30px; right: 30px; background: #16a34a; color: #fff; border: none; padding: 15px 25px; border-radius: 30px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); cursor: pointer; transition: transform 0.2s, background 0.2s; z-index: 100; }
+  .fab-btn:hover { transform: scale(1.05); background: #15803d; }
+
+  .btn-reset { background: #fee2e2; color: #b91c1c; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-top: 30px; transition: background 0.2s; }
+  .btn-reset:hover { background: #fecaca; }
+</style>
+</head>
+<body data-page="checklists">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <button class="btn btn-secondary" onclick="go('checklists')" style="margin-bottom: 10px;">&larr; Voltar</button>
+        <h1 id="tituloLista">CheckList Atual</h1>
+      </div>
+    </div>
+
+    <div class="section-title">Itens Pendentes</div>
+    <div id="listaPendentes"></div>
+
+    <div class="section-title" style="color: #16a34a;">Itens Concluídos</div>
+    <div id="listaConcluidos"></div>
+
+    <!-- Botão para voltar todos para pendente -->
+    <button class="btn-reset" onclick="resetarTodos()">🔄 Voltar todos os concluídos para não concluído</button>
+  </main>
+</div>
+
+<!-- Botão Flutuante -->
+<button class="fab-btn" onclick="abrirModalItem()">+ Novo Item</button>
+
+<!-- MODAL ITEM -->
+<div class="modal-overlay" id="modalItem">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2 id="modalItemTitle">Novo Item</h2>
+      <button class="btn-close" onclick="closeModal('modalItem')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="itemForm">
+        <input type="hidden" id="itemEditId">
+        <div class="field"><label>Descrição do Item</label><input type="text" id="itemDesc" required placeholder="Ex: Caldas Novas"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Item</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let checklistId = null;
+  let itens = [];
+
+  function getQueryParam(param) {
+    const val = new URLSearchParams(window.location.search).get(param);
+    if (!val) return null;
+    return val.replace('.html', '');
+  }
+
+  async function init() {
+    checklistId = getQueryParam('id');
+    if (!checklistId || isNaN(Number(checklistId))) {
+      alert("Lista não encontrada.");
+      go('checklists');
+      return;
+    }
+
+    // Pega o nome da lista
+    const { data: cl } = await db.from('gestao_casal_checklists').select('titulo').eq('id', checklistId).single();
+    if (cl) document.getElementById('tituloLista').textContent = cl.titulo;
+
+    await carregarItens();
+  }
+
+  async function carregarItens() {
+    const { data, error } = await db.from('gestao_casal_checklist_itens').select('*').eq('checklist_id', checklistId).order('created_at', { ascending: true });
+    if (!error) {
+      itens = data;
+      renderItens();
+    }
+  }
+
+  function renderItens() {
+    const pendentes = itens.filter(i => !i.concluido);
+    const concluidos = itens.filter(i => i.concluido);
+
+    const divPend = document.getElementById('listaPendentes');
+    if (pendentes.length === 0) divPend.innerHTML = '<p style="color: #666;">Nenhum item pendente.</p>';
+    else {
+      divPend.innerHTML = pendentes.map(i => renderCard(i)).join('');
+    }
+
+    const divConc = document.getElementById('listaConcluidos');
+    if (concluidos.length === 0) divConc.innerHTML = '<p style="color: #666;">Nenhum item concluído.</p>';
+    else {
+      divConc.innerHTML = concluidos.map(i => renderCard(i)).join('');
+    }
+  }
+
+  function renderCard(i) {
+    return `
+      <div class="item-card ${i.concluido ? 'concluido' : ''}">
+        <div class="item-left">
+          <input type="checkbox" ${i.concluido ? 'checked' : ''} onchange="toggleConcluido('${i.id}', this.checked)">
+          <span class="item-text">${i.descricao}</span>
+        </div>
+        <div class="item-actions">
+          <button class="btn-icon-small" onclick="abrirModalItem('${i.id}')">✏️</button>
+          <button class="btn-icon-small danger" onclick="excluirItem('${i.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function toggleConcluido(id, isChecked) {
+    await db.from('gestao_casal_checklist_itens').update({ concluido: isChecked }).eq('id', id);
+    const item = itens.find(i => String(i.id) === String(id));
+    if (item) item.concluido = isChecked;
+    renderItens();
+  }
+
+  function abrirModalItem(id = null) {
+    document.getElementById('itemForm').reset();
+    document.getElementById('itemEditId').value = id || '';
+    document.getElementById('modalItemTitle').textContent = id ? 'Editar Item' : 'Novo Item';
+
+    if (id) {
+      const item = itens.find(i => String(i.id) === String(id));
+      if (item) document.getElementById('itemDesc').value = item.descricao;
+    }
+    openModal('modalItem');
+  }
+
+  document.getElementById('itemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('itemEditId').value;
+    const descricao = document.getElementById('itemDesc').value;
+
+    let error;
+    if (id) {
+      const res = await db.from('gestao_casal_checklist_itens').update({ descricao }).eq('id', id);
+      error = res.error;
+    } else {
+      const res = await db.from('gestao_casal_checklist_itens').insert([{ 
+        checklist_id: Number(checklistId),
+        user_id: window.currentUser.id, 
+        descricao 
+      }]);
+      error = res.error;
+    }
+
+    if (error) return alert("Erro: " + error.message);
+    closeModal('modalItem');
+    carregarItens();
+  });
+
+  async function excluirItem(id) {
+    if (!confirm('Excluir este item?')) return;
+    await db.from('gestao_casal_checklist_itens').delete().eq('id', id);
+    carregarItens();
+  }
+
+  async function resetarTodos() {
+    if (!confirm('Deseja desmarcar TODOS os itens concluídos?')) return;
+    await db.from('gestao_casal_checklist_itens').update({ concluido: false }).eq('checklist_id', checklistId).eq('concluido', true);
+    carregarItens();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        init();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movimentações Fixas</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .fixed-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .fixed-header { padding: 15px 20px; color: #fff; font-weight: 700; font-size: 1.1rem; background: #b91c1c; display: flex; justify-content: space-between; align-items: center; }
+  .fixed-header.receita { background: #15803d; }
+  .fixed-body { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .fixed-info { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .fixed-info span { font-size: 0.8rem; color: #666; }
+  .fixed-info strong { font-size: 1.1rem; color: #16a34a; }
+  .btn-header-action { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
+  .btn-header-action:hover { background: rgba(255,255,255,0.4); }
+
+  .calc-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+  .calc-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .calc-row input.desc { flex: 2; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; }
+  .calc-row input.val { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; max-width: 100px; }
+  .btn-remove-calc { background: #fee2e2; color: #dc2626; border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+  .btn-add-calc { background: transparent; color: #4f46e5; border: 1px dashed #4f46e5; padding: 6px 10px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.8rem; width: 100%; transition: background 0.2s; }
+  .btn-add-calc:hover { background: #eef2ff; }
+  .calc-total-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #cbd5e1; font-weight: bold; font-size: 1.1rem; color: #111827; }
+</style>
+</head>
+<body data-page="movimentacoes">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <h1>Movimentações Fixas</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <div class="header-green" style="background: #fff; border: 1px solid var(--border); color: var(--text);">
+      <div>
+        <h1 style="color: var(--text);">Gastos Recorrentes</h1>
+        <p style="color: var(--muted);">Cadastre os gastos que se repetem todo mês</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalFixo()">+ Novo Gasto Fixo</button>
+    </div>
+
+    <!-- FILTRO POR PESSOA -->
+    <div style="background: #fff; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+      <label style="margin: 0; font-weight: 700; color: #333;">Filtrar por pessoa:</label>
+      <select id="filtroPessoa" onchange="renderFixos()" style="width: 250px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; font-weight: 600;">
+        <option value="todos">Mostrar Todos</option>
+      </select>
+    </div>
+
+    <div style="background: #e0f2fe; border: 1px solid #bae6fd; padding: 20px; border-radius: 12px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h3 style="margin: 0; color: #0369a1;">Lançamento Rápido</h3>
+        <p style="margin: 5px 0 0 0; color: #0c4a6e; font-size: 0.9rem;">Copie todos os gastos fixos para um relatório mensal.</p>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <input type="month" id="mesLancamento" style="padding: 10px; border-radius: 8px; border: 1px solid #bae6fd; outline: none;">
+        <button class="btn btn-primary" onclick="lancarNoMes()">Lançar no Mês</button>
+      </div>
+    </div>
+
+    <div id="listaFixos"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalFixo">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2 id="modalFixoTitle">Novo Gasto Fixo</h2>
+      <button class="btn-close" onclick="closeModal('modalFixo')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="fixoForm">
+        <input type="hidden" id="fixoEditId">
+        
+        <div class="field"><label>Descrição Principal (Ex: Cartão de Crédito)</label><input type="text" id="fixoDesc" required></div>
+        
+        <div class="field"><label>Responsável</label><select id="fixoResp" required></select></div>
+        
+        <div class="field"><label>Tipo</label><select id="fixoTipo" required><option value="despesa">Despesa</option><option value="receita">Receita</option></select></div>
+
+        <div class="field">
+          <label>Calculadora de Valores (Opcional)</label>
+          <div class="calc-box">
+            <div id="calcRowsFixo"></div>
+            <button type="button" class="btn-add-calc" onclick="adicionarLinhaCalcFixo()">+ Adicionar Item</button>
+            <div class="calc-total-box">
+              <span>TOTAL CALCULADO:</span>
+              <span id="calcTotalDisplayFixo">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="fixoValorTotal">
+
+        <div class="field" style="display: flex; align-items: center; gap: 10px; margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 8px;">
+          <input type="checkbox" id="fixoPago" style="width: 20px; height: 20px; cursor: pointer;">
+          <label for="fixoPago" style="margin: 0; cursor: pointer; font-size: 0.95rem;">Já está <strong>Pago / Recebido</strong>?</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Gasto Fixo</button>
+        <button type="button" class="btn-danger" id="btnExcluirFixoModal" style="display:none; width: 100%; margin-top: 10px;" onclick="excluirFixoDoModal()">Excluir Gasto Fixo</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let fixos = [];
+  let membros = [];
+
+  async function carregarDados() {
+    const { data: mems } = await db.from('gestao_casal_membros').select('*').eq('user_id', window.currentUser.id).order('nome');
+    membros = mems || [];
+    
+    const selectResp = document.getElementById('fixoResp');
+    const filtroPessoa = document.getElementById('filtroPessoa');
+    
+    if (membros.length > 0) {
+      selectResp.innerHTML = membros.map(m => `<option value="${m.nome}">${m.nome}</option>`).join('');
+      filtroPessoa.innerHTML = '<option value="todos">Mostrar Todos</option>' + membros.map(m => `<option value="${m.nome}">${m.nome}</option>`).join('');
+    } else {
+      selectResp.innerHTML = '<option value="">Cadastre um membro primeiro</option>';
+    }
+
+    const { data, error } = await db.from('gestao_casal_movimentacoes_fixas').select('*').eq('user_id', window.currentUser.id).order('descricao');
+    if (!error) {
+      fixos = data;
+      renderFixos();
+    }
+  }
+
+  function renderFixos() {
+    const lista = document.getElementById('listaFixos');
+    const filtro = document.getElementById('filtroPessoa').value;
+
+    // Filtra os gastos fixos
+    const fixosFiltrados = filtro === 'todos' 
+      ? fixos 
+      : fixos.filter(f => f.responsavel === filtro);
+
+    if (fixosFiltrados.length === 0) {
+      lista.innerHTML = '<p style="color: #666;">Nenhum gasto fixo encontrado para este filtro.</p>';
+      return;
+    }
+
+    const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    lista.innerHTML = fixosFiltrados.map(f => {
+      const isRec = f.tipo === 'receita';
+      const headerClass = isRec ? 'fixed-header receita' : 'fixed-header';
+      
+      let detalhesHtml = '';
+      if (f.subitens && f.subitens.length > 0) {
+        const textoDetalhes = f.subitens.map(s => `${s.descricao} (${fmt(s.valor)})`).join(' • ');
+        detalhesHtml = `<span style="display: block; font-size: 0.75rem; color: #888; margin-top: 3px;">📝 ${textoDetalhes}</span>`;
+      }
+      
+      return `
+        <div class="fixed-card">
+          <div class="${headerClass}">
+            <span>${f.descricao}</span>
+            <button class="btn-header-action" onclick="abrirModalFixo('${f.id}')">✏️ Editar</button>
+          </div>
+          <div class="fixed-body">
+            <div class="fixed-info">
+              <span>${f.responsavel} ${f.pago ? '✅ (Pago)' : '⏳ (Pendente)'}</span>
+              <strong>${fmt(f.valor)}</strong>
+              ${detalhesHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function adicionarLinhaCalcFixo(desc = '', val = '') {
+    const div = document.createElement('div');
+    div.className = 'calc-row';
+    div.innerHTML = `
+      <input type="text" class="desc" placeholder="Descrição (ex: Academia)" value="${desc}">
+      <input type="number" step="0.01" class="val" placeholder="R$ 0,00" value="${val}" oninput="atualizarCalculadoraFixo()">
+      <button type="button" class="btn-remove-calc" onclick="this.parentElement.remove(); atualizarCalculadoraFixo()">✕</button>
+    `;
+    document.getElementById('calcRowsFixo').appendChild(div);
+    atualizarCalculadoraFixo();
+  }
+
+  function atualizarCalculadoraFixo() {
+    let total = 0;
+    document.querySelectorAll('#calcRowsFixo .calc-row').forEach(row => {
+      const val = parseFloat(row.querySelector('.val').value) || 0;
+      total += val;
+    });
+    
+    document.getElementById('fixoValorTotal').value = total;
+    const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('calcTotalDisplayFixo').textContent = fmt(total);
+  }
+
+  function abrirModalFixo(id = null) {
+    document.getElementById('fixoForm').reset();
+    document.getElementById('calcRowsFixo').innerHTML = '';
+    document.getElementById('fixoEditId').value = id || '';
+    document.getElementById('modalFixoTitle').textContent = id ? 'Editar Gasto Fixo' : 'Novo Gasto Fixo';
+    document.getElementById('btnExcluirFixoModal').style.display = id ? 'block' : 'none';
+
+    if (id) {
+      const f = fixos.find(x => String(x.id) === String(id));
+      if (f) {
+        document.getElementById('fixoDesc').value = f.descricao;
+        document.getElementById('fixoTipo').value = f.tipo;
+        document.getElementById('fixoResp').value = f.responsavel;
+        document.getElementById('fixoPago').checked = f.pago || false;
+        
+        if (f.subitens && f.subitens.length > 0) {
+          f.subitens.forEach(s => adicionarLinhaCalcFixo(s.descricao, s.valor));
+        } else {
+          adicionarLinhaCalcFixo('Valor Único', f.valor);
+        }
+      }
+    } else {
+      document.getElementById('fixoPago').checked = false;
+      adicionarLinhaCalcFixo();
+    }
+    openModal('modalFixo');
+  }
+
+  document.getElementById('fixoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('fixoEditId').value;
+    const resp = document.getElementById('fixoResp').value;
+    if (!resp) return alert('Cadastre um membro na aba "Membros do Casal" antes.');
+
+    const subitens = [];
+    document.querySelectorAll('#calcRowsFixo .calc-row').forEach(row => {
+      const desc = row.querySelector('.desc').value.trim();
+      const val = parseFloat(row.querySelector('.val').value) || 0;
+      if (desc && val > 0) subitens.push({ descricao: desc, valor: val });
+    });
+
+    const valorTotal = parseFloat(document.getElementById('fixoValorTotal').value) || 0;
+    if (valorTotal <= 0) return alert('O valor total precisa ser maior que 0.');
+
+    const payload = {
+      user_id: window.currentUser.id,
+      descricao: document.getElementById('fixoDesc').value,
+      valor: valorTotal,
+      tipo: document.getElementById('fixoTipo').value,
+      responsavel: resp,
+      pago: document.getElementById('fixoPago').checked,
+      subitens: subitens
+    };
+
+    let error;
+    if (id) {
+      const res = await db.from('gestao_casal_movimentacoes_fixas').update(payload).eq('id', id);
+      error = res.error;
+    } else {
+      const res = await db.from('gestao_casal_movimentacoes_fixas').insert([payload]);
+      error = res.error;
+    }
+
+    if (error) return alert("Erro: " + error.message);
+    closeModal('modalFixo');
+    carregarDados();
+  });
+
+  async function excluirFixoDoModal() {
+    const id = document.getElementById('fixoEditId').value;
+    if (!id || !confirm('Excluir este gasto fixo?')) return;
+    await db.from('gestao_casal_movimentacoes_fixas').delete().eq('id', id);
+    closeModal('modalFixo');
+    carregarDados();
+  }
+
+  async function lancarNoMes() {
+    const mesInput = document.getElementById('mesLancamento').value;
+    if (!mesInput) return alert('Selecione o mês.');
+    
+    const [ano, mes] = mesInput.split('-');
+    const mesAnoFormatado = `${mes}/${ano}`;
+
+    if (fixos.length === 0) return alert('Não há gastos fixos.');
+
+    let { data: rel } = await db.from('gestao_casal_relatorios')
+      .select('*').eq('user_id', window.currentUser.id).eq('mes_ano', mesAnoFormatado).maybeSingle();
+
+    if (!rel) {
+      const { data: newRel, error: errNew } = await db.from('gestao_casal_relatorios')
+        .insert([{ user_id: window.currentUser.id, mes_ano: mesAnoFormatado, criado_por: 'Sistema' }]).select().single();
+      if (errNew) return alert("Erro: " + errNew.message);
+      rel = newRel;
+    }
+
+    const { data: jaLancados } = await db.from('gestao_casal_movimentacoes').select('fixo_id').eq('relatorio_id', rel.id).not('fixo_id', 'is', null);
+    const idsJaLancados = (jaLancados || []).map(l => l.fixo_id);
+
+    const novasMovs = fixos.filter(f => !idsJaLancados.includes(f.id)).map(f => ({
+      relatorio_id: rel.id,
+      user_id: window.currentUser.id,
+      descricao: f.descricao,
+      valor: f.valor,
+      tipo: f.tipo,
+      responsavel: f.responsavel,
+      pago: f.pago || false,
+      subitens: f.subitens || [],
+      data_movimentacao: new Date().toISOString().split('T')[0],
+      fixo_id: f.id
+    }));
+
+    if (novasMovs.length === 0) return alert('Todos já foram lançados neste mês!');
+
+    await db.from('gestao_casal_movimentacoes').insert(novasMovs);
+    alert(`Sucesso! ${novasMovs.length} gastos lançados em ${mesAnoFormatado}.`);
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        document.getElementById('mesLancamento').value = new Date().toISOString().slice(0, 7);
+        carregarDados();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

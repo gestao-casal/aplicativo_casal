@@ -10,16 +10,35 @@ window.db = db;
 
 let currentUser = null;
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
 function $(id) { return document.getElementById(id); }
 
 function go(page) {
-  window.location.href = page + ".html";
+  if (page.includes('.html') || page.includes('?')) {
+    window.location.href = page;
+  } else {
+    window.location.href = page + ".html";
+  }
 }
 
-// Carrega o menu em qualquer página que tenha a div id="menu"
+// Atualize a função de toggle para receber a seta
+function toggleSubmenu(submenuId, arrowId) {
+  const submenu = document.getElementById(submenuId);
+  const arrow = document.getElementById(arrowId);
+
+  if (submenu.style.display === "block") {
+    submenu.style.display = "none";
+    if (arrow) arrow.textContent = "▼";
+  } else {
+    // Fecha todos os outros submenus abertos antes de abrir o novo
+    document.querySelectorAll('.submenu').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.arrow').forEach(el => el.textContent = '▼');
+
+    submenu.style.display = "block";
+    if (arrow) arrow.textContent = "▲";
+  }
+}
+
+// Atualize a função loadMenu para abrir o submenu correto
 async function loadMenu() {
   const menuDiv = $("menu");
   if (!menuDiv) return;
@@ -29,19 +48,32 @@ async function loadMenu() {
     if (!response.ok) throw new Error("Erro ao carregar menu");
     menuDiv.innerHTML = await response.text();
     
-    // Marca o botão ativo com base na página atual
     const page = document.body.dataset.page;
+
+    // Marca o botão ativo
     document.querySelectorAll(".nav button").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.page === page);
     });
+
+    // Abre o submenu correto se estiver em uma página filha
+    if (['financeiro', 'movimentacoes', 'membros'].includes(page)) {
+      const submenu = document.getElementById('submenu-financeiro');
+      const arrow = document.getElementById('arrow-financeiro');
+      if (submenu) submenu.style.display = "block";
+      if (arrow) arrow.textContent = "▲";
+    } 
+    else if (['veiculos', 'manutencao', 'abastecimento'].includes(page)) {
+      const submenu = document.getElementById('submenu-veiculos');
+      const arrow = document.getElementById('arrow-veiculos');
+      if (submenu) submenu.style.display = "block";
+      if (arrow) arrow.textContent = "▲";
+    }
+
   } catch (error) {
     console.error("Erro no menu:", error);
   }
 }
 
-/* =========================================================
-   LOGIN E AUTH (Mesma lógica de antes)
-   ========================================================= */
 async function initLogin() {
   const loginForm = $("loginForm");
   if (!loginForm) return;
@@ -82,6 +114,7 @@ async function requireAuth() {
   if (userNameElement) {
     userNameElement.textContent = currentUser.email || "Usuário Logado";
   }
+
   return true;
 }
 
@@ -90,9 +123,6 @@ async function logout() {
   window.location.replace("index.html");
 }
 
-/* =========================================================
-   INICIALIZAÇÃO
-   ========================================================= */
 document.addEventListener("DOMContentLoaded", async function () {
   const page = document.body.dataset.page;
 
@@ -101,7 +131,22 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
-  if (page === "ferias" || page === "dashboard") {
+  // ATUALIZADO: Adicionado 'checklists' e 'checklist_detalhe'
+  const paginasProtegidas = [
+    "ferias", 
+    "financeiro", 
+    "movimentacoes", 
+    "relatorio_detalhe", 
+    "membros",
+    "checklists",
+    "checklist_detalhe",
+    "filmes",
+    "listas_compras",
+    "lista_detalhe",
+    "restaurantes", "veiculos", "abastecimento", "historico_km", "manutencao"
+  ];
+  
+  if (paginasProtegidas.includes(page)) {
     const auth = await requireAuth();
     if (auth) {
       await loadMenu();

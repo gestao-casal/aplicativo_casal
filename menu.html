@@ -1,14 +1,45 @@
 <aside class="sidebar">
   <div class="brand">
-    Meu Sistema
-    <small>Organize suas viagens</small>
+    Gestão Casal
+    <small>Controle Financeiro e Férias</small>
   </div>
 
   <nav class="nav">
-    <button data-page="ferias" onclick="go('ferias')" class="active">
-      ✈️ Minhas Viagens
-    </button>
-    <!-- Outros botões podem ser adicionados aqui no futuro -->
+    <!-- ITENS DIRETOS -->
+    <button data-page="checklists" onclick="go('checklists')">✅ Check-List</button>
+    <button data-page="ferias" onclick="go('ferias')">✈️ Minhas Viagens</button>
+    <button data-page="filmes" onclick="go('filmes')">🎬 Filmes</button>
+    
+    <!-- GRUPO: FINANCEIRO -->
+    <div class="menu-group">
+      <button class="menu-dropdown-btn" onclick="toggleSubmenu('submenu-financeiro', 'arrow-financeiro')">
+        💰 Financeiro
+        <span class="arrow" id="arrow-financeiro">▼</span>
+      </button>
+      
+      <div class="submenu" id="submenu-financeiro">
+        <button data-page="membros" onclick="go('membros')">👥 Membros do Casal</button>
+        <button data-page="movimentacoes" onclick="go('movimentacoes')">🔄 Movimentações Fixas</button>
+        <button data-page="financeiro" onclick="go('financeiro')">📊 Relatórios Mensais</button>
+      </div>
+    </div>
+
+    <button data-page="listas_compras" onclick="go('listas_compras')">🛒 Lista de Compras</button>
+    <button data-page="restaurantes" onclick="go('restaurantes')">🍔 Restaurantes</button>
+
+    <!-- GRUPO: VEÍCULOS -->
+    <div class="menu-group">
+      <button class="menu-dropdown-btn" onclick="toggleSubmenu('submenu-veiculos', 'arrow-veiculos')">
+        🚗 Veículos
+        <span class="arrow" id="arrow-veiculos">▼</span>
+      </button>
+      
+      <div class="submenu" id="submenu-veiculos">
+        <button data-page="abastecimento" onclick="go('abastecimento')">⛽ Abastecimento</button>
+        <button data-page="manutencao" onclick="go('manutencao')">🔧 Manutenções</button>
+        <button data-page="veiculos" onclick="go('veiculos')">🚘 Meus Veículos</button>
+      </div>
+    </div>
   </nav>
 
   <button id="logoutBtn" class="btn btn-danger logout" onclick="logout()">

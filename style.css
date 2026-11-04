@@ -191,6 +191,7 @@ textarea:focus {
     position: fixed;
     inset: 0 auto 0 0;
     padding: 20px 14px;
+    z-index: 1000;
     z-index: 10;
     display: flex;
     flex-direction: column;
@@ -887,6 +888,53 @@ th {
     border-radius: 10px;
     border: 1px solid var(--border);
     margin-bottom: 20px;
+}
+
+/* ==============================
+   SUBMENU DA SIDEBAR
+============================== */
+.menu-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.menu-dropdown-btn {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.menu-dropdown-btn .arrow {
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+}
+
+.submenu {
+    display: none;
+    flex-direction: column;
+    background: #1f2937;
+    border-radius: 9px;
+    margin-top: 2px;
+    margin-bottom: 5px;
+    padding: 5px 0;
+}
+
+.submenu button {
+    padding: 10px 12px 10px 35px !important; /* Indentação para parecer submenu */
+    font-size: 0.9rem;
+    color: #9ca3af;
+    border-radius: 0;
+    margin: 0;
+    text-align: left;
+}
+
+.submenu button:hover, 
+.submenu button.active {
+    background: #374151;
+    color: #fff;
+    border-radius: 0;
 }
 
 .agenda-table {

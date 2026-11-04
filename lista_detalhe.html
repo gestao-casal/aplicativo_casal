@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista Atual</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .section-title { font-size: 1.1rem; font-weight: 700; margin: 20px 0 10px 0; color: #333; }
+  
+  .item-card { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; transition: opacity 0.2s; }
+  .item-card.concluido { opacity: 0.6; }
+  .item-card.concluido .item-text { text-decoration: line-through; color: #666; }
+  
+  .item-left { display: flex; align-items: flex-start; gap: 15px; flex: 1; }
+  .item-left input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #16a34a; margin-top: 2px; }
+  .item-info { display: flex; flex-direction: column; }
+  .item-text { font-size: 1rem; font-weight: 600; color: #111827; }
+  .item-details { font-size: 0.8rem; color: #666; margin-top: 3px; }
+  
+  .item-actions { display: flex; gap: 8px; }
+  .btn-icon-small { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
+  .btn-icon-small:hover { background: #f3f4f6; }
+  .btn-icon-small.danger { border-color: #fee2e2; color: #ef4444; }
+  .btn-icon-small.danger:hover { background: #fee2e2; }
+
+  /* Botão Flutuante */
+  .fab-btn { position: fixed; bottom: 30px; right: 30px; background: #16a34a; color: #fff; border: none; padding: 15px 25px; border-radius: 30px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); cursor: pointer; transition: transform 0.2s, background 0.2s; z-index: 100; }
+  .fab-btn:hover { transform: scale(1.05); background: #15803d; }
+
+  /* Área de Compra (Painel Lateral) */
+  .painel-compra { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
+  .painel-compra.active { display: block; }
+  .painel-compra h3 { margin: 0 0 15px 0; font-size: 1.2rem; color: #111827; }
+  
+  .input-group { margin-bottom: 15px; }
+  .input-group label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; font-weight: 600; }
+  .input-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; outline: none; }
+  
+  .qtd-control { display: flex; align-items: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
+  .qtd-control button { background: #f1f5f9; border: none; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; }
+  .qtd-control input { flex: 1; text-align: center; border: none; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; height: 40px; font-weight: bold; }
+  
+  .painel-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #cbd5e1; }
+  .total-label { font-size: 0.9rem; color: #64748b; font-weight: 600; }
+  .total-valor { font-size: 1.5rem; color: #4f46e5; font-weight: 800; }
+  .btn-comprar { background: #4f46e5; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  
+  /* Total Geral da Compra Concluída */
+  .total-compra-box { background: linear-gradient(90deg, #06b6d4 0%, #4f46e5 100%); color: #fff; padding: 20px; border-radius: 12px; margin-top: 30px; }
+  .total-compra-box span { font-size: 1rem; font-weight: 600; opacity: 0.9; }
+  .total-compra-box strong { display: block; font-size: 2rem; font-weight: 800; margin-top: 5px; }
+
+  .btn-concluir-lista { background: #4f46e5; color: #fff; border: none; padding: 15px; border-radius: 30px; font-weight: 700; font-size: 1rem; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }
+</style>
+</head>
+<body data-page="lista_detalhe">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <button class="btn btn-secondary" onclick="go('listas_compras')" style="margin-bottom: 10px;">&larr; Voltar</button>
+        <h1 id="tituloLista">Lista Atual</h1>
+      </div>
+    </div>
+
+    <div id="areaPendentes">
+      <div class="section-title">Itens Pendentes</div>
+      <div id="listaPendentes"></div>
+      
+      <!-- Painel de Compra (Aparece ao clicar no checkbox) -->
+      <div class="painel-compra" id="painelCompra">
+        <h3 id="painelItemNome">Item</h3>
+        <div class="input-group">
+          <label>Preço Unitário (R$)</label>
+          <input type="text" id="inputPreco" placeholder="Ex: R$ 2,00">
+        </div>
+        <div class="input-group">
+          <label>Quantidade</label>
+          <div class="qtd-control">
+            <button type="button" onclick="mudarQtd(-1)">-</button>
+            <input type="number" id="inputQtd" value="1" min="0.1" step="0.1">
+            <button type="button" onclick="mudarQtd(1)">+</button>
+          </div>
+        </div>
+        <div class="painel-footer">
+          <div>
+            <div class="total-label">Total</div>
+            <div class="total-valor" id="painelTotal">R$ 0,00</div>
+          </div>
+          <button class="btn-comprar" onclick="confirmarCompra()">🛒 Comprar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="areaConcluidos">
+      <div class="section-title" style="color: #16a34a;">Itens Comprados</div>
+      <div id="listaConcluidos"></div>
+    </div>
+
+    <!-- Total e Botão de Concluir -->
+    <div id="areaTotal" style="display: none;">
+      <div class="total-compra-box">
+        <span>Total da Compra</span>
+        <strong id="totalGeralLista">R$ 0,00</strong>
+      </div>
+      <button class="btn-concluir-lista" onclick="concluirLista()">✔️ Concluir Compra</button>
+    </div>
+
+  </main>
+</div>
+
+<button class="fab-btn" onclick="abrirModalItem()">+ Novo Produto</button>
+
+<!-- MODAL ITEM (NOVO/EDITAR) -->
+<div class="modal-overlay" id="modalItem">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2 id="modalItemTitle">Novo Produto</h2>
+      <button class="btn-close" onclick="closeModal('modalItem')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="itemForm">
+        <input type="hidden" id="itemEditId">
+        
+        <div class="field"><label>Descrição do Produto</label><input type="text" id="itemDesc" required placeholder="Ex: Arroz"></div>
+        
+        <!-- OPÇÃO: JÁ COMPRADO -->
+        <div class="field" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" id="itemJaComprado" style="width: 20px; height: 20px;" onchange="toggleCamposComprado()">
+            <strong>Este produto já foi comprado?</strong>
+          </label>
+          <p style="font-size: 0.8rem; color: #666; margin: 5px 0 0 0;">Se marcar, você pode inserir o preço e a quantidade agora.</p>
+          
+          <div id="camposComprados" style="display: none; margin-top: 15px;">
+            <div class="field">
+              <label>Preço Unitário (R$)</label>
+              <input type="text" id="itemPreco" placeholder="Ex: R$ 10,00">
+            </div>
+            <div class="field">
+              <label>Quantidade</label>
+              <input type="number" id="itemQtd" value="1" min="0.1" step="0.1">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; background: #4f46e5;">Salvar Item</button>
+        <button type="button" class="btn-danger" id="btnExcluirItem" style="display: none; width: 100%; margin-top: 10px;" onclick="excluirItemDoModal()">Excluir Item</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let listaId = null;
+  let itens = [];
+  let itemSelecionado = null; // Para o painel lateral
+
+  function getQueryParam(param) {
+    const val = new URLSearchParams(window.location.search).get(param);
+    if (!val) return null;
+    return val.replace('.html', '');
+  }
+
+  // MÁSCARA DE MOEDA (R$ 0,00)
+  function formatarMoeda(valor) {
+    let v = valor.replace(/\D/g, '');
+    v = (v / 100).toFixed(2) + '';
+    v = v.replace(".", ",");
+    v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+    v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+    return 'R$ ' + v;
+  }
+
+  function desformatarMoeda(valor) {
+    if (!valor) return 0;
+    let v = valor.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(v) || 0;
+  }
+
+  async function init() {
+    listaId = getQueryParam('id');
+    if (!listaId || isNaN(Number(listaId))) {
+      alert("Lista não encontrada.");
+      go('listas_compras');
+      return;
+    }
+
+    const { data: l } = await db.from('gestao_casal_listas_compras').select('titulo, concluida').eq('id', listaId).single();
+    if (l) {
+      document.getElementById('tituloLista').textContent = l.titulo;
+      if (l.concluida) {
+        document.querySelector('.fab-btn').style.display = 'none'; // Esconde o botão de novo item
+      }
+    }
+
+    await carregarItens();
+  }
+
+  async function carregarItens() {
+    const { data, error } = await db.from('gestao_casal_itens_compra').select('*').eq('lista_id', listaId).order('created_at', { ascending: true });
+    if (!error) {
+      itens = data;
+      renderItens();
+    }
+  }
+
+  function renderItens() {
+    const pendentes = itens.filter(i => !i.comprado);
+    const comprados = itens.filter(i => i.comprado);
+
+    const divPend = document.getElementById('listaPendentes');
+    if (pendentes.length === 0) divPend.innerHTML = '<p style="color: #666;">Nenhum item pendente.</p>';
+    else divPend.innerHTML = pendentes.map(i => renderCard(i)).join('');
+
+    const divConc = document.getElementById('listaConcluidos');
+    if (comprados.length === 0) divConc.innerHTML = '<p style="color: #666;">Nenhum item comprado ainda.</p>';
+    else divConc.innerHTML = comprados.map(i => renderCard(i)).join('');
+
+    // Calcula o total
+    let total = 0;
+    comprados.forEach(i => { total += (i.preco_unitario * i.quantidade); });
+    
+    const areaTotal = document.getElementById('areaTotal');
+    if (comprados.length > 0) {
+      areaTotal.style.display = 'block';
+      document.getElementById('totalGeralLista').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    } else {
+      areaTotal.style.display = 'none';
+    }
+  }
+
+  function renderCard(i) {
+    const totalItem = (i.preco_unitario * i.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const unitario = i.preco_unitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    // Detalhes embaixo do nome
+    let detalhes = `Qtd: ${i.quantidade}`;
+    if (i.comprado && i.preco_unitario > 0) {
+      detalhes = `Unidade: <span style="color:#16a34a">${unitario}</span> <br> Qtd: ${i.quantidade} • <strong>${totalItem}</strong>`;
+    }
+
+    return `
+      <div class="item-card ${i.comprado ? 'concluido' : ''}">
+        <div class="item-left">
+          <input type="checkbox" ${i.comprado ? 'checked' : ''} onchange="toggleComprado('${i.id}', this.checked)">
+          <div class="item-info">
+            <span class="item-text">${i.descricao}</span>
+            <span class="item-details">${detalhes}</span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="btn-icon-small" onclick="abrirModalItem('${i.id}')">✏️</button>
+          <button class="btn-icon-small danger" onclick="excluirItem('${i.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // ==========================================
+  // FLUXO DE COMPRA (CHECKBOX -> PAINEL)
+  // ==========================================
+  function toggleComprado(id, isChecked) {
+    if (!isChecked) {
+      // Se desmarcar, volta direto para pendente
+      db.from('gestao_casal_itens_compra').update({ comprado: false }).eq('id', id).then(() => carregarItens());
+      return;
+    }
+
+    // Se marcar, abre o painel de compra
+    const item = itens.find(x => String(x.id) === String(id));
+    if (!item) return;
+    
+    itemSelecionado = item;
+    
+    document.getElementById('painelItemNome').textContent = item.descricao;
+    document.getElementById('inputPreco').value = item.preco_unitario > 0 ? formatarMoeda((item.preco_unitario * 100).toString()) : '';
+    document.getElementById('inputQtd').value = item.quantidade || 1;
+    
+    calcularTotalPainel();
+    document.getElementById('painelCompra').classList.add('active');
+    
+    // Rola a tela até o painel
+    document.getElementById('painelCompra').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function mudarQtd(delta) {
+    const input = document.getElementById('inputQtd');
+    let val = parseFloat(input.value) || 1;
+    val += delta;
+    if (val < 0.1) val = 0.1;
+    input.value = val;
+    calcularTotalPainel();
+  }
+
+  function calcularTotalPainel() {
+    const preco = desformatarMoeda(document.getElementById('inputPreco').value);
+    const qtd = parseFloat(document.getElementById('inputQtd').value) || 0;
+    const total = preco * qtd;
+    
+    document.getElementById('painelTotal').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  // Monitora a digitação no preço do painel para formatar e recalcular
+  document.getElementById('inputPreco').addEventListener('input', function(e) {
+    e.target.value = formatarMoeda(e.target.value);
+    calcularTotalPainel();
+  });
+  
+  document.getElementById('inputQtd').addEventListener('input', calcularTotalPainel);
+
+  async function confirmarCompra() {
+    if (!itemSelecionado) return;
+    
+    const preco = desformatarMoeda(document.getElementById('inputPreco').value);
+    const qtd = parseFloat(document.getElementById('inputQtd').value) || 1;
+
+    await db.from('gestao_casal_itens_compra').update({
+      comprado: true,
+      preco_unitario: preco,
+      quantidade: qtd
+    }).eq('id', itemSelecionado.id);
+
+    document.getElementById('painelCompra').classList.remove('active');
+    itemSelecionado = null;
+    carregarItens();
+  }
+
+  // ==========================================
+  // MODAL DE ITEM (NOVO/EDITAR)
+  // ==========================================
+  function toggleCamposComprado() {
+    const isChecked = document.getElementById('itemJaComprado').checked;
+    document.getElementById('camposComprados').style.display = isChecked ? 'block' : 'none';
+  }
+
+  function abrirModalItem(id = null) {
+    document.getElementById('itemForm').reset();
+    document.getElementById('itemEditId').value = id || '';
+    document.getElementById('modalItemTitle').textContent = id ? 'Editar Produto' : 'Novo Produto';
+    document.getElementById('btnExcluirItem').style.display = id ? 'block' : 'none';
+    document.getElementById('camposComprados').style.display = 'none';
+
+    if (id) {
+      const i = itens.find(x => String(x.id) === String(id));
+      if (i) {
+        document.getElementById('itemDesc').value = i.descricao;
+        document.getElementById('itemJaComprado').checked = i.comprado;
+        toggleCamposComprado();
+        if (i.comprado) {
+          document.getElementById('itemPreco').value = formatarMoeda((i.preco_unitario * 100).toString());
+          document.getElementById('itemQtd').value = i.quantidade;
+        }
+      }
+    }
+    openModal('modalItem');
+  }
+
+  // Formata o input de preço no modal
+  document.getElementById('itemPreco').addEventListener('input', function(e) {
+    e.target.value = formatarMoeda(e.target.value);
+  });
+
+  document.getElementById('itemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('itemEditId').value;
+    const isComprado = document.getElementById('itemJaComprado').checked;
+    
+    const preco = isComprado ? desformatarMoeda(document.getElementById('itemPreco').value) : 0;
+    const qtd = isComprado ? (parseFloat(document.getElementById('itemQtd').value) || 1) : 1;
+
+    const payload = {
+      lista_id: Number(listaId),
+      user_id: window.currentUser.id,
+      descricao: document.getElementById('itemDesc').value,
+      comprado: isComprado,
+      preco_unitario: preco,
+      quantidade: qtd
+    };
+
+    let error;
+    if (id) {
+      const res = await db.from('gestao_casal_itens_compra').update(payload).eq('id', id);
+      error = res.error;
+    } else {
+      const res = await db.from('gestao_casal_itens_compra').insert([payload]);
+      error = res.error;
+    }
+
+    if (error) return alert("Erro: " + error.message);
+    closeModal('modalItem');
+    carregarItens();
+  });
+
+  async function excluirItem(id) {
+    if (!confirm('Excluir este produto?')) return;
+    await db.from('gestao_casal_itens_compra').delete().eq('id', id);
+    carregarItens();
+  }
+
+  async function excluirItemDoModal() {
+    const id = document.getElementById('itemEditId').value;
+    if (!id || !confirm('Excluir este produto?')) return;
+    await db.from('gestao_casal_itens_compra').delete().eq('id', id);
+    closeModal('modalItem');
+    carregarItens();
+  }
+
+  async function concluirLista() {
+    if (!confirm('Deseja concluir esta lista de compras? Ela não poderá mais ser editada.')) return;
+    await db.from('gestao_casal_listas_compras').update({ concluida: true }).eq('id', listaId);
+    go('listas_compras');
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        init();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

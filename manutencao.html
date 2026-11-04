@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manutenção</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Cabeçalho de Filtros */
+  .filters-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
+  .filters-bar select { width: 250px; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; height: 40px; font-weight: 600; }
+  
+  /* Cards Superiores (Atalhos) */
+  .top-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+  .action-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 20px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+  .action-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.06); }
+  .action-icon { font-size: 2rem; }
+  .action-title { font-weight: 600; font-size: 0.95rem; color: #333; }
+  .action-sub { font-size: 0.75rem; color: #888; }
+
+  /* Lista de Manutenções */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-header h2 { font-size: 1.1rem; color: #111827; margin: 0; }
+  .btn-text { background: none; border: none; color: #06b6d4; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; }
+  
+  .list-container { background: #fff; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 30px; }
+  
+  .list-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
+  .list-item:last-child { border-bottom: none; }
+  .list-item:hover { background: #f9fafb; }
+  
+  .item-left { display: flex; flex-direction: column; gap: 5px; }
+  .item-title { font-weight: 700; font-size: 1rem; color: #111827; }
+  .item-sub { font-size: 0.8rem; color: #6b7280; }
+  
+  .item-right { display: flex; align-items: center; gap: 15px; }
+  .item-price { font-weight: 700; color: #dc2626; font-size: 1.1rem; }
+  .item-arrow { color: #9ca3af; font-size: 1.2rem; }
+
+  /* Modal */
+  .modal-content.large { max-width: 700px; }
+  .form-section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .form-section h3 { font-size: 1rem; color: #111827; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
+  .form-section h3 span { color: #06b6d4; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: auto; }
+  
+  .field-row { display: flex; gap: 15px; }
+  .field-row .field { flex: 1; }
+  
+  .switch-container { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+  .switch-container span { font-size: 0.9rem; font-weight: 600; color: #374151; }
+  .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
+  .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+  input:checked + .slider { background-color: #4f46e5; }
+  input:checked + .slider:before { transform: translateX(20px); }
+
+  .modal-footer-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; }
+  
+  .btn-cancel { background: #fff; border: 1px solid #d1d5db; color: #374151; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-cancel:hover { background: #f9fafb; }
+  
+  .btn-save { background: #4f46e5; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-save:hover { background: #4338ca; }
+  
+  .btn-delete { background: #dc2626; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: none; transition: background 0.2s; }
+  .btn-delete:hover { background: #b91c1c; }
+</style>
+</head>
+<body data-page="manutencao">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <h1>Manutenção</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <!-- FILTRO DE VEÍCULO -->
+    <div class="filters-bar">
+      <label style="font-weight: 600; color: #333;">Filtrar Veículo:</label>
+      <select id="filtroVeiculo" onchange="carregarManutencoes()">
+        <option value="todos">Todos os Veículos</option>
+      </select>
+    </div>
+
+    <!-- ATALHOS -->
+    <div class="top-actions">
+      <div class="action-card" onclick="abrirModalTipo()">
+        <div class="action-icon">🔧</div>
+        <div class="action-title">Tipos de Serviço</div>
+        <div class="action-sub">Gerencie as categorias</div>
+      </div>
+      <div class="action-card" onclick="abrirModalManutencao(null, 'concluido')">
+        <div class="action-icon">✅</div>
+        <div class="action-title">Registrar Serviço</div>
+        <div class="action-sub">Adicionar serviço já realizado</div>
+      </div>
+      <div class="action-card" onclick="abrirModalManutencao(null, 'pendente')">
+        <div class="action-icon">⏰</div>
+        <div class="action-title">Próxima Manutenção</div>
+        <div class="action-sub">Agendar lembrete futuro</div>
+      </div>
+    </div>
+
+    <!-- PRÓXIMAS MANUTENÇÕES (PENDENTES) -->
+    <div class="section-header">
+      <h2>Próximas Manutenções</h2>
+      <button class="btn-text" onclick="abrirModalManutencao(null, 'pendente')">Agendar</button>
+    </div>
+    <div class="list-container" id="listaPendentes"></div>
+
+    <!-- ÚLTIMOS SERVIÇOS (CONCLUÍDOS) -->
+    <div class="section-header">
+      <h2>Últimos Serviços</h2>
+      <button class="btn-text" onclick="abrirModalManutencao(null, 'concluido')">Registrar</button>
+    </div>
+    <div class="list-container" id="listaConcluidos"></div>
+
+  </main>
+</div>
+
+<!-- MODAL DE MANUTENÇÃO -->
+<div class="modal-overlay" id="modalManutencao">
+  <div class="modal-content large">
+    <div class="modal-header">
+      <h2 id="modalTitle">Registrar Manutenção</h2>
+      <button class="btn-close" onclick="closeModal('modalManutencao')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="manutencaoForm">
+        <input type="hidden" id="manutId">
+        <input type="hidden" id="manutStatus">
+
+        <!-- VEÍCULO -->
+        <div class="form-section">
+          <h3>🚗 Veículo</h3>
+          <div class="field">
+            <select id="manutVeiculo" required></select>
+          </div>
+        </div>
+
+        <!-- DETALHES -->
+        <div class="form-section">
+          <h3>🔧 Detalhes da Manutenção</h3>
+          
+          <div class="field">
+            <label>Tipo de Manutenção</label>
+            <select id="manutTipo" required>
+              <!-- Opções carregadas via JS -->
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Descrição do Serviço</label>
+            <input type="text" id="manutDesc" required placeholder="Descreva o serviço...">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label id="labelKm">Quilometragem *</label>
+              <input type="number" step="0.1" id="manutKm" required placeholder="Ex: 45000">
+            </div>
+            <!-- CAMPO DE DATA OCULTO POR PADRÃO -->
+            <div class="field" id="campoData" style="display: none;">
+              <label>Data da Manutenção *</label>
+              <input type="date" id="manutData">
+            </div>
+          </div>
+        </div>
+
+        <!-- FINANCEIRO -->
+        <div class="form-section" id="secaoFinanceiro">
+          <h3>💲 Informações Financeiras</h3>
+          <div class="field-row">
+            <div class="field">
+              <label>Custo Peça (R$)</label>
+              <input type="text" id="manutPeca" placeholder="0,00" oninput="formatarMoeda(this)">
+            </div>
+            <div class="field">
+              <label>Mão de Obra (R$)</label>
+              <input type="text" id="manutMao" placeholder="0,00" oninput="formatarMoeda(this)">
+            </div>
+          </div>
+          <div class="field">
+            <label>Oficina / Prestador</label>
+            <input type="text" id="manutOficina" placeholder="Nome da oficina...">
+          </div>
+        </div>
+
+        <!-- PRÓXIMA MANUTENÇÃO -->
+        <div class="form-section" id="secaoProxManut">
+          <h3>📅 Próxima Manutenção</h3>
+          <div class="switch-container">
+            <div>
+              <span style="display:block; margin-bottom:3px;">Definir lembrete</span>
+              <span style="font-size:0.75rem; font-weight:normal; color:#6b7280;">Receba um aviso quando estiver próximo</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="manutLembrete">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="field" style="margin-top: 10px;">
+            <label id="labelProxKm">Próxima Quilometragem</label>
+            <input type="number" step="0.1" id="manutProxKm" placeholder="Ex: 50000">
+          </div>
+        </div>
+
+        <div class="modal-footer-actions">
+          <div>
+            <button type="button" class="btn-delete" id="btnExcluirManut" onclick="excluirManutencao()">Excluir</button>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-cancel" onclick="closeModal('modalManutencao')">Cancelar</button>
+            <button type="submit" class="btn-save">Salvar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TIPO DE MANUTENÇÃO -->
+<div class="modal-overlay" id="modalTipo">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>Tipos de Serviço</h2>
+      <button class="btn-close" onclick="closeModal('modalTipo')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <ul id="listaTipos" style="list-style: none; padding: 0; margin-bottom: 15px;"></ul>
+      <form id="tipoForm" style="display: flex; gap: 10px;">
+        <input type="text" id="novoTipo" required placeholder="Ex: Troca de Pneu" style="flex:1; padding: 8px; border: 1px solid #ccc; border-radius: 6px;">
+        <button type="submit" class="btn btn-primary" style="background: #4f46e5;">+</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let veiculos = [];
+  let tipos = [];
+  let manutencoes = [];
+
+  function formatarMoeda(input) {
+    let v = input.value.replace(/\D/g, '');
+    v = (v / 100).toFixed(2) + '';
+    v = v.replace(".", ",");
+    v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+    v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+    input.value = v;
+  }
+  function desformatarMoeda(valor) {
+    if (!valor) return 0;
+    let v = valor.replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(v) || 0;
+  }
+
+  async function carregarDados() {
+    const { data: v } = await db.from('gestao_casal_veiculos').select('*').eq('user_id', window.currentUser.id).order('modelo');
+    veiculos = v || [];
+    document.getElementById('filtroVeiculo').innerHTML = '<option value="todos">Todos os Veículos</option>' + veiculos.map(vei => `<option value="${vei.id}">${vei.modelo} - ${vei.placa}</option>`).join('');
+    document.getElementById('manutVeiculo').innerHTML = veiculos.map(vei => `<option value="${vei.id}">${vei.modelo} - ${vei.placa}</option>`).join('');
+
+    const { data: t } = await db.from('gestao_casal_tipos_manutencao').select('*').eq('user_id', window.currentUser.id).order('nome');
+    tipos = t || [];
+    document.getElementById('manutTipo').innerHTML = '<option value="">Selecione o tipo...</option>' + tipos.map(tp => `<option value="${tp.id}">${tp.nome}</option>`).join('');
+
+    await carregarManutencoes();
+  }
+
+  async function carregarManutencoes() {
+    const filtro = document.getElementById('filtroVeiculo').value;
+    let query = db.from('gestao_casal_manutencoes').select('*').eq('user_id', window.currentUser.id).order('data_manutencao', { ascending: false });
+    if (filtro !== 'todos') query = query.eq('veiculo_id', filtro);
+    
+    const { data, error } = await query;
+    if (!error) {
+      manutencoes = data;
+      renderManutencoes();
+    }
+  }
+
+  function renderManutencoes() {
+    const pendentes = manutencoes.filter(m => m.status === 'pendente');
+    const concluidos = manutencoes.filter(m => m.status === 'concluido');
+
+    const divPend = document.getElementById('listaPendentes');
+    if (pendentes.length === 0) divPend.innerHTML = '<div class="list-item" style="cursor:default; color:#888;">Nenhuma manutenção agendada.</div>';
+    else {
+      divPend.innerHTML = pendentes.map(m => {
+        const veic = veiculos.find(v => v.id === m.veiculo_id);
+        return `
+          <div class="list-item" onclick="abrirModalManutencao('${m.id}')">
+            <div class="item-left">
+              <span class="item-title">${m.descricao}</span>
+              <span class="item-sub">Alvo: ${m.km_manutencao} KM • ${veic ? veic.modelo : 'Veículo'}</span>
+            </div>
+            <div class="item-right"><span class="item-arrow">›</span></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const divConc = document.getElementById('listaConcluidos');
+    if (concluidos.length === 0) divConc.innerHTML = '<div class="list-item" style="cursor:default; color:#888;">Nenhum serviço registrado.</div>';
+    else {
+      divConc.innerHTML = concluidos.map(m => {
+        const veic = veiculos.find(v => v.id === m.veiculo_id);
+        const dataF = m.data_manutencao ? new Date(m.data_manutencao + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+        const total = (Number(m.custo_peca) + Number(m.mao_de_obra)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return `
+          <div class="list-item" onclick="abrirModalManutencao('${m.id}')">
+            <div class="item-left">
+              <span class="item-title">${m.descricao}</span>
+              <span class="item-sub">${dataF} • ${m.km_manutencao}KM • ${veic ? veic.modelo : ''}</span>
+            </div>
+            <div class="item-right">
+              <span class="item-price">${total}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  function abrirModalManutencao(id = null, statusPadrao = 'concluido') {
+    if (veiculos.length === 0) return alert('Cadastre um veículo primeiro.');
+
+    document.getElementById('manutencaoForm').reset();
+    document.getElementById('manutId').value = id || '';
+    document.getElementById('btnExcluirManut').style.display = id ? 'block' : 'none';
+    
+    // Elementos para manipular a visibilidade
+    const campoData = document.getElementById('campoData');
+    const secaoFinanceiro = document.getElementById('secaoFinanceiro');
+    const secaoProxManut = document.getElementById('secaoProxManut');
+    const labelKm = document.getElementById('labelKm');
+    const labelProxKm = document.getElementById('labelProxKm');
+
+    let isPendente = (statusPadrao === 'pendente');
+
+    if (id) {
+      const m = manutencoes.find(x => String(x.id) === String(id));
+      if (m) {
+        isPendente = (m.status === 'pendente');
+        document.getElementById('modalTitle').textContent = isPendente ? 'Concluir Manutenção' : 'Editar Serviço';
+        document.getElementById('manutStatus').value = m.status;
+        
+        document.getElementById('manutVeiculo').value = m.veiculo_id;
+        document.getElementById('manutTipo').value = m.tipo_id || '';
+        document.getElementById('manutDesc').value = m.descricao;
+        document.getElementById('manutKm').value = m.km_manutencao;
+        
+        if (!isPendente && m.data_manutencao) {
+          document.getElementById('manutData').value = m.data_manutencao;
+        }
+        
+        document.getElementById('manutPeca').value = m.custo_peca > 0 ? formatarMoedaRetorno(m.custo_peca) : '';
+        document.getElementById('manutMao').value = m.mao_de_obra > 0 ? formatarMoedaRetorno(m.mao_de_obra) : '';
+        document.getElementById('manutOficina').value = m.oficina || '';
+        document.getElementById('manutLembrete').checked = m.lembrete || false;
+        
+        // Aqui está a correção: se for pendente, limpa o campo prox_km para você digitar o novo
+        document.getElementById('manutProxKm').value = isPendente ? '' : (m.prox_km || '');
+      }
+    } else {
+      document.getElementById('modalTitle').textContent = isPendente ? 'Agendar Manutenção' : 'Registrar Serviço';
+      document.getElementById('manutStatus').value = statusPadrao;
+      document.getElementById('manutData').value = new Date().toISOString().split('T')[0];
+    }
+
+    // Lógica de Exibição dos Campos
+    if (isPendente) {
+      campoData.style.display = 'none';
+      document.getElementById('manutData').required = false;
+      
+      secaoFinanceiro.style.display = 'none';
+      document.getElementById('manutPeca').required = false;
+      document.getElementById('manutMao').required = false;
+      
+      secaoProxManut.style.display = 'none'; // Esconde "Próxima Manutenção" no agendamento
+      
+      labelKm.textContent = 'Quilometragem Alvo (Lembrete) *';
+    } else {
+      campoData.style.display = 'block';
+      document.getElementById('manutData').required = true;
+      
+      secaoFinanceiro.style.display = 'block';
+      
+      secaoProxManut.style.display = 'block'; // Mostra "Próxima Manutenção" na conclusão
+      
+      labelKm.textContent = 'Quilometragem da Manutenção *';
+      labelProxKm.textContent = 'Agendar Próxima Quilometragem (Opcional)';
+    }
+    
+    openModal('modalManutencao');
+  }
+
+  function formatarMoedaRetorno(val) {
+    return Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  }
+
+  document.getElementById('manutencaoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('manutId').value;
+    const statusAtual = document.getElementById('manutStatus').value;
+    const isPendente = (statusAtual === 'pendente');
+    
+    // Se for agendamento, usa a data de hoje (oculta) como padrão para não quebrar o banco
+    const dataManut = isPendente ? new Date().toISOString().split('T')[0] : document.getElementById('manutData').value;
+
+    const payload = {
+      user_id: window.currentUser.id,
+      veiculo_id: Number(document.getElementById('manutVeiculo').value),
+      tipo_id: document.getElementById('manutTipo').value ? Number(document.getElementById('manutTipo').value) : null,
+      descricao: document.getElementById('manutDesc').value,
+      km_manutencao: parseFloat(document.getElementById('manutKm').value) || 0,
+      data_manutencao: dataManut,
+      custo_peca: isPendente ? 0 : desformatarMoeda(document.getElementById('manutPeca').value),
+      mao_de_obra: isPendente ? 0 : desformatarMoeda(document.getElementById('manutMao').value),
+      oficina: isPendente ? null : document.getElementById('manutOficina').value,
+      lembrete: document.getElementById('manutLembrete').checked,
+      prox_km: parseFloat(document.getElementById('manutProxKm').value) || null
+    };
+
+    if (id && isPendente) {
+      // CONCLUINDO UMA MANUTENÇÃO
+      payload.status = 'concluido';
+      
+      // Atualiza o banco com os dados financeiros e a data que o usuário colocou agora
+      payload.data_manutencao = document.getElementById('manutData').value;
+      payload.custo_peca = desformatarMoeda(document.getElementById('manutPeca').value);
+      payload.mao_de_obra = desformatarMoeda(document.getElementById('manutMao').value);
+      payload.oficina = document.getElementById('manutOficina').value;
+
+      // Atualiza o registro atual para concluído
+      await db.from('gestao_casal_manutencoes').update(payload).eq('id', id);
+
+      // CRIA A PRÓXIMA MANUTENÇÃO SE O CAMPO FOI PREENCHIDO
+      if (payload.prox_km) {
+        const proxima = {
+          user_id: payload.user_id,
+          veiculo_id: payload.veiculo_id,
+          tipo_id: payload.tipo_id,
+          descricao: payload.descricao,
+          km_manutencao: payload.prox_km, // Usa a nova KM como alvo
+          data_manutencao: new Date().toISOString().split('T')[0], // Data de hoje como criação
+          status: 'pendente',
+          lembrete: payload.lembrete
+        };
+        await db.from('gestao_casal_manutencoes').insert([proxima]);
+      }
+    } else {
+      // CRIANDO UM NOVO (Agendamento ou Serviço direto)
+      payload.status = statusAtual;
+      
+      // Se estiver criando um serviço direto, e preencheu a próxima
+      let criarProxima = false;
+      
+      if (id) {
+        await db.from('gestao_casal_manutencoes').update(payload).eq('id', id);
+      } else {
+        await db.from('gestao_casal_manutencoes').insert([payload]);
+        if (payload.prox_km) criarProxima = true;
+      }
+
+      if (criarProxima) {
+        const proxima = {
+          user_id: payload.user_id,
+          veiculo_id: payload.veiculo_id,
+          tipo_id: payload.tipo_id,
+          descricao: payload.descricao,
+          km_manutencao: payload.prox_km,
+          data_manutencao: new Date().toISOString().split('T')[0],
+          status: 'pendente',
+          lembrete: payload.lembrete
+        };
+        await db.from('gestao_casal_manutencoes').insert([proxima]);
+      }
+    }
+
+    closeModal('modalManutencao');
+    carregarManutencoes();
+  });
+
+  async function excluirManutencao() {
+    const id = document.getElementById('manutId').value;
+    if (!id || !confirm('Excluir esta manutenção?')) return;
+    await db.from('gestao_casal_manutencoes').delete().eq('id', id);
+    closeModal('modalManutencao');
+    carregarManutencoes();
+  }
+
+  // Gerenciar Tipos
+  function abrirModalTipo() {
+    document.getElementById('tipoForm').reset();
+    renderTipos();
+    openModal('modalTipo');
+  }
+
+  function renderTipos() {
+    const ul = document.getElementById('listaTipos');
+    ul.innerHTML = tipos.map(t => `
+      <li style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+        <span>${t.nome}</span>
+        <button style="background:none; border:none; color:#ef4444; cursor:pointer;" onclick="excluirTipo('${t.id}')">🗑️</button>
+      </li>
+    `).join('');
+  }
+
+  document.getElementById('tipoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = document.getElementById('novoTipo').value;
+    await db.from('gestao_casal_tipos_manutencao').insert([{ user_id: window.currentUser.id, nome }]);
+    document.getElementById('novoTipo').value = '';
+    await carregarDados();
+    renderTipos();
+  });
+
+  async function excluirTipo(id) {
+    if (!confirm('Excluir este tipo?')) return;
+    await db.from('gestao_casal_tipos_manutencao').delete().eq('id', id);
+    await carregarDados();
+    renderTipos();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarDados();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financeiro Mensal</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+  .tab-btn { background: transparent; border: none; font-size: 1rem; font-weight: 700; color: #666; padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+  .tab-btn:hover { color: #4f46e5; }
+  .tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+
+  .report-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .report-header { padding: 15px 20px; color: #fff; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
+  .report-header.blue { background: #0f4c81; }
+  .report-header.red { background: #b91c1c; }
+  .report-header.green { background: #15803d; }
+  
+  .report-body { padding: 20px; }
+  .report-summary { display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+  .report-summary-item { display: flex; flex-direction: column; gap: 5px; }
+  .report-summary-item span { font-size: 0.8rem; color: #666; font-weight: 600; text-transform: uppercase; }
+  .report-summary-item strong { font-size: 1.2rem; }
+  .report-summary-item.receita strong { color: #16a34a; }
+  .report-summary-item.despesa strong { color: #dc2626; }
+  .report-summary-item.saldo strong { color: #2563eb; }
+  
+  .report-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+  .opcoes-criacao { display: flex; gap: 15px; margin-top: 10px; }
+  .opcao-card { flex: 1; border: 2px solid #e5e7eb; border-radius: 10px; padding: 15px; cursor: pointer; text-align: center; transition: all 0.2s; background: #fafafa; }
+  .opcao-card:hover { border-color: #4f46e5; background: #f5f3ff; }
+  .opcao-card.active { border-color: #4f46e5; background: #eef2ff; box-shadow: 0 0 0 3px #4f46e51a; }
+  .opcao-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+  .opcao-title { font-weight: 700; font-size: 1rem; color: #111827; margin-bottom: 5px; }
+  .opcao-desc { font-size: 0.8rem; color: #6b7280; line-height: 1.4; }
+
+  .btn-success { background: #16a34a; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
+  .btn-success:hover { background: #15803d; }
+  
+  .btn-warning { background: #f59e0b; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
+  .btn-warning:hover { background: #d97706; }
+</style>
+</head>
+<body data-page="financeiro">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <h1>Relatórios Mensais</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <div class="header-green" style="background: #fff; border: 1px solid var(--border); color: var(--text);">
+      <div>
+        <h1 style="color: var(--text);">Meus Relatórios</h1>
+        <p style="color: var(--muted);">Selecione um mês para ver os detalhes</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalRelatorio()">+ Novo Relatório</button>
+    </div>
+
+    <div class="tabs-container">
+      <button class="tab-btn active" id="tabPendentes" onclick="mudarAba('pendente')">⏳ Relatórios Pendentes</button>
+      <button class="tab-btn" id="tabConcluidos" onclick="mudarAba('fechado')">✅ Relatórios Concluídos</button>
+    </div>
+
+    <div id="listaRelatorios"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalRelatorio">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>Novo Relatório Mensal</h2>
+      <button class="btn-close" onclick="closeModal('modalRelatorio')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="relatorioForm">
+        <div style="display: flex; gap: 15px;">
+          <div class="field" style="flex: 1;"><label>Mês e Ano</label><input type="month" id="mesAno" required></div>
+          <div class="field" style="flex: 1;"><label>Criado por</label><select id="criadoPor" required></select></div>
+        </div>
+
+        <div class="field" style="margin-top: 15px;">
+          <label>Como deseja iniciar este relatório?</label>
+          <div class="opcoes-criacao">
+            <div class="opcao-card active" id="opcaoBranco" onclick="selecionarOpcao('branco')">
+              <span class="opcao-icon">📄</span>
+              <div class="opcao-title">Começar do Zero</div>
+              <div class="opcao-desc">O relatório será criado vazio. Você adicionará as contas manualmente.</div>
+            </div>
+            
+            <div class="opcao-card" id="opcaoFixo" onclick="selecionarOpcao('fixo')">
+              <span class="opcao-icon">🔄</span>
+              <div class="opcao-title">Importar Gastos Fixos</div>
+              <div class="opcao-desc">Puxa automaticamente todas as suas movimentações fixas para este mês.</div>
+            </div>
+          </div>
+          <input type="hidden" id="opcaoCriacao" value="branco">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 25px; padding: 12px;">Criar Relatório</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let relatorios = [];
+  let membros = [];
+  let abaAtual = 'pendente';
+
+  async function carregarRelatorios() {
+    const { data: mems } = await db.from('gestao_casal_membros').select('*').eq('user_id', window.currentUser.id).order('nome');
+    membros = mems || [];
+    const selectCriador = document.getElementById('criadoPor');
+    if (membros.length > 0) {
+      selectCriador.innerHTML = membros.map(m => `<option value="${m.nome}">${m.nome}</option>`).join('');
+    } else {
+      selectCriador.innerHTML = '<option value="">Cadastre um membro</option>';
+    }
+
+    const { data, error } = await db.from('gestao_casal_relatorios').select('*').eq('user_id', window.currentUser.id).order('mes_ano', { ascending: false });
+    if (error) return console.error(error);
+
+    for (let r of data) {
+      const { data: movs } = await db.from('gestao_casal_movimentacoes').select('valor, tipo').eq('relatorio_id', r.id);
+      let receita = 0, despesa = 0;
+      if (movs) {
+        movs.forEach(m => {
+          if (m.tipo === 'receita') receita += Number(m.valor);
+          else despesa += Number(m.valor);
+        });
+      }
+      r._receita = receita;
+      r._despesa = despesa;
+      r._saldo = receita - despesa;
+    }
+
+    relatorios = data;
+    renderRelatorios();
+  }
+
+  function mudarAba(aba) {
+    abaAtual = aba;
+    document.getElementById('tabPendentes').classList.toggle('active', aba === 'pendente');
+    document.getElementById('tabConcluidos').classList.toggle('active', aba === 'fechado');
+    renderRelatorios();
+  }
+
+  function renderRelatorios() {
+    const lista = document.getElementById('listaRelatorios');
+    const filtrados = relatorios.filter(r => r.status === abaAtual);
+
+    if (filtrados.length === 0) {
+      lista.innerHTML = `<p style="color: #666;">Nenhum relatório ${abaAtual === 'pendente' ? 'pendente' : 'concluído'} encontrado.</p>`;
+      return;
+    }
+
+    lista.innerHTML = filtrados.map(r => {
+      const cor = r._saldo >= 0 ? 'blue' : 'red';
+      const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      
+      const headerClass = r.status === 'fechado' ? 'report-header green' : `report-header ${cor}`;
+      
+      // Lógica dos botões
+      let botoesAcao = '';
+      if (r.status === 'pendente') {
+        botoesAcao = `
+          <button class="btn-success" onclick="event.stopPropagation(); fecharRelatorio('${r.id}')">🔒 Fechar Mês</button>
+          <button class="btn btn-danger" onclick="event.stopPropagation(); excluirRelatorio('${r.id}')">🗑️ Excluir</button>
+        `;
+      } else {
+        botoesAcao = `
+          <button class="btn-warning" onclick="event.stopPropagation(); reabrirRelatorio('${r.id}')">🔓 Reabrir Mês</button>
+          <button class="btn btn-danger" onclick="event.stopPropagation(); excluirRelatorio('${r.id}')">🗑️ Excluir</button>
+        `;
+      }
+
+      return `
+        <div class="report-card">
+          <div class="${headerClass}" onclick="window.location.href='relatorio_detalhe.html?id=${r.id}'">
+            <span>📅 Família - ${r.mes_ano}</span>
+            <span style="font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;">${r.status.toUpperCase()}</span>
+          </div>
+          <div class="report-body">
+            <div class="report-summary">
+              <div class="report-summary-item receita">
+                <span>Receita</span>
+                <strong>${fmt(r._receita)}</strong>
+              </div>
+              <div class="report-summary-item despesa">
+                <span>Despesa</span>
+                <strong>${fmt(r._despesa)}</strong>
+              </div>
+              <div class="report-summary-item saldo">
+                <span>Saldo do Mês</span>
+                <strong>${fmt(r._saldo)}</strong>
+              </div>
+            </div>
+            <div class="report-actions">
+              ${botoesAcao}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function fecharRelatorio(id) {
+    if (!confirm('Deseja concluir este mês? Após fechado, ele não poderá mais ser editado (a menos que você reabra).')) return;
+    await db.from('gestao_casal_relatorios').update({ status: 'fechado' }).eq('id', id);
+    carregarRelatorios();
+  }
+
+  async function reabrirRelatorio(id) {
+    if (!confirm('Deseja reabrir este mês? Ele voltará para a lista de pendentes e poderá ser editado.')) return;
+    await db.from('gestao_casal_relatorios').update({ status: 'pendente' }).eq('id', id);
+    carregarRelatorios();
+  }
+
+  function selecionarOpcao(tipo) {
+    document.getElementById('opcaoBranco').classList.remove('active');
+    document.getElementById('opcaoFixo').classList.remove('active');
+    if (tipo === 'branco') document.getElementById('opcaoBranco').classList.add('active');
+    else document.getElementById('opcaoFixo').classList.add('active');
+    document.getElementById('opcaoCriacao').value = tipo;
+  }
+
+  function abrirModalRelatorio() {
+    document.getElementById('relatorioForm').reset();
+    selecionarOpcao('branco');
+    openModal('modalRelatorio');
+  }
+
+  document.getElementById('relatorioForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Criando...';
+
+    const mesAnoInput = document.getElementById('mesAno').value;
+    const [ano, mes] = mesAnoInput.split('-');
+    const mesAnoFormatado = `${mes}/${ano}`;
+    const tipoCriacao = document.getElementById('opcaoCriacao').value;
+    const criador = document.getElementById('criadoPor').value;
+
+    if (!criador) {
+      alert("Cadastre um membro antes de criar o relatório.");
+      btn.disabled = false;
+      btn.textContent = 'Criar Relatório';
+      return;
+    }
+
+    const payloadRelatorio = {
+      user_id: window.currentUser.id,
+      mes_ano: mesAnoFormatado,
+      criado_por: criador,
+      status: 'pendente'
+    };
+
+    const { data: newRel, error: errorRel } = await db.from('gestao_casal_relatorios').insert([payloadRelatorio]).select().single();
+    
+    if (errorRel) {
+      alert("Erro ao criar relatório: " + errorRel.message);
+      btn.disabled = false;
+      btn.textContent = 'Criar Relatório';
+      return;
+    }
+
+    if (tipoCriacao === 'fixo') {
+      const { data: fixos } = await db.from('gestao_casal_movimentacoes_fixas').select('*').eq('user_id', window.currentUser.id);
+      
+      if (fixos && fixos.length > 0) {
+        const novasMovs = fixos.map(f => ({
+          relatorio_id: newRel.id,
+          user_id: window.currentUser.id,
+          descricao: f.descricao,
+          valor: f.valor,
+          tipo: f.tipo,
+          responsavel: f.responsavel,
+          data_movimentacao: new Date().toISOString().split('T')[0],
+          fixo_id: f.id
+        }));
+        await db.from('gestao_casal_movimentacoes').insert(novasMovs);
+      }
+    }
+
+    closeModal('modalRelatorio');
+    carregarRelatorios();
+    
+    btn.disabled = false;
+    btn.textContent = 'Criar Relatório';
+  });
+
+  async function excluirRelatorio(id) {
+    if (!confirm('Excluir este relatório e todas as suas movimentações?')) return;
+    await db.from('gestao_casal_relatorios').delete().eq('id', id);
+    carregarRelatorios();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarRelatorios();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

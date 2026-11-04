@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Membros do Casal</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .membro-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 15px 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+  .membro-info { display: flex; align-items: center; gap: 15px; }
+  .avatar { width: 40px; height: 40px; background: #eef2ff; color: #4f46e5; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; }
+  .membro-nome { font-weight: 700; font-size: 1.1rem; color: #111827; }
+</style>
+</head>
+<body data-page="membros">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <h1>Membros</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <div class="header-green" style="background: #fff; border: 1px solid var(--border); color: var(--text);">
+      <div>
+        <h1 style="color: var(--text);">Quem participa?</h1>
+        <p style="color: var(--muted);">Cadastre as pessoas para separar as contas.</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalMembro()">+ Novo Membro</button>
+    </div>
+
+    <div id="listaMembros"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalMembro">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>Novo Membro</h2>
+      <button class="btn-close" onclick="closeModal('modalMembro')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="membroForm">
+        <div class="field"><label>Nome da Pessoa</label><input type="text" id="nomeMembro" required placeholder="Ex: William, Renata..."></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Membro</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let membros = [];
+
+  async function carregarMembros() {
+    const { data, error } = await db.from('gestao_casal_membros').select('*').eq('user_id', window.currentUser.id).order('nome');
+    if (error) return console.error(error);
+    membros = data || [];
+    renderMembros();
+  }
+
+  function renderMembros() {
+    const lista = document.getElementById('listaMembros');
+    if (membros.length === 0) {
+      lista.innerHTML = '<p style="color: #666;">Nenhum membro cadastrado. Adicione o primeiro!</p>';
+      return;
+    }
+
+    lista.innerHTML = membros.map(m => `
+      <div class="membro-card">
+        <div class="membro-info">
+          <div class="avatar">${m.nome.charAt(0).toUpperCase()}</div>
+          <span class="membro-nome">${m.nome}</span>
+        </div>
+        <button class="btn btn-danger" onclick="excluirMembro('${m.id}')">🗑️</button>
+      </div>
+    `).join('');
+  }
+
+  function abrirModalMembro() {
+    document.getElementById('membroForm').reset();
+    openModal('modalMembro');
+  }
+
+  document.getElementById('membroForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      user_id: window.currentUser.id,
+      nome: document.getElementById('nomeMembro').value.trim()
+    };
+
+    const { error } = await db.from('gestao_casal_membros').insert([payload]);
+    if (error) return alert("Erro: " + error.message);
+
+    closeModal('modalMembro');
+    carregarMembros();
+  });
+
+  async function excluirMembro(id) {
+    if (!confirm('Excluir este membro? As contas antigas dele não serão apagadas.')) return;
+    await db.from('gestao_casal_membros').delete().eq('id', id);
+    carregarMembros();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarMembros();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

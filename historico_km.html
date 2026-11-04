@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histórico de Consumo</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .hist-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s; }
+  .hist-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+  
+  .hist-left { display: flex; align-items: center; gap: 15px; }
+  .hist-icon { width: 45px; height: 45px; background: #e0e7ff; color: #4f46e5; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+  
+  .hist-info { display: flex; flex-direction: column; gap: 3px; }
+  .hist-date { font-weight: 700; color: #111827; font-size: 1rem; }
+  .hist-details { font-size: 0.8rem; color: #6b7280; }
+  .hist-fuel { font-size: 0.75rem; color: #0ea5e9; font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+  .hist-fuel::before { content: '●'; font-size: 0.6rem; }
+  
+  .hist-right { text-align: right; }
+  .hist-km { font-size: 1.2rem; font-weight: 800; color: #16a34a; }
+  .hist-km.erro { color: #9ca3af; font-size: 0.9rem; font-weight: 600; }
+  .hist-price { font-size: 0.75rem; color: #6b7280; margin-top: 3px; }
+
+  .btn-add { background: #4f46e5; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; }
+</style>
+</head>
+<body data-page="historico_km">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <button class="btn btn-secondary" onclick="go('veiculos')" style="margin-bottom: 10px;">&larr; Voltar</button>
+        <h1 id="titulo">Histórico km/L</h1>
+      </div>
+      <a id="btnNovoAbast" class="btn-add" href="#">+ Abastecer</a>
+    </div>
+
+    <div id="listaHistorico"></div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let veiculoId = null;
+
+  function getQueryParam(param) {
+    const val = new URLSearchParams(window.location.search).get(param);
+    if (!val) return null;
+    return val.replace('.html', '');
+  }
+
+  async function init() {
+    veiculoId = getQueryParam('id');
+    if (!veiculoId || isNaN(Number(veiculoId))) {
+      alert("Veículo não encontrado.");
+      go('veiculos');
+      return;
+    }
+
+    document.getElementById('btnNovoAbast').href = `abastecimento.html?veiculo=${veiculoId}`;
+
+    // Pega o nome do veículo
+    const { data: v } = await db.from('gestao_casal_veiculos').select('modelo').eq('id', veiculoId).single();
+    if (v) document.getElementById('titulo').textContent = `Histórico: ${v.modelo}`;
+
+    await carregarHistorico();
+  }
+
+  async function carregarHistorico() {
+    const { data, error } = await db.from('gestao_casal_abastecimentos')
+      .select('*')
+      .eq('veiculo_id', veiculoId)
+      .order('data_abastecimento', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (!error) {
+      renderHistorico(data);
+    }
+  }
+
+  function renderHistorico(abastecimentos) {
+    const div = document.getElementById('listaHistorico');
+    
+    if (abastecimentos.length === 0) {
+      div.innerHTML = '<p style="color: #666;">Nenhum abastecimento registrado para este veículo.</p>';
+      return;
+    }
+
+    div.innerHTML = abastecimentos.map(a => {
+      const dataFormatada = new Date(a.data_abastecimento + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+      const precoFmt = Number(a.preco_litro).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      
+      let kmLHtml = '';
+      if (a.km_por_litro) {
+        kmLHtml = `<div class="hist-km">${Number(a.km_por_litro).toFixed(1)} km/L</div>`;
+      } else if (!a.tanque_cheio) {
+        kmLHtml = `<div class="hist-km erro">Tanque incompleto</div>`;
+      } else {
+        kmLHtml = `<div class="hist-km erro">1º Abastecimento</div>`;
+      }
+
+      return `
+        <div class="hist-card">
+          <div class="hist-left">
+            <div class="hist-icon">⛽</div>
+            <div class="hist-info">
+              <span class="hist-date">${dataFormatada}</span>
+              <span class="hist-details">${a.local || 'Local não informado'} • ${Number(a.litros).toFixed(1)}L</span>
+              <span class="hist-fuel">${a.tipo_combustivel}</span>
+            </div>
+          </div>
+          <div class="hist-right">
+            ${kmLHtml}
+            <div class="hist-price">${precoFmt}/L</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        init();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurantes</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Layout Principal */
+  .filters-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .filters-section h3 { margin: 0; font-size: 1.1rem; color: #111827; }
+  .btn-link { background: none; border: none; color: #06b6d4; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+  .tag-btn { background: transparent; border: none; color: #4b5563; font-size: 0.9rem; cursor: pointer; transition: color 0.2s; padding: 5px; }
+  .tag-btn:hover { color: #111827; }
+  .tag-btn.active { color: #111827; font-weight: 700; border-bottom: 2px solid #111827; }
+
+  /* Cards de Restaurantes */
+  .rest-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.2s; }
+  .rest-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.06); }
+  
+  .rest-info { flex: 1; }
+  .rest-title { font-size: 1.1rem; font-weight: 700; color: #111827; margin: 0 0 8px 0; }
+  .rest-status { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #6b7280; }
+  .status-icon { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #d1d5db; }
+  .rest-card.visited .status-icon { background: #16a34a; border-color: #16a34a; }
+  
+  .rest-stars { color: #f59e0b; font-size: 1.1rem; margin-top: 5px; letter-spacing: 2px; }
+  
+  .btn-delete { background: transparent; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 10px; }
+  
+  /* Modal Finalizar Visita (Print 2) */
+  .modal-fullpage { max-width: 800px; }
+  .form-large { text-align: left; }
+  .form-large h3 { font-size: 1rem; font-weight: 700; color: #111827; margin: 20px 0 10px 0; }
+  .form-large input[type="text"], .form-large input[type="number"], .form-large textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; }
+  .form-large input:focus, .form-large textarea:focus { border-color: #06b6d4; }
+  
+  .radio-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+  .radio-option { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: #374151; cursor: pointer; }
+  .radio-option input[type="radio"] { width: 18px; height: 18px; accent-color: #06b6d4; cursor: pointer; }
+  
+  .btn-save { background: #06b6d4; color: #fff; border: none; padding: 15px; border-radius: 30px; font-weight: 700; font-size: 1.1rem; cursor: pointer; width: 100%; margin-top: 20px; transition: background 0.2s; }
+  .btn-save:hover { background: #0891b2; }
+
+  /* Modais Menores */
+  .modal-header-center { text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 20px; }
+</style>
+</head>
+<body data-page="restaurantes">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <h1>Restaurantes</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <!-- FILTRO DE CATEGORIAS -->
+    <div class="filters-section">
+      <h3>Categorias</h3>
+      <button class="btn-link" onclick="abrirModalOpcoes('categoria')">Novo</button>
+    </div>
+    <div class="tags-container" id="filtroCategorias"></div>
+
+    <!-- FILTRO DE CIDADES -->
+    <div class="filters-section">
+      <h3>Cidade</h3>
+      <button class="btn-link" onclick="abrirModalOpcoes('cidade')">Novo</button>
+    </div>
+    <div class="tags-container" id="filtroCidades"></div>
+
+    <!-- FILTRO DE ESTRELAS -->
+    <div class="filters-section">
+      <h3>Avaliação</h3>
+    </div>
+    <div class="tags-container" id="filtroEstrelas">
+      <button class="tag-btn active" onclick="mudarFiltroEstrela(0)">Todas</button>
+      <button class="tag-btn" onclick="mudarFiltroEstrela(5)">⭐⭐⭐⭐⭐ (5)</button>
+      <button class="tag-btn" onclick="mudarFiltroEstrela(4)">⭐⭐⭐⭐ (4)</button>
+      <button class="tag-btn" onclick="mudarFiltroEstrela(3)">⭐⭐⭐ (3)</button>
+    </div>
+
+    <!-- PENDENTES -->
+    <div class="filters-section" style="margin-top: 30px;">
+      <h3>Pendentes</h3>
+      <button class="btn-link" onclick="abrirModalRestaurante()">Novo</button>
+    </div>
+    <div id="listaPendentes"></div>
+
+    <!-- VISITADOS -->
+    <div class="filters-section" style="margin-top: 30px;">
+      <h3>Visitados</h3>
+    </div>
+    <div id="listaVisitados"></div>
+  </main>
+</div>
+
+<!-- MODAL GERENCIAR OPÇÕES (Cidades/Categorias) -->
+<div class="modal-overlay" id="modalOpcoes">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2 id="modalOpcoesTitle">Gerenciar</h2>
+      <button class="btn-close" onclick="closeModal('modalOpcoes')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <ul style="list-style: none; padding: 0; margin: 0 0 15px 0; max-height: 200px; overflow-y: auto;" id="listaOpcoesModal"></ul>
+      <form id="opcaoForm" style="display: flex; gap: 10px;">
+        <input type="hidden" id="opcaoTipo">
+        <input type="text" id="opcaoNome" required placeholder="Nome..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+        <button type="submit" class="btn btn-primary" style="background: #06b6d4; padding: 0 15px;">+</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO RESTAURANTE -->
+<div class="modal-overlay" id="modalRestaurante">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>Novo Restaurante</h2>
+      <button class="btn-close" onclick="closeModal('modalRestaurante')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="restForm">
+        <div class="field"><label>Nome do Restaurante</label><input type="text" id="restNome" required></div>
+        <div class="field">
+          <label>Cidade</label>
+          <select id="restCidade" required></select>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select id="restCategoria" required></select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; background: #06b6d4;">Salvar Restaurante</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FINALIZAR VISITA (PRINT 2) -->
+<div class="modal-overlay" id="modalVisita">
+  <div class="modal-content modal-fullpage">
+    <div class="modal-header">
+      <h2>Finalizar Visita</h2>
+      <button class="btn-close" onclick="closeModal('modalVisita')">&times;</button>
+    </div>
+    <div class="modal-body form-large">
+      <div class="modal-header-center">
+        <strong id="visitaRestNome">Restaurante: </strong>
+      </div>
+
+      <form id="visitaForm">
+        <input type="hidden" id="visitaRestId">
+
+        <h3>O que vocês comeram?</h3>
+        <input type="text" id="visitaComeu" placeholder="Ex: Pizza de Frango com Catupiry" required>
+
+        <h3>Valor total da conta</h3>
+        <input type="text" id="visitaValor" placeholder="Ex: 65,89" required>
+
+        <h3>O que acharam do lugar?</h3>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="avaliacao" value="5" required>
+            Gostei e voltaria <span style="color:#f59e0b; margin-left:5px;">⭐⭐⭐⭐⭐</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="avaliacao" value="4">
+            Gostei, mas não é minha primeira opção <span style="color:#f59e0b; margin-left:5px;">⭐⭐⭐⭐</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="avaliacao" value="3">
+            Gostaria de experimentar outra opção <span style="color:#f59e0b; margin-left:5px;">⭐⭐⭐</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="avaliacao" value="1">
+            Não gostei e não voltaria! <span style="color:#f59e0b; margin-left:5px;">⭐</span>
+          </label>
+        </div>
+
+        <input type="text" id="visitaObs" placeholder="Ex: Gostaria de experimentar o Hamburguer">
+
+        <button type="submit" class="btn-save">Salvar</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let restaurantes = [];
+  let opcoes = [];
+  
+  // Filtros
+  let filtroCat = null;
+  let filtroCid = null;
+  let filtroEst = 0;
+
+  // Formatação de Moeda
+  function formatarMoeda(valor) {
+    let v = valor.replace(/\D/g, '');
+    v = (v / 100).toFixed(2) + '';
+    v = v.replace(".", ",");
+    v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+    v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+    return v;
+  }
+
+  async function carregarDados() {
+    // 1. Carrega opções (Cidades e Categorias)
+    const { data: ops } = await db.from('gestao_casal_restaurantes_opcoes').select('*').eq('user_id', window.currentUser.id).order('nome');
+    opcoes = ops || [];
+    
+    renderFiltros();
+    preencherSelects();
+
+    // 2. Carrega Restaurantes
+    const { data: rests } = await db.from('gestao_casal_restaurantes').select('*').eq('user_id', window.currentUser.id).order('nome');
+    restaurantes = rests || [];
+    
+    renderRestaurantes();
+  }
+
+  function renderFiltros() {
+    const cats = opcoes.filter(o => o.tipo === 'categoria');
+    const cids = opcoes.filter(o => o.tipo === 'cidade');
+
+    let htmlCats = `<button class="tag-btn ${filtroCat === null ? 'active' : ''}" onclick="mudarFiltroCat(null)">Todas</button>`;
+    htmlCats += cats.map(c => `<button class="tag-btn ${filtroCat === c.nome ? 'active' : ''}" onclick="mudarFiltroCat('${c.nome}')">${c.nome}</button>`).join('');
+    document.getElementById('filtroCategorias').innerHTML = htmlCats;
+
+    let htmlCids = `<button class="tag-btn ${filtroCid === null ? 'active' : ''}" onclick="mudarFiltroCid(null)">Todas</button>`;
+    htmlCids += cids.map(c => `<button class="tag-btn ${filtroCid === c.nome ? 'active' : ''}" onclick="mudarFiltroCid('${c.nome}')">${c.nome}</button>`).join('');
+    document.getElementById('filtroCidades').innerHTML = htmlCids;
+  }
+
+  function preencherSelects() {
+    const cats = opcoes.filter(o => o.tipo === 'categoria');
+    const cids = opcoes.filter(o => o.tipo === 'cidade');
+
+    document.getElementById('restCategoria').innerHTML = cats.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+    document.getElementById('restCidade').innerHTML = cids.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+  }
+
+  function mudarFiltroCat(nome) { filtroCat = nome; renderFiltros(); renderRestaurantes(); }
+  function mudarFiltroCid(nome) { filtroCid = nome; renderFiltros(); renderRestaurantes(); }
+  function mudarFiltroEstrela(qtd) { 
+    filtroEst = qtd; 
+    document.querySelectorAll('#filtroEstrelas .tag-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    renderRestaurantes(); 
+  }
+
+  function renderRestaurantes() {
+    let filtrados = restaurantes;
+    if (filtroCat) filtrados = filtrados.filter(r => r.categoria === filtroCat);
+    if (filtroCid) filtrados = filtrados.filter(r => r.cidade === filtroCid);
+    if (filtroEst > 0) filtrados = filtrados.filter(r => r.estrelas === filtroEst);
+
+    const pendentes = filtrados.filter(r => !r.visitado);
+    const visitados = filtrados.filter(r => r.visitado);
+
+    const divPend = document.getElementById('listaPendentes');
+    if (pendentes.length === 0) divPend.innerHTML = '<p style="color: #666;">Nenhum restaurante pendente.</p>';
+    else divPend.innerHTML = pendentes.map(r => renderCard(r)).join('');
+
+    const divVis = document.getElementById('listaVisitados');
+    if (visitados.length === 0) divVis.innerHTML = '<p style="color: #666;">Nenhum restaurante visitado.</p>';
+    else divVis.innerHTML = visitados.map(r => renderCard(r)).join('');
+  }
+
+  function renderCard(r) {
+    const isVisited = r.visitado;
+    const starsHtml = isVisited ? `<div class="rest-stars">${'⭐'.repeat(r.estrelas || 0)}</div>` : '';
+    
+    return `
+      <div class="rest-card ${isVisited ? 'visited' : ''}" onclick="abrirModalVisita('${r.id}')">
+        <div class="rest-info">
+          <h3 class="rest-title">${r.nome}</h3>
+          <div class="rest-status">
+            <div class="status-icon"></div>
+            <span>${isVisited ? 'Visitado' : 'Pendente'}</span>
+          </div>
+          ${starsHtml}
+        </div>
+        <button class="btn-delete" onclick="event.stopPropagation(); excluirRestaurante('${r.id}')">🗑️</button>
+      </div>
+    `;
+  }
+
+  // ==========================================
+  // GERENCIAR OPÇÕES (CIDADES/CATEGORIAS)
+  // ==========================================
+  function abrirModalOpcoes(tipo) {
+    document.getElementById('opcaoTipo').value = tipo;
+    document.getElementById('modalOpcoesTitle').textContent = tipo === 'categoria' ? 'Gerenciar Categorias' : 'Gerenciar Cidades';
+    document.getElementById('opcaoForm').reset();
+    renderOpcoesModal();
+    openModal('modalOpcoes');
+  }
+
+  function renderOpcoesModal() {
+    const tipo = document.getElementById('opcaoTipo').value;
+    const filtradas = opcoes.filter(o => o.tipo === tipo);
+    const lista = document.getElementById('listaOpcoesModal');
+
+    if (filtradas.length === 0) {
+      lista.innerHTML = '<li style="color:#666; text-align:center;">Nenhuma opção cadastrada.</li>';
+      return;
+    }
+
+    lista.innerHTML = filtradas.map(o => `
+      <li style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+        <span>${o.nome}</span>
+        <button style="background:none; border:none; color:#ef4444; cursor:pointer;" onclick="excluirOpcao('${o.id}')">🗑️</button>
+      </li>
+    `).join('');
+  }
+
+  document.getElementById('opcaoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const tipo = document.getElementById('opcaoTipo').value;
+    const nome = document.getElementById('opcaoNome').value;
+
+    await db.from('gestao_casal_restaurantes_opcoes').insert([{ user_id: window.currentUser.id, tipo, nome }]);
+    document.getElementById('opcaoNome').value = '';
+    await carregarDados();
+    renderOpcoesModal();
+  });
+
+  async function excluirOpcao(id) {
+    if (!confirm('Excluir esta opção?')) return;
+    await db.from('gestao_casal_restaurantes_opcoes').delete().eq('id', id);
+    await carregarDados();
+    renderOpcoesModal();
+  }
+
+  // ==========================================
+  // NOVO RESTAURANTE
+  // ==========================================
+  function abrirModalRestaurante() {
+    if (opcoes.length === 0) return alert('Cadastre pelo menos uma Cidade e uma Categoria antes.');
+    document.getElementById('restForm').reset();
+    openModal('modalRestaurante');
+  }
+
+  document.getElementById('restForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      user_id: window.currentUser.id,
+      nome: document.getElementById('restNome').value,
+      cidade: document.getElementById('restCidade').value,
+      categoria: document.getElementById('restCategoria').value
+    };
+    await db.from('gestao_casal_restaurantes').insert([payload]);
+    closeModal('modalRestaurante');
+    carregarDados();
+  });
+
+  async function excluirRestaurante(id) {
+    if (!confirm('Excluir este restaurante?')) return;
+    await db.from('gestao_casal_restaurantes').delete().eq('id', id);
+    carregarDados();
+  }
+
+  // ==========================================
+  // FINALIZAR VISITA
+  // ==========================================
+  function abrirModalVisita(id) {
+    const r = restaurantes.find(x => String(x.id) === String(id));
+    if (!r) return;
+
+    document.getElementById('visitaForm').reset();
+    document.getElementById('visitaRestId').value = r.id;
+    document.getElementById('visitaRestNome').textContent = `Restaurante: ${r.nome}`;
+
+    // Se já foi visitado, preenche os dados
+    if (r.visitado) {
+      document.getElementById('visitaComeu').value = r.o_que_comeu || '';
+      document.getElementById('visitaValor').value = r.valor_conta ? formatarMoeda((r.valor_conta * 100).toString()) : '';
+      document.getElementById('visitaObs').value = r.observacao_avaliacao || '';
+      
+      if (r.estrelas) {
+        const radio = document.querySelector(`input[name="avaliacao"][value="${r.estrelas}"]`);
+        if (radio) radio.checked = true;
+      }
+    }
+
+    openModal('modalVisita');
+  }
+
+  // Formatar valor da conta no modal
+  document.getElementById('visitaValor').addEventListener('input', function(e) {
+    e.target.value = formatarMoeda(e.target.value);
+  });
+
+  document.getElementById('visitaForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('visitaRestId').value;
+    const estrelas = document.querySelector('input[name="avaliacao"]:checked').value;
+    
+    // Desformata o valor
+    let valorStr = document.getElementById('visitaValor').value.replace(/\./g, '').replace(',', '.');
+    const valor = parseFloat(valorStr) || 0;
+
+    const payload = {
+      visitado: true,
+      data_visita: new Date().toISOString().split('T')[0],
+      o_que_comeu: document.getElementById('visitaComeu').value,
+      valor_conta: valor,
+      estrelas: parseInt(estrelas),
+      observacao_avaliacao: document.getElementById('visitaObs').value
+    };
+
+    await db.from('gestao_casal_restaurantes').update(payload).eq('id', id);
+    closeModal('modalVisita');
+    carregarDados();
+  });
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarDados();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

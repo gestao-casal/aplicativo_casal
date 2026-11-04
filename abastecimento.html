@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abastecimento</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .form-wrapper { max-width: 800px; margin: 0 auto; }
+  .form-card { background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .form-card h3 { margin: 0 0 15px 0; font-size: 0.95rem; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; }
+  .field-row { display: flex; gap: 15px; }
+  .field-row .field { flex: 1; }
+  .field { margin-bottom: 15px; }
+  .field label { display: block; font-size: 0.8rem; font-weight: 600; color: #6b7280; margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; max-width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; color: #111827; background-color: #fff; outline: none; box-sizing: border-box; height: 38px; transition: border-color 0.2s; }
+  .field textarea { height: auto; min-height: 70px; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1); }
+  .field input[readonly] { background-color: #f3f4f6; color: #6b7280; cursor: not-allowed; }
+  .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f9fafb; padding: 12px 15px; border-radius: 6px; border: 1px solid #e5e7eb; margin-top: 10px; margin-bottom: 5px; }
+  .switch-container span { font-size: 0.9rem; font-weight: 600; color: #374151; }
+  .switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 22px; }
+  .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+  input:checked + .slider { background-color: #16a34a; }
+  input:checked + .slider:before { transform: translateX(18px); }
+  .btn-save { background: #4f46e5; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 700; font-size: 1rem; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; transition: background 0.2s; }
+  .btn-save:hover { background: #4338ca; }
+</style>
+</head>
+<body data-page="abastecimento">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <button class="btn btn-secondary" onclick="go('veiculos')" style="margin-bottom: 10px;">&larr; Voltar</button>
+        <h1>Abastecimento</h1>
+      </div>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <div class="form-wrapper">
+      <form id="abastForm">
+        <div class="form-card">
+          <h3>🚗 Veículo</h3>
+          <div class="field" style="margin-bottom: 0;">
+            <select id="abastVeiculo" required onchange="carregarKmAnterior()">
+              <option value="">Selecione o veículo...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>⛽ Dados do Abastecimento</h3>
+          
+          <div class="field">
+            <label>Tipo de Combustível</label>
+            <select id="abastCombustivel" required>
+              <option value="Gasolina Comum">Gasolina Comum</option>
+              <option value="Gasolina Aditivada">Gasolina Aditivada</option>
+              <option value="Etanol">Etanol</option>
+              <option value="Diesel">Diesel</option>
+              <option value="GNV">GNV</option>
+            </select>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Litros Abastecidos</label>
+              <input type="number" step="0.01" id="abastLitros" required placeholder="Ex: 40.5" oninput="calcularTotal()">
+            </div>
+            <div class="field">
+              <label>Preço por Litro (R$)</label>
+              <input type="text" id="abastPreco" required placeholder="Ex: 5,89" oninput="formatarPreco(this); calcularTotal()">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Valor Total (R$)</label>
+            <input type="text" id="abastTotal" readonly style="font-weight: 700; color: #4f46e5;">
+          </div>
+
+          <div class="switch-container" style="margin-bottom: 0;">
+            <span>Tanque completo?</span>
+            <label class="switch">
+              <input type="checkbox" id="abastTanqueCheio" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>🛞 Quilometragem</h3>
+          <div class="field-row" style="margin-bottom: 0;">
+            <div class="field">
+              <label>KM Atual</label>
+              <input type="number" step="0.1" id="abastKmAtual" required placeholder="Ex: 52340">
+            </div>
+            <div class="field">
+              <label>KM Anterior (Automático)</label>
+              <input type="text" id="abastKmAnterior" readonly>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📍 Local e Data</h3>
+          <div class="field-row" style="margin-bottom: 0;">
+            <div class="field">
+              <label>Posto / Local</label>
+              <input type="text" id="abastLocal" required placeholder="Nome do posto">
+            </div>
+            <div class="field" style="max-width: 200px;">
+              <label>Data</label>
+              <input type="date" id="abastData" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📝 Observações</h3>
+          <div class="field" style="margin-bottom: 0;">
+            <textarea id="abastObs" rows="2" placeholder="Observações (opcional)"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-save">Salvar Abastecimento</button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let veiculos = [];
+  let ultimoKm = 0;
+  let litrosParciaisPendentes = 0;
+
+  async function carregarVeiculos() {
+    const { data } = await db.from('gestao_casal_veiculos').select('*').eq('user_id', window.currentUser.id).order('modelo');
+    veiculos = data || [];
+    
+    const select = document.getElementById('abastVeiculo');
+    select.innerHTML = '<option value="">Selecione o veículo...</option>' + veiculos.map(v => `<option value="${v.id}">${v.modelo} (${v.placa})</option>`).join('');
+    
+    document.getElementById('abastData').value = new Date().toISOString().split('T')[0];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const vId = urlParams.get('veiculo');
+    if (vId) {
+      select.value = vId;
+      carregarKmAnterior();
+    }
+  }
+
+  async function carregarKmAnterior() {
+    const vid = document.getElementById('abastVeiculo').value;
+    if (!vid) {
+      document.getElementById('abastKmAnterior').value = '';
+      return;
+    }
+
+    const v = veiculos.find(x => String(x.id) === String(vid));
+    if (v) {
+      ultimoKm = v.km_atual || 0;
+      document.getElementById('abastKmAnterior').value = ultimoKm;
+    }
+
+    // BUSCA OS LITROS PARCIAIS PENDENTES
+    // Pega todos os abastecimentos desse veículo onde o tanque NÃO estava cheio (tanque_cheio = false)
+    // desde o último abastecimento com tanque cheio (tanque_cheio = true).
+    const { data: abasts } = await db.from('gestao_casal_abastecimentos')
+      .select('litros, tanque_cheio')
+      .eq('veiculo_id', vid)
+      .order('created_at', { ascending: false }); // Do mais recente para o mais antigo
+
+    let somaParciais = 0;
+    if (abasts) {
+      for (let a of abasts) {
+        if (a.tanque_cheio === false) {
+          somaParciais += Number(a.litros);
+        } else {
+          break; // Se encontrou um tanque cheio, para de somar (pois o ciclo fechou)
+        }
+      }
+    }
+    
+    litrosParciaisPendentes = somaParciais;
+    
+    // Mostra um aviso no console (você pode colocar na tela se quiser)
+    console.log("Litros parciais pendentes desde o último tanque cheio:", litrosParciaisPendentes);
+  }
+
+  function formatarPreco(input) {
+    let v = input.value.replace(/\D/g, '');
+    v = (v / 100).toFixed(2) + '';
+    v = v.replace(".", ",");
+    v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+    v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+    input.value = v;
+  }
+
+  function desformatarMoeda(valor) {
+    if (!valor) return 0;
+    let v = valor.replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(v) || 0;
+  }
+
+  function calcularTotal() {
+    const litros = parseFloat(document.getElementById('abastLitros').value) || 0;
+    const preco = desformatarMoeda(document.getElementById('abastPreco').value);
+    const total = litros * preco;
+    document.getElementById('abastTotal').value = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  document.getElementById('abastForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const veiculoId = document.getElementById('abastVeiculo').value;
+    if (!veiculoId) return alert("Selecione um veículo.");
+
+    const litrosAtuais = parseFloat(document.getElementById('abastLitros').value) || 0;
+    const preco = desformatarMoeda(document.getElementById('abastPreco').value);
+    const total = litrosAtuais * preco;
+    const kmAtual = parseFloat(document.getElementById('abastKmAtual').value) || 0;
+    const tanqueCheio = document.getElementById('abastTanqueCheio').checked;
+
+    if (kmAtual < ultimoKm) {
+      return alert("O KM Atual não pode ser menor que o KM Anterior.");
+    }
+
+    // CÁLCULO INTELIGENTE DO KM/L
+    let kmPorLitro = null;
+    
+    // Só calcula se: Encheu o tanque E não é o primeiro abastecimento (KM anterior > 0)
+    if (tanqueCheio && ultimoKm > 0) {
+      const kmRodados = kmAtual - ultimoKm;
+      // Soma os litros atuais + os litros que estavam "esperando" de tempos parciais
+      const litrosTotaisParaCalculo = litrosAtuais + litrosParciaisPendentes;
+      kmPorLitro = kmRodados / litrosTotaisParaCalculo;
+    }
+
+    const payload = {
+      user_id: window.currentUser.id,
+      veiculo_id: Number(veiculoId),
+      tipo_combustivel: document.getElementById('abastCombustivel').value,
+      litros: litrosAtuais,
+      preco_litro: preco,
+      valor_total: total,
+      km_atual: kmAtual,
+      km_anterior: ultimoKm,
+      tanque_cheio: tanqueCheio,
+      km_por_litro: kmPorLitro,
+      local: document.getElementById('abastLocal').value,
+      data_abastecimento: document.getElementById('abastData').value,
+      observacao: document.getElementById('abastObs').value
+    };
+
+    const { error } = await db.from('gestao_casal_abastecimentos').insert([payload]);
+    if (error) return alert("Erro: " + error.message);
+
+    await db.from('gestao_casal_veiculos').update({ km_atual: kmAtual }).eq('id', veiculoId);
+
+    alert("Abastecimento salvo com sucesso!");
+    go('historico_km.html?id=' + veiculoId);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarVeiculos();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

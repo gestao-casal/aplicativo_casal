@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus Check-Lists</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .checklist-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.2s; }
+  .checklist-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+  .cl-header { background: #4f46e5; color: #fff; padding: 15px 20px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
+  .cl-body { padding: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .cl-info span { display: block; font-size: 0.75rem; color: #888; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
+  .cl-info strong { font-size: 1.1rem; color: #111827; }
+  .cl-actions { display: flex; gap: 10px; }
+  
+  .btn-outline { background: #fff; border: 1px solid #4f46e5; color: #4f46e5; padding: 6px 15px; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+  .btn-outline:hover { background: #eef2ff; }
+  
+  .btn-danger-outline { background: #fff; border: 1px solid #ef4444; color: #ef4444; padding: 6px 15px; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+  .btn-danger-outline:hover { background: #fef2f2; }
+</style>
+</head>
+<body data-page="checklists">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <h1>Meus Check-Lists</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <div class="header-green" style="background: #fff; border: 1px solid var(--border); color: var(--text);">
+      <div>
+        <h1 style="color: var(--text);">Listas de Tarefas</h1>
+        <p style="color: var(--muted);">Organize suas viagens, compras e metas</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalChecklist()">+ Nova Lista</button>
+    </div>
+
+    <div id="listaChecklists"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalChecklist">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2 id="modalClTitle">Nova Lista</h2>
+      <button class="btn-close" onclick="closeModal('modalChecklist')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="checklistForm">
+        <input type="hidden" id="clEditId">
+        <div class="field"><label>Nome da Lista (Ex: Cidades, Mercado)</label><input type="text" id="clTitulo" required></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Lista</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let checklists = [];
+
+  async function carregarChecklists() {
+    const { data, error } = await db.from('gestao_casal_checklists').select('*').eq('user_id', window.currentUser.id).order('created_at', { ascending: false });
+    if (error) return console.error(error);
+
+    // Conta quantos itens tem em cada lista
+    for (let cl of data) {
+      const { count } = await db.from('gestao_casal_checklist_itens').select('*', { count: 'exact', head: true }).eq('checklist_id', cl.id);
+      cl._totalItens = count || 0;
+    }
+
+    checklists = data;
+    renderChecklists();
+  }
+
+  function renderChecklists() {
+    const div = document.getElementById('listaChecklists');
+    if (checklists.length === 0) {
+      div.innerHTML = '<p style="color: #666;">Nenhuma lista criada ainda.</p>';
+      return;
+    }
+
+    div.innerHTML = checklists.map(cl => `
+      <div class="checklist-card" onclick="window.location.href='checklist_detalhe.html?id=${cl.id}'">
+        <div class="cl-header">
+          🛒 ${cl.titulo}
+        </div>
+        <div class="cl-body">
+          <div class="cl-info">
+            <span>Itens</span>
+            <strong>${cl._totalItens} itens</strong>
+          </div>
+          <div class="cl-actions">
+            <button class="btn-outline" onclick="event.stopPropagation(); abrirModalChecklist('${cl.id}')">✏️ Editar</button>
+            <button class="btn-danger-outline" onclick="event.stopPropagation(); excluirChecklist('${cl.id}')">🗑️ Excluir</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function abrirModalChecklist(id = null) {
+    document.getElementById('checklistForm').reset();
+    document.getElementById('clEditId').value = id || '';
+    document.getElementById('modalClTitle').textContent = id ? 'Editar Lista' : 'Nova Lista';
+
+    if (id) {
+      const cl = checklists.find(x => String(x.id) === String(id));
+      if (cl) document.getElementById('clTitulo').value = cl.titulo;
+    }
+    openModal('modalChecklist');
+  }
+
+  document.getElementById('checklistForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('clEditId').value;
+    const titulo = document.getElementById('clTitulo').value;
+
+    let error;
+    if (id) {
+      const res = await db.from('gestao_casal_checklists').update({ titulo }).eq('id', id);
+      error = res.error;
+    } else {
+      const res = await db.from('gestao_casal_checklists').insert([{ user_id: window.currentUser.id, titulo }]);
+      error = res.error;
+    }
+
+    if (error) return alert("Erro: " + error.message);
+    closeModal('modalChecklist');
+    carregarChecklists();
+  });
+
+  async function excluirChecklist(id) {
+    if (!confirm('Excluir esta lista apagará TODOS os itens dentro dela. Continuar?')) return;
+    await db.from('gestao_casal_checklists').delete().eq('id', id);
+    carregarChecklists();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarChecklists();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>
