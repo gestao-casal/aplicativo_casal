@@ -5,24 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Minhas Viagens</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  /* Adicionando um estilo para a barra de progresso do orçamento */
+  .progress-container { background: #e5e7eb; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin-top: 5px; }
+  .progress-bar { height: 100%; transition: width 0.3s; }
+  .progress-ok { background: #16a34a; }
+  .progress-warning { background: #f59e0b; }
+  .progress-danger { background: #dc2626; }
+  
+  .budget-info { font-size: 0.8rem; color: #6b7280; margin-top: 5px; display: flex; justify-content: space-between; }
+</style>
 </head>
 <body data-page="ferias">
 
 <div class="app">
-  <!-- MENU LATERAL -->
   <div id="menu"></div>
 
-  <!-- CONTEÚDO PRINCIPAL -->
   <main class="main">
-    
     <div class="topbar">
       <h1>Programação de Férias</h1>
-      <div class="user-info">
-        <strong id="userName">Carregando...</strong>
-      </div>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
     </div>
 
-    <!-- HEADER VERDE -->
     <div class="header-green">
       <div>
         <h1>Minhas Viagens</h1>
@@ -31,20 +35,39 @@
       <button class="btn-white" onclick="abrirModalFerias()">+ Nova Viagem</button>
     </div>
 
-    <!-- ABAS -->
     <div class="tabs-container">
       <button class="tab-btn active" id="tabAtuais" onclick="mudarAba('atuais')">✈️ Viagens Atuais</button>
       <button class="tab-btn" id="tabConcluidas" onclick="mudarAba('concluidas')">✅ Viagens Concluídas</button>
     </div>
 
-    <!-- LISTA DE VIAGENS -->
     <div class="viagens-grid" id="viagensGrid"></div>
 
-    <!-- DETALHES DA VIAGEM SELECIONADA (AGENDA) -->
     <div id="detalhesViagem" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h2 id="nomeViagemSelecionada" style="margin: 0; color: #1a1f2b;"></h2>
         <button class="btn btn-secondary" onclick="fecharDetalhes()">Fechar Agenda</button>
+      </div>
+
+      <!-- NOVO: RESUMO DO ORÇAMENTO -->
+      <div style="background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <div>
+            <span style="font-size: 0.85rem; color: #666; display: block;">Orçamento Definido</span>
+            <strong id="viewOrcamento" style="font-size: 1.2rem; color: #4f46e5;">R$ 0,00</strong>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 0.85rem; color: #666; display: block;">Custo Real (Agenda + Gastos)</span>
+            <strong id="viewCustoReal" style="font-size: 1.2rem; color: #dc2626;">R$ 0,00</strong>
+          </div>
+        </div>
+        
+        <div class="progress-container">
+          <div class="progress-bar progress-ok" id="barraOrcamento" style="width: 0%;"></div>
+        </div>
+        <div class="budget-info">
+          <span id="statusOrcamento">Calculando...</span>
+          <span id="saldoOrcamento" style="font-weight: 700;">R$ 0,00 restante</span>
+        </div>
       </div>
 
       <div class="agenda-wrapper" id="agendaWrapper">
@@ -94,6 +117,13 @@
         <div class="field"><label>Nome da Viagem</label><input type="text" id="nomeFerias" required></div>
         <div class="field"><label>Data de Ida</label><input type="date" id="dataIda" required></div>
         <div class="field"><label>Data de Volta</label><input type="date" id="dataVolta" required></div>
+        
+        <!-- NOVO: CAMPO DE ORÇAMENTO -->
+        <div class="field">
+          <label>Orçamento da Viagem (R$)</label>
+          <input type="text" id="orcamentoFerias" placeholder="Ex: 5000,00" oninput="formatarMoedaInput(this)">
+        </div>
+
         <div class="field" style="display: flex; gap: 10px;">
           <div style="flex: 1;">
             <label>Horário Inicial</label>
@@ -184,26 +214,37 @@
   let todosEventos = [];
   let todosGastosAvulsos = [];
   let feriasAtual = null;
-  let abaAtual = 'atuais'; // 'atuais' ou 'concluidas'
+  let abaAtual = 'atuais';
 
-  // Inicialização
+  // Formatação de Moeda (Para o Input)
+  function formatarMoedaInput(input) {
+    let v = input.value.replace(/\D/g, '');
+    v = (v / 100).toFixed(2) + '';
+    v = v.replace(".", ",");
+    v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+    v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+    input.value = v;
+  }
+
+  function desformatarMoeda(valor) {
+    if (!valor) return 0;
+    let v = valor.replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(v) || 0;
+  }
+
   async function initFeriasApp() {
     if (!window.currentUser) return;
     document.getElementById('userName').textContent = window.currentUser.email;
     await carregarFerias();
   }
 
-  // Carrega todas as férias de uma vez
   async function carregarFerias() {
     const { data, error } = await db.from('ferias').select('*').eq('user_id', window.currentUser.id).order('data_ida');
     if (error) return console.error('Erro:', error);
     
-    // Separa em Atuais e Concluídas
     todasFerias = data.filter(f => !f.concluida);
     todasFeriasConcluidas = data.filter(f => f.concluida);
     
-    // Para cada viagem, precisamos calcular o valor total (busca eventos e gastos)
-    // Como é um sistema simples, faremos uma chamada por viagem para atualizar o card
     for (const f of data) {
       const { data: evs } = await db.from('eventos').select('valor, gastos_extras').eq('ferias_id', f.id);
       const { data: gts } = await db.from('gastos_avulsos').select('valor').eq('ferias_id', f.id);
@@ -217,13 +258,12 @@
       });
       if (gts) gts.forEach(g => total += Number(g.valor || 0));
       
-      f._total = total; // Guarda o total temporariamente no objeto
+      f._total = total;
     }
 
     renderViagens();
   }
 
-  // Alternar Abas
   function mudarAba(aba) {
     abaAtual = aba;
     document.getElementById('tabAtuais').classList.toggle('active', aba === 'atuais');
@@ -231,8 +271,6 @@
     renderViagens();
   }
 
-  // Renderiza os cards de viagens
-    // Renderiza os cards de viagens
   function renderViagens() {
     const grid = document.getElementById('viagensGrid');
     const lista = abaAtual === 'atuais' ? todasFerias : todasFeriasConcluidas;
@@ -248,6 +286,9 @@
       const valorTotal = f._total || 0;
       const formatado = valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       
+      const orcamento = Number(f.orcamento) || 0;
+      const formatadoOrcamento = orcamento > 0 ? orcamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Não definido';
+
       const isConcluida = f.concluida;
       const cardClass = isConcluida ? 'viagem-card concluida' : 'viagem-card';
       
@@ -257,7 +298,6 @@
 
       return `
         <div class="${cardClass}">
-          <!-- Corpo do Card -->
           <div>
             <div class="viagem-header">
               <h3 class="viagem-title">${f.nome_ferias}</h3>
@@ -266,17 +306,22 @@
               📅 ${dtIda} a ${dtVolta}
             </div>
             
-            <div class="viagem-financeiro">
-              <span>Custo Estimado:</span>
-              <strong>${formatado}</strong>
+            <!-- NOVO: CUSTO E ORÇAMENTO NO CARD -->
+            <div class="viagem-financeiro" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+              <div style="display: flex; justify-content: space-between; width: 100%;">
+                <span>Orçamento:</span>
+                <strong style="color: #4f46e5;">${formatadoOrcamento}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; width: 100%;">
+                <span>Custo Real:</span>
+                <strong>${formatado}</strong>
+              </div>
             </div>
           </div>
 
-          <!-- Ações do Card -->
           <div class="viagem-actions-container">
-            <!-- Linha 1: Botões principais -->
             <div class="viagem-actions-top">
-              <button class="btn-card btn-card-primary" onclick="abrirAgenda('${f.id}', '${f.nome_ferias.replace(/'/g, "\\'")}', '${f.data_ida}', '${f.data_volta}', '${f.hora_inicio}', '${f.hora_fim}')">📋 Abrir Agenda</button>
+              <button class="btn-card btn-card-primary" onclick="abrirAgenda('${f.id}', '${f.nome_ferias.replace(/'/g, "\\'")}', '${f.data_ida}', '${f.data_volta}', '${f.hora_inicio}', '${f.hora_fim}', ${orcamento})">📋 Abrir Agenda</button>
               
               <div class="viagem-actions-icons">
                 <button class="btn-card btn-card-icon btn-card-outline" onclick="abrirModalFerias('${f.id}')" title="Editar Viagem">✏️</button>
@@ -284,7 +329,6 @@
               </div>
             </div>
             
-            <!-- Linha 2: Status -->
             <div class="viagem-actions-bottom">
               ${btnAcao}
             </div>
@@ -294,7 +338,6 @@
     }).join('');
   }
 
-  // Ações de Concluir
   async function marcarConcluida(id) {
     await db.from('ferias').update({ concluida: true }).eq('id', id);
     await carregarFerias();
@@ -305,9 +348,8 @@
     await carregarFerias();
   }
 
-  // Abre a Agenda de uma Viagem
-  async function abrirAgenda(id, nome, dataIda, dataVolta, horaInicio, horaFim) {
-    feriasAtual = { id, nome, dataIda, dataVolta, horaInicio, horaFim };
+  async function abrirAgenda(id, nome, dataIda, dataVolta, horaInicio, horaFim, orcamento) {
+    feriasAtual = { id, nome, dataIda, dataVolta, horaInicio, horaFim, orcamento: Number(orcamento) };
     document.getElementById('viagensGrid').style.display = 'none';
     document.querySelector('.tabs-container').style.display = 'none';
     document.getElementById('detalhesViagem').style.display = 'block';
@@ -321,13 +363,8 @@
     document.getElementById('viagensGrid').style.display = 'grid';
     document.querySelector('.tabs-container').style.display = 'flex';
     feriasAtual = null;
-    carregarFerias(); // Recarrega os totais
+    carregarFerias();
   }
-
-  // ... (A partir daqui permanece igual: carregarEventos, renderAgenda, abrirModalFerias, etc) ...
-
-  // [Cole aqui as funções restantes: carregarEventos, renderAgenda, abrirModalFerias, salvar, etc]
-  // Vou colar todas abaixo para facilitar.
 
   async function carregarEventos(feriasId) {
     const { data, error } = await db.from('eventos').select('*').eq('ferias_id', feriasId).order('hora_inicio');
@@ -480,6 +517,44 @@
     } else {
       totalBox.style.display = 'none';
     }
+
+    // NOVO: LÓGICA DO ORÇAMENTO NA AGENDA
+    const orcamento = feriasAtual.orcamento || 0;
+    const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    document.getElementById('viewOrcamento').textContent = fmt(orcamento);
+    document.getElementById('viewCustoReal').textContent = fmt(totalGeral);
+
+    const barra = document.getElementById('barraOrcamento');
+    const statusTxt = document.getElementById('statusOrcamento');
+    const saldoTxt = document.getElementById('saldoOrcamento');
+
+    if (orcamento > 0) {
+      let porcentagem = (totalGeral / orcamento) * 100;
+      if (porcentagem > 100) porcentagem = 100; // Trava a barra em 100%
+
+      barra.style.width = `${porcentagem}%`;
+      barra.className = 'progress-bar ' + (porcentagem < 80 ? 'progress-ok' : (porcentagem <= 100 ? 'progress-warning' : 'progress-danger'));
+
+      const saldo = orcamento - totalGeral;
+      if (saldo < 0) {
+        statusTxt.textContent = 'Orçamento Estourado!';
+        statusTxt.style.color = '#dc2626';
+        saldoTxt.textContent = `${fmt(Math.abs(saldo))} acima do limite`;
+        saldoTxt.style.color = '#dc2626';
+        barra.className = 'progress-bar progress-danger';
+      } else {
+        statusTxt.textContent = 'Dentro do Orçamento';
+        statusTxt.style.color = '#16a34a';
+        saldoTxt.textContent = `${fmt(saldo)} restante`;
+        saldoTxt.style.color = '#16a34a';
+      }
+    } else {
+      barra.style.width = '0%';
+      statusTxt.textContent = 'Nenhum orçamento definido.';
+      statusTxt.style.color = '#666';
+      saldoTxt.textContent = '';
+    }
   }
 
   // MODAIS E SALVAMENTO
@@ -497,23 +572,39 @@
         document.getElementById('dataVolta').value = f.data_volta;
         document.getElementById('horaInicioFerias').value = f.hora_inicio || '05:00';
         document.getElementById('horaFimFerias').value = f.hora_fim || '23:00';
+        
+        // NOVO: Preenche o orçamento
+        if (f.orcamento) {
+          document.getElementById('orcamentoFerias').value = formatarMoedaRetorno(f.orcamento);
+        }
       }
     } else {
       document.getElementById('horaInicioFerias').value = '05:00';
       document.getElementById('horaFimFerias').value = '23:00';
+      document.getElementById('orcamentoFerias').value = '';
     }
     openModal('modalFerias');
+  }
+
+  function formatarMoedaRetorno(val) {
+    return Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
   }
 
   document.getElementById('feriasForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('feriasEditId').value;
+    
+    // NOVO: Pega o orçamento
+    const orcamentoStr = document.getElementById('orcamentoFerias').value;
+    const orcamento = desformatarMoeda(orcamentoStr);
+
     const payload = {
       nome_ferias: document.getElementById('nomeFerias').value,
       data_ida: document.getElementById('dataIda').value,
       data_volta: document.getElementById('dataVolta').value,
       hora_inicio: document.getElementById('horaInicioFerias').value,
       hora_fim: document.getElementById('horaFimFerias').value,
+      orcamento: orcamento, // NOVO
       user_id: window.currentUser.id
     };
     
