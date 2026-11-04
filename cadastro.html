@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cadastro</title>
+<style>
+  body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+  .login-box { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+  h2 { text-align: center; color: #229954; margin-bottom: 20px; }
+  input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+  button { width: 100%; padding: 10px; background: #229954; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+  button:hover { background: #1e8449; }
+  a { display: block; text-align: center; margin-top: 15px; font-size: 0.9rem; color: #666; text-decoration: none; }
+</style>
+</head>
+<body data-page="cadastro">
+
+  <div class="login-box">
+    <h2>Criar Conta</h2>
+    <div id="cadastroMessage"></div>
+    <form id="cadastroForm">
+      <input type="text" id="nome" placeholder="Seu Nome" required>
+      <input type="email" id="email" placeholder="E-mail" required>
+      <input type="password" id="password" placeholder="Senha (mínimo 6 dígitos)" required>
+      <button type="submit">Cadastrar</button>
+    </form>
+    <a href="index.html">Já tem conta? Faça login</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      const msg = document.getElementById('cadastroMessage');
+      btn.disabled = true; btn.textContent = 'Cadastrando...';
+
+      const nome = document.getElementById('nome').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await db.auth.signUp({ email, password });
+
+      if (error) {
+        msg.innerHTML = '<div style="color: red;">' + error.message + '</div>';
+        btn.disabled = false; btn.textContent = 'Cadastrar';
+        return;
+      }
+
+      // Se o cadastro der certo, cria o perfil (opcional)
+      if (data.user) {
+        await db.from('profiles').insert([{ id: data.user.id, nome: nome }]);
+      }
+
+      alert('Conta criada com sucesso! Você será redirecionado para o login.');
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
