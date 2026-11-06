@@ -6,17 +6,28 @@
 
   <nav class="nav">
     <!-- ITENS DIRETOS -->
+     
+    <!-- GRUPO: AGENDA -->
+    <div class="menu-group">
+      <button class="menu-dropdown-btn" onclick="toggleSubmenu('submenu-agenda', 'arrow-agenda')">
+        📅 Agenda
+        <span class="arrow" id="arrow-agenda">▼</span>
+      </button>
+      <div class="submenu" id="submenu-agenda">
+        <button data-page="agenda" onclick="go('agenda')">📋 Cronograma</button>
+        <button data-page="agenda-lista" onclick="go('agenda-lista')">📄 Lista</button>
+      </div>
+    </div>
     <button data-page="checklists" onclick="go('checklists')">✅ Check-List</button>
     <button data-page="ferias" onclick="go('ferias')">✈️ Minhas Viagens</button>
     <button data-page="filmes" onclick="go('filmes')">🎬 Filmes</button>
-    
+
     <!-- GRUPO: FINANCEIRO -->
     <div class="menu-group">
       <button class="menu-dropdown-btn" onclick="toggleSubmenu('submenu-financeiro', 'arrow-financeiro')">
         💰 Financeiro
         <span class="arrow" id="arrow-financeiro">▼</span>
       </button>
-      
       <div class="submenu" id="submenu-financeiro">
         <button data-page="membros" onclick="go('membros')">👥 Membros do Casal</button>
         <button data-page="movimentacoes" onclick="go('movimentacoes')">🔄 Movimentações Fixas</button>
@@ -33,7 +44,6 @@
         🚗 Veículos
         <span class="arrow" id="arrow-veiculos">▼</span>
       </button>
-      
       <div class="submenu" id="submenu-veiculos">
         <button data-page="abastecimento" onclick="go('abastecimento')">⛽ Abastecimento</button>
         <button data-page="manutencao" onclick="go('manutencao')">🔧 Manutenções</button>

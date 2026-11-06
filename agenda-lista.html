@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda — Próximos Eventos</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .toolbar-info { display: flex; flex-direction: column; gap: 2px; }
+  .toolbar-info h2 { margin: 0; color: #1a1f2b; font-size: 1.1rem; }
+  .toolbar-info small { color: #666; font-size: 0.8rem; }
+  .toolbar-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #374151; cursor: pointer; user-select: none; }
+  .toolbar-toggle input { width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5; }
+
+  .resumo-box {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+  }
+  .resumo-item { display: flex; flex-direction: column; }
+  .resumo-item span { font-size: 0.78rem; color: #6b7280; }
+  .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
+  .resumo-item strong.total { color: #dc2626; }
+
+  .list-view { display: flex; flex-direction: column; gap: 10px; }
+
+  .list-event-row {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    display: flex; align-items: stretch; gap: 16px; padding: 14px 18px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .list-event-row:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+    border-color: #c7d2fe;
+  }
+  .list-event-row.concluido { opacity: 0.65; }
+  .list-event-row.hoje { border-left: 4px solid #4f46e5; }
+  .list-event-row.passado { background: #fafafa; }
+
+  .list-event-date {
+    flex-shrink: 0; width: 130px; display: flex; flex-direction: column;
+    justify-content: center; padding-right: 16px; border-right: 1px solid #f3f4f6;
+  }
+  .list-event-date .date-weekday { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; }
+  .list-event-date .date-day { font-weight: 700; color: #1a1f2b; font-size: 1rem; margin-top: 2px; }
+  .list-event-date .date-time { font-size: 0.9rem; color: #4f46e5; font-weight: 700; margin-top: 4px; }
+
+  .list-event-body {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;
+  }
+  .list-event-name {
+    font-weight: 600; color: #1a1f2b; font-size: 0.98rem; margin-bottom: 4px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .list-event-row.concluido .list-event-name { text-decoration: line-through; }
+  .list-event-location { font-size: 0.8rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list-event-notes { font-size: 0.78rem; color: #9ca3af; font-style: italic; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Badge de viagem */
+  .list-event-trip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.7rem; font-weight: 700; color: #4f46e5;
+    background: #eef2ff; padding: 2px 9px; border-radius: 10px;
+    margin-top: 6px; width: fit-content;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .list-event-meta {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;
+    justify-content: center; gap: 6px;
+  }
+  .list-event-value { font-weight: 700; color: #dc2626; font-size: 1rem; white-space: nowrap; }
+  .list-event-value.gratuito { color: #16a34a; }
+  .list-event-badge {
+    font-size: 0.7rem; padding: 2px 10px; border-radius: 10px; font-weight: 600; white-space: nowrap;
+  }
+  .list-event-badge.pendente { background: #fef3c7; color: #92400e; }
+  .list-event-badge.concluido { background: #dcfce7; color: #166534; }
+  .list-event-badge.passado { background: #e5e7eb; color: #6b7280; }
+
+  .list-empty-box {
+    background: #fff; border: 1px dashed #d1d5db; border-radius: 10px;
+    padding: 50px 20px; text-align: center; color: #9ca3af; font-size: 0.9rem;
+  }
+
+  @media (max-width: 600px) {
+    .list-event-row { flex-wrap: wrap; }
+    .list-event-date {
+      width: 100%; border-right: none; border-bottom: 1px solid #f3f4f6;
+      padding-bottom: 8px; flex-direction: row; align-items: center; gap: 8px;
+    }
+    .list-event-date .date-day, .list-event-date .date-time { margin-top: 0; }
+    .list-event-meta { align-items: flex-start; }
+  }
+</style>
+</head>
+<body data-page="agenda-lista">
+
+<div class="app">
+  <div id="menu"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>Agenda</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <div class="header-green">
+      <div>
+        <h1>Próximos Eventos</h1>
+        <p>Todos os compromissos agendados — incluindo os das suas viagens</p>
+      </div>
+      <button class="btn-white" onclick="novoEvento()">+ Novo Evento</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-info">
+        <h2 id="toolbarTitle">Próximos eventos</h2>
+        <small id="toolbarSub">Carregando...</small>
+      </div>
+      <label class="toolbar-toggle">
+        <input type="checkbox" id="togglePassados" onchange="renderLista()">
+        Mostrar também eventos passados
+      </label>
+    </div>
+
+    <div class="resumo-box">
+      <div class="resumo-item">
+        <span>Total de eventos</span>
+        <strong id="resumoQtd">0</strong>
+      </div>
+      <div class="resumo-item">
+        <span>Concluídos</span>
+        <strong id="resumoConcluidos">0</strong>
+      </div>
+      <div class="resumo-item">
+        <span>Total gasto</span>
+        <strong class="total" id="resumoTotal">R$ 0,00</strong>
+      </div>
+    </div>
+
+    <div class="list-view" id="listView"></div>
+  </main>
+</div>
+
+<!-- MODAL EVENTO -->
+<div class="modal-overlay" id="modalEvento">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="eventoTitle">Adicionar Evento</h2>
+      <button class="btn-close" onclick="closeModal('modalEvento')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="eventoForm">
+        <input type="hidden" id="eventoId">
+
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="dataEventoDisplay" required>
+        </div>
+
+        <div class="field"><label>Nome do Evento</label><input type="text" id="nomeAtracao" required></div>
+        <div class="field"><label>Endereço / Local</label><input type="text" id="endereco"></div>
+        <div class="field"><label>Observações</label><textarea id="observacoes" placeholder="Detalhes..."></textarea></div>
+
+        <div class="field" style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label>Qtd. Pessoas</label>
+            <input type="number" id="quantidade_pessoas" min="1" value="1" required>
+          </div>
+          <div style="flex: 1;">
+            <label>Valor por Pessoa (R$)</label>
+            <input type="number" step="0.01" id="valor_por_pessoa" value="0.00" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Horário Início</label>
+          <input type="time" id="horaInicio" required>
+        </div>
+
+        <div class="box-gastos">
+          <h4>Outros Gastos (Estacionamento, Taxas, etc)</h4>
+          <div id="listaGastosAtracao"></div>
+          <button type="button" class="btn-add-gasto" onclick="adicionarCampoGasto()">+ Adicionar Outro Gasto</button>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Evento</button>
+        <button type="button" class="btn-conclude" id="btnConcluirEventoModal" onclick="concluirEventoDoModal()">Marcar como Concluído</button>
+        <button type="button" class="btn-danger" id="btnExcluirEventoModal" onclick="excluirEventoDoModal()">Excluir Evento</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let todosEventos = [];
+  let mapaFerias = {}; // id -> nome_ferias
+
+  function formatarDataISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dia}`;
+  }
+
+  function fmtMoeda(v) {
+    return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function calcularValorEvento(ev) {
+    const base = (Number(ev.quantidade_pessoas) || 1) * (Number(ev.valor_por_pessoa) || 0);
+    let extras = 0;
+    if (Array.isArray(ev.gastos_extras)) {
+      extras = ev.gastos_extras.reduce((s, g) => s + (Number(g.valor) || 0), 0);
+    }
+    return base + extras;
+  }
+
+  function isPassado(ev, hojeISO) {
+    return ev.data < hojeISO;
+  }
+
+  async function initAgendaApp() {
+    if (!window.currentUser) return;
+    document.getElementById('userName').textContent = window.currentUser.email;
+    await carregarEventos();
+  }
+
+  async function carregarEventos() {
+    // 1. Carrega viagens do usuário (para ter IDs + nomes)
+    const { data: viagens, error: errViagens } = await db
+      .from('ferias')
+      .select('id, nome_ferias')
+      .eq('user_id', window.currentUser.id);
+
+    if (errViagens) console.warn('Erro ao carregar viagens:', errViagens);
+
+    mapaFerias = {};
+    const feriasIds = [];
+    (viagens || []).forEach(f => {
+      mapaFerias[f.id] = f.nome_ferias;
+      feriasIds.push(f.id);
+    });
+
+    // 2. Query eventos: user_id direto OU ferias_id nas viagens do usuário
+    let query = db.from('eventos').select('*');
+
+    if (feriasIds.length > 0) {
+      // Inclui eventos avulsos (user_id) e eventos de viagem (ferias_id)
+      query = query.or(
+        `user_id.eq.${window.currentUser.id},ferias_id.in.(${feriasIds.join(',')})`
+      );
+    } else {
+      query = query.eq('user_id', window.currentUser.id);
+    }
+
+    const { data, error } = await query
+      .order('data', { ascending: true })
+      .order('hora_inicio', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao carregar eventos:', error);
+      todosEventos = [];
+    } else {
+      // Deduplica por id (o OR pode trazer o mesmo evento nas 2 condições)
+      const mapa = {};
+      (data || []).forEach(ev => { mapa[ev.id] = ev; });
+      todosEventos = Object.values(mapa);
+    }
+
+    renderLista();
+  }
+
+  function renderLista() {
+    const hojeISO = formatarDataISO(new Date());
+    const mostrarPassados = document.getElementById('togglePassados').checked;
+
+    const base = mostrarPassados
+      ? [...todosEventos]
+      : todosEventos.filter(ev => !isPassado(ev, hojeISO));
+
+    const eventosOrdenados = base.sort((a, b) =>
+      `${a.data}T${a.hora_inicio}`.localeCompare(`${b.data}T${b.hora_inicio}`)
+    );
+
+    document.getElementById('toolbarTitle').textContent = mostrarPassados
+      ? 'Todos os eventos'
+      : 'Próximos eventos';
+    document.getElementById('toolbarSub').textContent = eventosOrdenados.length === 0
+      ? 'Nenhum evento encontrado'
+      : `${eventosOrdenados.length} evento${eventosOrdenados.length !== 1 ? 's' : ''} ${mostrarPassados ? 'no total' : 'a partir de hoje'}`;
+
+    const container = document.getElementById('listView');
+
+    if (eventosOrdenados.length === 0) {
+      container.innerHTML = `<div class="list-empty-box">
+        ${mostrarPassados ? 'Nenhum evento cadastrado.' : 'Nenhum evento futuro agendado.'}
+        <br><br>
+        <button class="btn btn-primary" onclick="novoEvento()">+ Adicionar evento</button>
+      </div>`;
+    } else {
+      container.innerHTML = eventosOrdenados.map(ev => {
+        const valor = calcularValorEvento(ev);
+        const dataObj = new Date(ev.data + 'T00:00:00');
+        const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+        const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const hora = ev.hora_inicio.substring(0, 5);
+        const isHoje = ev.data === hojeISO;
+        const passado = isPassado(ev, hojeISO);
+        const nomeViagem = ev.ferias_id ? mapaFerias[ev.ferias_id] : null;
+
+        const rowClasses = [
+          'list-event-row',
+          ev.concluido ? 'concluido' : '',
+          isHoje ? 'hoje' : '',
+          passado ? 'passado' : ''
+        ].filter(Boolean).join(' ');
+
+        const badge = ev.concluido
+          ? '<span class="list-event-badge concluido">✓ Concluído</span>'
+          : (passado
+              ? '<span class="list-event-badge passado">Passado</span>'
+              : '<span class="list-event-badge pendente">Pendente</span>');
+
+        const tripBadge = nomeViagem
+          ? `<div class="list-event-trip">✈️ ${nomeViagem}</div>`
+          : '';
+
+        return `<div class="${rowClasses}" onclick="abrirModalEvento('${ev.data}','${hora}',${ev.id})">
+          <div class="list-event-date">
+            <span class="date-weekday">${diaSemana}${isHoje ? ' • HOJE' : ''}</span>
+            <span class="date-day">${diaMes}</span>
+            <span class="date-time">${hora}</span>
+          </div>
+          <div class="list-event-body">
+            <div class="list-event-name">${ev.nome_atracao}</div>
+            ${ev.endereco ? `<div class="list-event-location">📍 ${ev.endereco}</div>` : ''}
+            ${ev.observacoes ? `<div class="list-event-notes">${ev.observacoes}</div>` : ''}
+            ${tripBadge}
+          </div>
+          <div class="list-event-meta">
+            <span class="list-event-value ${valor > 0 ? '' : 'gratuito'}">${valor > 0 ? fmtMoeda(valor) : 'Grátis'}</span>
+            ${badge}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    const totalVisivel = eventosOrdenados.reduce((s, ev) => s + calcularValorEvento(ev), 0);
+    document.getElementById('resumoQtd').textContent = eventosOrdenados.length;
+    document.getElementById('resumoConcluidos').textContent = eventosOrdenados.filter(ev => ev.concluido).length;
+    document.getElementById('resumoTotal').textContent = fmtMoeda(totalVisivel);
+  }
+
+  function novoEvento() {
+    const agora = new Date();
+    const proxHora = String(Math.min(agora.getHours() + 1, 23)).padStart(2, '0') + ':00';
+    abrirModalEvento(formatarDataISO(agora), proxHora);
+  }
+
+  function adicionarCampoGasto(descricao = '', valor = '') {
+    const container = document.getElementById('listaGastosAtracao');
+    const div = document.createElement('div');
+    div.className = 'gasto-item';
+    div.innerHTML = `
+      <input type="text" placeholder="Descrição" value="${descricao}" class="gasto-desc">
+      <input type="number" step="0.01" placeholder="R$" value="${valor}" class="gasto-val">
+      <button type="button" class="btn-remove-gasto" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(div);
+  }
+
+  function abrirModalEvento(dataStr, horaStr, eventoId = null) {
+    document.getElementById('eventoTitle').textContent = eventoId ? 'Editar Evento' : 'Adicionar Evento';
+    document.getElementById('eventoForm').reset();
+    document.getElementById('listaGastosAtracao').innerHTML = '';
+
+    document.getElementById('dataEventoDisplay').value = dataStr;
+    document.getElementById('horaInicio').value = horaStr;
+    document.getElementById('eventoId').value = eventoId || '';
+
+    const btnExcluir = document.getElementById('btnExcluirEventoModal');
+    const btnConcluir = document.getElementById('btnConcluirEventoModal');
+
+    if (eventoId) {
+      btnExcluir.style.display = 'block';
+      btnConcluir.style.display = 'block';
+      const ev = todosEventos.find(e => String(e.id) === String(eventoId));
+      if (ev) {
+        document.getElementById('nomeAtracao').value = ev.nome_atracao;
+        document.getElementById('endereco').value = ev.endereco || '';
+        document.getElementById('observacoes').value = ev.observacoes || '';
+        document.getElementById('quantidade_pessoas').value = ev.quantidade_pessoas || 1;
+        document.getElementById('valor_por_pessoa').value = ev.valor_por_pessoa || 0;
+        document.getElementById('horaInicio').value = ev.hora_inicio;
+        if (Array.isArray(ev.gastos_extras)) {
+          ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
+        }
+        if (ev.concluido) {
+          btnConcluir.textContent = 'Desmarcar Conclusão';
+          btnConcluir.style.background = '#666';
+        } else {
+          btnConcluir.textContent = 'Marcar como Concluído';
+          btnConcluir.style.background = '#f57c00';
+        }
+      }
+    } else {
+      btnExcluir.style.display = 'none';
+      btnConcluir.style.display = 'none';
+      document.getElementById('quantidade_pessoas').value = 1;
+      document.getElementById('valor_por_pessoa').value = 0;
+    }
+    openModal('modalEvento');
+  }
+
+  document.getElementById('eventoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const { data: sessData } = await db.auth.getSession();
+    const userId = sessData?.session?.user?.id || window.currentUser?.id;
+    if (!userId) return alert('Sessão não encontrada. Faça login novamente.');
+
+    const eventoId = document.getElementById('eventoId').value;
+    const qtd = Number(document.getElementById('quantidade_pessoas').value);
+    const valorUnit = Number(document.getElementById('valor_por_pessoa').value);
+
+    const gastosExtras = [];
+    document.querySelectorAll('.gasto-item').forEach(item => {
+      const desc = item.querySelector('.gasto-desc').value;
+      const val = Number(item.querySelector('.gasto-val').value);
+      if (desc && val > 0) gastosExtras.push({ descricao: desc, valor: val });
+    });
+
+    const payload = {
+      user_id: userId,
+      data: document.getElementById('dataEventoDisplay').value,
+      hora_inicio: document.getElementById('horaInicio').value,
+      nome_atracao: document.getElementById('nomeAtracao').value,
+      endereco: document.getElementById('endereco').value,
+      observacoes: document.getElementById('observacoes').value,
+      quantidade_pessoas: qtd,
+      valor_por_pessoa: valorUnit,
+      valor: qtd * valorUnit,
+      gastos_extras: gastosExtras
+    };
+
+    let error;
+    if (eventoId) {
+      const res = await db.from('eventos').update(payload).eq('id', eventoId);
+      error = res.error;
+    } else {
+      const res = await db.from('eventos').insert([payload]);
+      error = res.error;
+    }
+
+    if (error) { console.error(error); return alert('Erro ao salvar: ' + error.message); }
+    closeModal('modalEvento');
+    await carregarEventos();
+  });
+
+  async function excluirEventoDoModal() {
+    const eventoId = document.getElementById('eventoId').value;
+    if (!eventoId || !confirm('Excluir este evento?')) return;
+    const { error } = await db.from('eventos').delete().eq('id', eventoId);
+    if (error) return alert('Erro: ' + error.message);
+    closeModal('modalEvento');
+    await carregarEventos();
+  }
+
+  async function concluirEventoDoModal() {
+    const eventoId = document.getElementById('eventoId').value;
+    if (!eventoId) return;
+    const ev = todosEventos.find(e => String(e.id) === String(eventoId));
+    if (!ev) return;
+    const { error } = await db.from('eventos').update({ concluido: !ev.concluido }).eq('id', eventoId);
+    if (error) return alert('Erro: ' + error.message);
+    closeModal('modalEvento');
+    await carregarEventos();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const check = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(check);
+        initAgendaApp();
+      }
+      if (tentativas > 50) {
+        clearInterval(check);
+        console.error('Timeout: usuário não carregado pelo app.js');
+      }
+    }, 200);
+  });
+</script>
+</body>
+</html>

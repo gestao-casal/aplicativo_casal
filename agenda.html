@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Semanal — Cronograma</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .week-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 15px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .week-nav h2 { margin: 0; color: #1a1f2b; font-size: 1.1rem; }
+  .week-nav .week-label { font-size: 0.85rem; color: #666; margin-top: 4px; }
+  .week-nav-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .week-btn {
+    background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 16px; cursor: pointer; font-weight: 600; color: #374151;
+    transition: all 0.2s;
+  }
+  .week-btn:hover { background: #e5e7eb; }
+  .week-btn-today { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+  .week-btn-today:hover { background: #4338ca; }
+
+  .agenda-wrapper { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
+  .agenda-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  .agenda-table th {
+    background: #f9fafb; padding: 12px 8px; border-bottom: 2px solid var(--border);
+    font-size: 0.8rem; color: #374151; text-align: center; font-weight: 600;
+  }
+  .agenda-table th.dia-hoje { background: #eef2ff; color: #4f46e5; }
+  .agenda-table th small { display: block; font-weight: 400; color: #9ca3af; font-size: 0.7rem; margin-top: 2px; }
+  .agenda-table td { border: 1px solid #e5e7eb; height: 60px; padding: 4px; vertical-align: top; }
+  .agenda-table td.hora-col {
+    background: #f9fafb; text-align: center; font-size: 0.75rem; color: #6b7280;
+    font-weight: 600; width: 70px; vertical-align: middle;
+  }
+  .evento-cell { cursor: pointer; position: relative; }
+  .evento-cell:hover { background: #f9fafb; }
+  .evento-cell:hover::after {
+    content: '+'; position: absolute; top: 4px; right: 6px; color: #9ca3af;
+    font-size: 1rem; font-weight: bold;
+  }
+  .evento-texto {
+    font-size: 0.72rem; padding: 4px 6px; border-radius: 5px; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .evento-texto.gratuito { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+  .evento-texto.pago { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+  .evento-texto.concluido { opacity: 0.55; text-decoration: line-through; }
+  .evento-valor { font-size: 0.65rem; color: #374151; margin-top: 2px; font-weight: 700; }
+  .evento-viagem {
+    font-size: 0.6rem; color: #4f46e5; background: #eef2ff;
+    padding: 1px 5px; border-radius: 6px; margin-top: 2px; font-weight: 700;
+    display: inline-block; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .resumo-box {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+  }
+  .resumo-item { display: flex; flex-direction: column; }
+  .resumo-item span { font-size: 0.78rem; color: #6b7280; }
+  .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
+  .resumo-item strong.total { color: #dc2626; }
+
+  .legend-row { display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #374151; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+</style>
+</head>
+<body data-page="agenda">
+
+<div class="app">
+  <div id="menu"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>Agenda Semanal</h1>
+      <div class="user-info"><strong id="userName">Carregando...</strong></div>
+    </div>
+
+    <div class="header-green">
+      <div>
+        <h1>Minha Agenda</h1>
+        <p>Organize seus eventos e compromissos da semana — incluindo os das suas viagens</p>
+      </div>
+      <button class="btn-white" onclick="abrirModalConfig()">⚙️ Configurar Horários</button>
+    </div>
+
+    <div class="week-nav">
+      <div>
+        <h2 id="weekTitle">Semana</h2>
+        <div class="week-label" id="weekRange"></div>
+      </div>
+      <div class="week-nav-btns">
+        <button class="week-btn" onclick="mudarSemana(-1)">← Semana Anterior</button>
+        <button class="week-btn week-btn-today" onclick="irParaHoje()">Hoje</button>
+        <button class="week-btn" onclick="mudarSemana(1)">Próxima Semana →</button>
+      </div>
+    </div>
+
+    <div class="resumo-box">
+      <div class="resumo-item">
+        <span>Eventos na semana</span>
+        <strong id="resumoQtd">0</strong>
+      </div>
+      <div class="resumo-item">
+        <span>Eventos concluídos</span>
+        <strong id="resumoConcluidos">0</strong>
+      </div>
+      <div class="resumo-item">
+        <span>Total gasto na semana</span>
+        <strong class="total" id="resumoTotal">R$ 0,00</strong>
+      </div>
+    </div>
+
+    <div class="agenda-wrapper">
+      <table class="agenda-table" id="agendaTable">
+        <thead id="agendaThead"></thead>
+        <tbody id="agendaTbody"></tbody>
+      </table>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border-left:3px solid #16a34a;"></div> Evento Gratuito</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fee2e2;border-left:3px solid #dc2626;"></div> Evento Pago</div>
+      <div class="legend-item" style="color:#9ca3af;">Clique em uma célula vazia para adicionar um evento</div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL EVENTO -->
+<div class="modal-overlay" id="modalEvento">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="eventoTitle">Adicionar Evento</h2>
+      <button class="btn-close" onclick="closeModal('modalEvento')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="eventoForm">
+        <input type="hidden" id="eventoId">
+
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="dataEventoDisplay" disabled style="background:#f3f4f6;">
+        </div>
+
+        <div class="field"><label>Nome do Evento</label><input type="text" id="nomeAtracao" required></div>
+        <div class="field"><label>Endereço / Local</label><input type="text" id="endereco"></div>
+        <div class="field"><label>Observações</label><textarea id="observacoes" placeholder="Detalhes..."></textarea></div>
+
+        <div class="field" style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label>Qtd. Pessoas</label>
+            <input type="number" id="quantidade_pessoas" min="1" value="1" required>
+          </div>
+          <div style="flex: 1;">
+            <label>Valor por Pessoa (R$)</label>
+            <input type="number" step="0.01" id="valor_por_pessoa" value="0.00" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Horário Início</label>
+          <input type="time" id="horaInicio" required>
+        </div>
+
+        <div class="box-gastos">
+          <h4>Outros Gastos (Estacionamento, Taxas, etc)</h4>
+          <div id="listaGastosAtracao"></div>
+          <button type="button" class="btn-add-gasto" onclick="adicionarCampoGasto()">+ Adicionar Outro Gasto</button>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Evento</button>
+        <button type="button" class="btn-conclude" id="btnConcluirEventoModal" onclick="concluirEventoDoModal()">Marcar como Concluído</button>
+        <button type="button" class="btn-danger" id="btnExcluirEventoModal" onclick="excluirEventoDoModal()">Excluir Evento</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div class="modal-overlay" id="modalConfig">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Configurar Horários</h2>
+      <button class="btn-close" onclick="closeModal('modalConfig')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="configForm">
+        <div class="field" style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label>Horário Inicial</label>
+            <input type="time" id="configHoraInicio" required>
+          </div>
+          <div style="flex: 1;">
+            <label>Horário Final</label>
+            <input type="time" id="configHoraFim" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Configuração</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let todosEventos = [];
+  let mapaFerias = {};
+  let dataSemanaAtual = new Date();
+  let horaInicioDia = '05:00';
+  let horaFimDia = '23:00';
+
+  function getInicioSemana(ref) {
+    const d = new Date(ref);
+    d.setHours(0, 0, 0, 0);
+    const dia = d.getDay();
+    const diff = dia === 0 ? -6 : 1 - dia;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+
+  function formatarDataISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dia}`;
+  }
+
+  function getDiasDaSemana(ref) {
+    const inicio = getInicioSemana(ref);
+    const dias = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(inicio);
+      d.setDate(inicio.getDate() + i);
+      dias.push(d);
+    }
+    return dias;
+  }
+
+  function fmtMoeda(v) {
+    return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function calcularValorEvento(ev) {
+    const base = (Number(ev.quantidade_pessoas) || 1) * (Number(ev.valor_por_pessoa) || 0);
+    let extras = 0;
+    if (Array.isArray(ev.gastos_extras)) {
+      extras = ev.gastos_extras.reduce((s, g) => s + (Number(g.valor) || 0), 0);
+    }
+    return base + extras;
+  }
+
+  async function initAgendaApp() {
+    if (!window.currentUser) return;
+    document.getElementById('userName').textContent = window.currentUser.email;
+    await carregarConfig();
+    await carregarEventosSemana();
+  }
+
+  async function carregarConfig() {
+    try {
+      const { data } = await db.from('config_agenda').select('*').eq('user_id', window.currentUser.id).maybeSingle();
+      if (data) {
+        horaInicioDia = data.hora_inicio || '05:00';
+        horaFimDia = data.hora_fim || '23:00';
+      }
+    } catch (e) {}
+  }
+
+  async function carregarEventosSemana() {
+    const dias = getDiasDaSemana(dataSemanaAtual);
+    const dataIni = formatarDataISO(dias[0]);
+    const dataFim = formatarDataISO(dias[6]);
+
+    // 1. Viagens do usuário
+    const { data: viagens } = await db
+      .from('ferias')
+      .select('id, nome_ferias')
+      .eq('user_id', window.currentUser.id);
+
+    mapaFerias = {};
+    const feriasIds = [];
+    (viagens || []).forEach(f => {
+      mapaFerias[f.id] = f.nome_ferias;
+      feriasIds.push(f.id);
+    });
+
+    // 2. Eventos da semana (user_id OU ferias_id)
+    let query = db.from('eventos')
+      .select('*')
+      .gte('data', dataIni)
+      .lte('data', dataFim);
+
+    if (feriasIds.length > 0) {
+      query = query.or(
+        `user_id.eq.${window.currentUser.id},ferias_id.in.(${feriasIds.join(',')})`
+      );
+    } else {
+      query = query.eq('user_id', window.currentUser.id);
+    }
+
+    const { data, error } = await query
+      .order('data')
+      .order('hora_inicio');
+
+    if (error) {
+      console.error('Erro ao carregar eventos:', error);
+      todosEventos = [];
+    } else {
+      // Deduplica por id (OR pode trazer o mesmo evento 2x)
+      const mapa = {};
+      (data || []).forEach(ev => { mapa[ev.id] = ev; });
+      todosEventos = Object.values(mapa);
+    }
+
+    renderAgenda();
+  }
+
+  function mudarSemana(delta) {
+    dataSemanaAtual.setDate(dataSemanaAtual.getDate() + delta * 7);
+    carregarEventosSemana();
+  }
+
+  function irParaHoje() {
+    dataSemanaAtual = new Date();
+    carregarEventosSemana();
+  }
+
+  function renderAgenda() {
+    const dias = getDiasDaSemana(dataSemanaAtual);
+    const hoje = formatarDataISO(new Date());
+    const fmtCurto = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const fmtLongo = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    document.getElementById('weekTitle').textContent = `Semana de ${fmtCurto(dias[0])} a ${fmtCurto(dias[6])}`;
+    document.getElementById('weekRange').textContent = `${fmtLongo(dias[0])} — ${fmtLongo(dias[6])}`;
+
+    const thead = document.getElementById('agendaThead');
+    let theadHtml = '<tr><th style="width:70px;"></th>';
+    const nomesDia = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    dias.forEach(d => {
+      const iso = formatarDataISO(d);
+      const isHoje = iso === hoje;
+      theadHtml += `<th class="${isHoje ? 'dia-hoje' : ''}">
+        ${nomesDia[d.getDay()]}<small>${fmtCurto(d)}${isHoje ? ' • HOJE' : ''}</small>
+      </th>`;
+    });
+    theadHtml += '</tr>';
+    thead.innerHTML = theadHtml;
+
+    const tbody = document.getElementById('agendaTbody');
+    const hIni = parseInt(horaInicioDia.split(':')[0], 10);
+    const hFim = parseInt(horaFimDia.split(':')[0], 10);
+
+    const mapaEventos = {};
+    todosEventos.forEach(ev => {
+      mapaEventos[`${ev.data}|${ev.hora_inicio.substring(0, 5)}`] = ev;
+    });
+
+    let tbodyHtml = '';
+    for (let h = hIni; h <= hFim; h++) {
+      const horaStr = String(h).padStart(2, '0') + ':00';
+      tbodyHtml += `<tr><td class="hora-col">${horaStr}</td>`;
+      dias.forEach(d => {
+        const iso = formatarDataISO(d);
+        const ev = mapaEventos[`${iso}|${horaStr}`];
+        if (ev) {
+          const valorTotal = calcularValorEvento(ev);
+          const classe = (valorTotal > 0 ? 'pago' : 'gratuito') + (ev.concluido ? ' concluido' : '');
+          const nomeViagem = ev.ferias_id ? mapaFerias[ev.ferias_id] : null;
+          const viagemBadge = nomeViagem
+            ? `<div class="evento-viagem" title="${nomeViagem}">✈️ ${nomeViagem}</div>`
+            : '';
+          tbodyHtml += `<td class="evento-cell" onclick="abrirModalEvento('${iso}','${horaStr}',${ev.id})" title="${ev.nome_atracao}">
+            <div class="evento-texto ${classe}">${ev.nome_atracao}</div>
+            ${valorTotal > 0 ? `<div class="evento-valor">${fmtMoeda(valorTotal)}</div>` : ''}
+            ${viagemBadge}
+          </td>`;
+        } else {
+          tbodyHtml += `<td class="evento-cell" onclick="abrirModalEvento('${iso}','${horaStr}')"></td>`;
+        }
+      });
+      tbodyHtml += '</tr>';
+    }
+    tbody.innerHTML = tbodyHtml;
+
+    const totalSemana = todosEventos.reduce((s, ev) => s + calcularValorEvento(ev), 0);
+    document.getElementById('resumoQtd').textContent = todosEventos.length;
+    document.getElementById('resumoConcluidos').textContent = todosEventos.filter(ev => ev.concluido).length;
+    document.getElementById('resumoTotal').textContent = fmtMoeda(totalSemana);
+  }
+
+  function adicionarCampoGasto(descricao = '', valor = '') {
+    const container = document.getElementById('listaGastosAtracao');
+    const div = document.createElement('div');
+    div.className = 'gasto-item';
+    div.innerHTML = `
+      <input type="text" placeholder="Descrição" value="${descricao}" class="gasto-desc">
+      <input type="number" step="0.01" placeholder="R$" value="${valor}" class="gasto-val">
+      <button type="button" class="btn-remove-gasto" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(div);
+  }
+
+  function abrirModalEvento(dataStr, horaStr, eventoId = null) {
+    document.getElementById('eventoTitle').textContent = eventoId ? 'Editar Evento' : 'Adicionar Evento';
+    document.getElementById('eventoForm').reset();
+    document.getElementById('listaGastosAtracao').innerHTML = '';
+
+    document.getElementById('dataEventoDisplay').value = dataStr;
+    document.getElementById('horaInicio').value = horaStr;
+    document.getElementById('eventoId').value = eventoId || '';
+
+    const btnExcluir = document.getElementById('btnExcluirEventoModal');
+    const btnConcluir = document.getElementById('btnConcluirEventoModal');
+
+    if (eventoId) {
+      btnExcluir.style.display = 'block';
+      btnConcluir.style.display = 'block';
+      const ev = todosEventos.find(e => String(e.id) === String(eventoId));
+      if (ev) {
+        document.getElementById('nomeAtracao').value = ev.nome_atracao;
+        document.getElementById('endereco').value = ev.endereco || '';
+        document.getElementById('observacoes').value = ev.observacoes || '';
+        document.getElementById('quantidade_pessoas').value = ev.quantidade_pessoas || 1;
+        document.getElementById('valor_por_pessoa').value = ev.valor_por_pessoa || 0;
+        document.getElementById('horaInicio').value = ev.hora_inicio;
+        if (Array.isArray(ev.gastos_extras)) {
+          ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
+        }
+        if (ev.concluido) {
+          btnConcluir.textContent = 'Desmarcar Conclusão';
+          btnConcluir.style.background = '#666';
+        } else {
+          btnConcluir.textContent = 'Marcar como Concluído';
+          btnConcluir.style.background = '#f57c00';
+        }
+      }
+    } else {
+      btnExcluir.style.display = 'none';
+      btnConcluir.style.display = 'none';
+      document.getElementById('quantidade_pessoas').value = 1;
+      document.getElementById('valor_por_pessoa').value = 0;
+    }
+    openModal('modalEvento');
+  }
+
+  document.getElementById('eventoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const { data: sessData } = await db.auth.getSession();
+    const userId = sessData?.session?.user?.id || window.currentUser?.id;
+    if (!userId) return alert('Sessão não encontrada. Faça login novamente.');
+
+    const eventoId = document.getElementById('eventoId').value;
+    const qtd = Number(document.getElementById('quantidade_pessoas').value);
+    const valorUnit = Number(document.getElementById('valor_por_pessoa').value);
+
+    const gastosExtras = [];
+    document.querySelectorAll('.gasto-item').forEach(item => {
+      const desc = item.querySelector('.gasto-desc').value;
+      const val = Number(item.querySelector('.gasto-val').value);
+      if (desc && val > 0) gastosExtras.push({ descricao: desc, valor: val });
+    });
+
+    const payload = {
+      user_id: userId,
+      data: document.getElementById('dataEventoDisplay').value,
+      hora_inicio: document.getElementById('horaInicio').value,
+      nome_atracao: document.getElementById('nomeAtracao').value,
+      endereco: document.getElementById('endereco').value,
+      observacoes: document.getElementById('observacoes').value,
+      quantidade_pessoas: qtd,
+      valor_por_pessoa: valorUnit,
+      valor: qtd * valorUnit,
+      gastos_extras: gastosExtras
+    };
+
+    let error;
+    if (eventoId) {
+      const res = await db.from('eventos').update(payload).eq('id', eventoId);
+      error = res.error;
+    } else {
+      const res = await db.from('eventos').insert([payload]);
+      error = res.error;
+    }
+
+    if (error) { console.error(error); return alert('Erro ao salvar: ' + error.message); }
+    closeModal('modalEvento');
+    await carregarEventosSemana();
+  });
+
+  async function excluirEventoDoModal() {
+    const eventoId = document.getElementById('eventoId').value;
+    if (!eventoId || !confirm('Excluir este evento?')) return;
+    const { error } = await db.from('eventos').delete().eq('id', eventoId);
+    if (error) return alert('Erro: ' + error.message);
+    closeModal('modalEvento');
+    await carregarEventosSemana();
+  }
+
+  async function concluirEventoDoModal() {
+    const eventoId = document.getElementById('eventoId').value;
+    if (!eventoId) return;
+    const ev = todosEventos.find(e => String(e.id) === String(eventoId));
+    if (!ev) return;
+    const { error } = await db.from('eventos').update({ concluido: !ev.concluido }).eq('id', eventoId);
+    if (error) return alert('Erro: ' + error.message);
+    closeModal('modalEvento');
+    await carregarEventosSemana();
+  }
+
+  function abrirModalConfig() {
+    document.getElementById('configHoraInicio').value = horaInicioDia;
+    document.getElementById('configHoraFim').value = horaFimDia;
+    openModal('modalConfig');
+  }
+
+  document.getElementById('configForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    horaInicioDia = document.getElementById('configHoraInicio').value;
+    horaFimDia = document.getElementById('configHoraFim').value;
+
+    try {
+      const payload = { user_id: window.currentUser.id, hora_inicio: horaInicioDia, hora_fim: horaFimDia };
+      const { data } = await db.from('config_agenda').select('id').eq('user_id', window.currentUser.id).maybeSingle();
+      if (data) await db.from('config_agenda').update(payload).eq('id', data.id);
+      else await db.from('config_agenda').insert([payload]);
+    } catch (err) {}
+
+    closeModal('modalConfig');
+    renderAgenda();
+  });
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const check = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(check);
+        initAgendaApp();
+      }
+      if (tentativas > 50) {
+        clearInterval(check);
+        console.error('Timeout: usuário não carregado pelo app.js');
+      }
+    }, 200);
+  });
+</script>
+</body>
+</html>

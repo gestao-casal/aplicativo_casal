@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     "filmes",
     "listas_compras",
     "lista_detalhe",
-    "restaurantes", "veiculos", "abastecimento", "historico_km", "manutencao"
+    "restaurantes", "veiculos", "abastecimento", "historico_km", "manutencao", "agenda","agenda-lista"
   ];
   
   if (paginasProtegidas.includes(page)) {
