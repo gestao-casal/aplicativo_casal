@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agenda — Próximos Eventos</title>
+<title>Agenda — Lista</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .toolbar {
@@ -11,12 +11,45 @@
     background: #fff; border: 1px solid var(--border); border-radius: 10px;
     padding: 12px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
   }
-  .toolbar-info { display: flex; flex-direction: column; gap: 2px; }
+  .toolbar-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 180px; }
   .toolbar-info h2 { margin: 0; color: #1a1f2b; font-size: 1.1rem; }
   .toolbar-info small { color: #666; font-size: 0.8rem; }
+
+  .toolbar-controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+  /* === FILTRO (Semana/Mês/Todas) === */
+  .filter-tabs {
+    display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 3px;
+  }
+  .filter-tab {
+    background: transparent; border: none; padding: 7px 16px; border-radius: 6px;
+    font-weight: 600; font-size: 0.85rem; color: #4b5563; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-tab:hover { color: #1f2937; }
+  .filter-tab.active { background: #4f46e5; color: #fff; box-shadow: 0 1px 3px rgba(79,70,229,0.3); }
+
   .toolbar-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #374151; cursor: pointer; user-select: none; }
   .toolbar-toggle input { width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5; }
 
+  /* === NAVEGAÇÃO DE PERÍODO (semana/mês) === */
+  .period-nav {
+    display: none; justify-content: space-between; align-items: center;
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .period-nav-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .week-btn {
+    background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 16px; cursor: pointer; font-weight: 600; color: #374151;
+    transition: all 0.2s;
+  }
+  .week-btn:hover { background: #e5e7eb; }
+  .week-btn-today { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+  .week-btn-today:hover { background: #4338ca; }
+  .period-nav-label { font-size: 0.9rem; font-weight: 700; color: #1a1f2b; }
+
+  /* === RESUMO === */
   .resumo-box {
     background: #fff; border: 1px solid var(--border); border-radius: 10px;
     padding: 18px 20px; margin-bottom: 20px;
@@ -27,6 +60,7 @@
   .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
   .resumo-item strong.total { color: #dc2626; }
 
+  /* === LISTA === */
   .list-view { display: flex; flex-direction: column; gap: 10px; }
 
   .list-event-row {
@@ -62,7 +96,6 @@
   .list-event-location { font-size: 0.8rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .list-event-notes { font-size: 0.78rem; color: #9ca3af; font-style: italic; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* Badge de viagem */
   .list-event-trip {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 0.7rem; font-weight: 700; color: #4f46e5;
@@ -95,8 +128,9 @@
       width: 100%; border-right: none; border-bottom: 1px solid #f3f4f6;
       padding-bottom: 8px; flex-direction: row; align-items: center; gap: 8px;
     }
-    .list-event-date .date-day, .list-event-date .date-time { margin-top: 0; }
+    .list-event-date .date-day, .list-event-date .time { margin-top: 0; }
     .list-event-meta { align-items: flex-start; }
+    .filter-tab { padding: 7px 12px; font-size: 0.8rem; }
   }
 </style>
 </head>
@@ -113,23 +147,42 @@
 
     <div class="header-green">
       <div>
-        <h1>Próximos Eventos</h1>
+        <h1>Minha Agenda</h1>
         <p>Todos os compromissos agendados — incluindo os das suas viagens</p>
       </div>
       <button class="btn-white" onclick="novoEvento()">+ Novo Evento</button>
     </div>
 
+    <!-- TOOLBAR COM FILTRO -->
     <div class="toolbar">
       <div class="toolbar-info">
         <h2 id="toolbarTitle">Próximos eventos</h2>
         <small id="toolbarSub">Carregando...</small>
       </div>
-      <label class="toolbar-toggle">
-        <input type="checkbox" id="togglePassados" onchange="renderLista()">
-        Mostrar também eventos passados
-      </label>
+      <div class="toolbar-controls">
+        <div class="filter-tabs" role="tablist">
+          <button class="filter-tab active" data-filter="semana" onclick="mudarFiltro('semana')">Semana</button>
+          <button class="filter-tab" data-filter="mes" onclick="mudarFiltro('mes')">Mês</button>
+          <button class="filter-tab" data-filter="todas" onclick="mudarFiltro('todas')">Todas</button>
+        </div>
+        <label class="toolbar-toggle" id="togglePassadosWrap" style="display:none;">
+          <input type="checkbox" id="togglePassados" onchange="renderLista()">
+          Mostrar passados
+        </label>
+      </div>
     </div>
 
+    <!-- NAVEGAÇÃO DE PERÍODO -->
+    <div class="period-nav" id="periodNav">
+      <div class="period-nav-label" id="periodNavLabel">—</div>
+      <div class="period-nav-btns">
+        <button class="week-btn" onclick="mudarPeriodo(-1)">← <span id="periodPrevLabel">Anterior</span></button>
+        <button class="week-btn week-btn-today" onclick="irParaHoje()">Hoje</button>
+        <button class="week-btn" onclick="mudarPeriodo(1)"><span id="periodNextLabel">Próximo</span> →</button>
+      </div>
+    </div>
+
+    <!-- RESUMO -->
     <div class="resumo-box">
       <div class="resumo-item">
         <span>Total de eventos</span>
@@ -203,13 +256,25 @@
 <script src="app.js"></script>
 <script>
   let todosEventos = [];
-  let mapaFerias = {}; // id -> nome_ferias
+  let mapaFerias = {};
+  let filtroAtual = 'semana';          // 'semana' | 'mes' | 'todas'
+  let referenciaPeriodo = new Date();  // usado para nav em semana/mês
 
+  // ---------- HELPERS ----------
   function formatarDataISO(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const dia = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${dia}`;
+  }
+
+  function getInicioSemana(ref) {
+    const d = new Date(ref);
+    d.setHours(0, 0, 0, 0);
+    const dia = d.getDay();
+    const diff = dia === 0 ? -6 : 1 - dia;
+    d.setDate(d.getDate() + diff);
+    return d;
   }
 
   function fmtMoeda(v) {
@@ -229,20 +294,47 @@
     return ev.data < hojeISO;
   }
 
+  // Retorna { ini, fim, label } do período atual conforme filtroAtual
+  function getPeriodo() {
+    if (filtroAtual === 'semana') {
+      const ini = getInicioSemana(referenciaPeriodo);
+      const fim = new Date(ini);
+      fim.setDate(ini.getDate() + 6);
+      const fmtCurto = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      return {
+        ini: formatarDataISO(ini),
+        fim: formatarDataISO(fim),
+        label: `Semana de ${fmtCurto(ini)} a ${fmtCurto(fim)}`
+      };
+    }
+    if (filtroAtual === 'mes') {
+      const ini = new Date(referenciaPeriodo.getFullYear(), referenciaPeriodo.getMonth(), 1);
+      const fim = new Date(referenciaPeriodo.getFullYear(), referenciaPeriodo.getMonth() + 1, 0);
+      const label = ini.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      return {
+        ini: formatarDataISO(ini),
+        fim: formatarDataISO(fim),
+        label: label.charAt(0).toUpperCase() + label.slice(1)
+      };
+    }
+    return null;
+  }
+
+  // ---------- INIT ----------
   async function initAgendaApp() {
     if (!window.currentUser) return;
     document.getElementById('userName').textContent = window.currentUser.email;
     await carregarEventos();
+    atualizarUIFiltro();
+    renderLista();
   }
 
   async function carregarEventos() {
-    // 1. Carrega viagens do usuário (para ter IDs + nomes)
-    const { data: viagens, error: errViagens } = await db
+    // 1. Viagens do usuário
+    const { data: viagens } = await db
       .from('ferias')
       .select('id, nome_ferias')
       .eq('user_id', window.currentUser.id);
-
-    if (errViagens) console.warn('Erro ao carregar viagens:', errViagens);
 
     mapaFerias = {};
     const feriasIds = [];
@@ -251,11 +343,10 @@
       feriasIds.push(f.id);
     });
 
-    // 2. Query eventos: user_id direto OU ferias_id nas viagens do usuário
+    // 2. Eventos: user_id direto OU ferias_id das viagens do usuário
     let query = db.from('eventos').select('*');
 
     if (feriasIds.length > 0) {
-      // Inclui eventos avulsos (user_id) e eventos de viagem (ferias_id)
       query = query.or(
         `user_id.eq.${window.currentUser.id},ferias_id.in.(${feriasIds.join(',')})`
       );
@@ -271,40 +362,100 @@
       console.error('Erro ao carregar eventos:', error);
       todosEventos = [];
     } else {
-      // Deduplica por id (o OR pode trazer o mesmo evento nas 2 condições)
       const mapa = {};
       (data || []).forEach(ev => { mapa[ev.id] = ev; });
       todosEventos = Object.values(mapa);
     }
+  }
 
+  // ---------- FILTRO / NAVEGAÇÃO ----------
+  function mudarFiltro(filtro) {
+    filtroAtual = filtro;
+    referenciaPeriodo = new Date();
+    atualizarUIFiltro();
     renderLista();
   }
 
+  function mudarPeriodo(delta) {
+    if (filtroAtual === 'semana') {
+      referenciaPeriodo.setDate(referenciaPeriodo.getDate() + delta * 7);
+    } else if (filtroAtual === 'mes') {
+      referenciaPeriodo.setMonth(referenciaPeriodo.getMonth() + delta);
+    }
+    renderLista();
+  }
+
+  function irParaHoje() {
+    referenciaPeriodo = new Date();
+    renderLista();
+  }
+
+  function atualizarUIFiltro() {
+    // tabs ativas
+    document.querySelectorAll('.filter-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === filtroAtual);
+    });
+    // nav de período só aparece em semana/mês
+    document.getElementById('periodNav').style.display = (filtroAtual === 'todas') ? 'none' : 'flex';
+    // toggle de passados só em "todas"
+    document.getElementById('togglePassadosWrap').style.display = (filtroAtual === 'todas') ? 'flex' : 'none';
+
+    // labels dos botões
+    if (filtroAtual === 'semana') {
+      document.getElementById('periodPrevLabel').textContent = 'Semana Anterior';
+      document.getElementById('periodNextLabel').textContent = 'Próxima Semana';
+    } else if (filtroAtual === 'mes') {
+      document.getElementById('periodPrevLabel').textContent = 'Mês Anterior';
+      document.getElementById('periodNextLabel').textContent = 'Próximo Mês';
+    }
+  }
+
+  // ---------- RENDER ----------
   function renderLista() {
     const hojeISO = formatarDataISO(new Date());
-    const mostrarPassados = document.getElementById('togglePassados').checked;
+    let eventosParaMostrar = [];
+    let titulo = '';
+    let subtitulo = '';
+    let navLabel = '';
 
-    const base = mostrarPassados
-      ? [...todosEventos]
-      : todosEventos.filter(ev => !isPassado(ev, hojeISO));
+    if (filtroAtual === 'todas') {
+      const mostrarPassados = document.getElementById('togglePassados').checked;
+      eventosParaMostrar = mostrarPassados
+        ? [...todosEventos]
+        : todosEventos.filter(ev => !isPassado(ev, hojeISO));
+      titulo = mostrarPassados ? 'Todos os eventos' : 'Próximos eventos';
+    } else {
+      const p = getPeriodo();
+      eventosParaMostrar = todosEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
+      titulo = filtroAtual === 'semana' ? 'Semana' : 'Mês';
+      navLabel = p.label;
+    }
 
-    const eventosOrdenados = base.sort((a, b) =>
+    // Ordena cronologicamente
+    const eventosOrdenados = eventosParaMostrar.sort((a, b) =>
       `${a.data}T${a.hora_inicio}`.localeCompare(`${b.data}T${b.hora_inicio}`)
     );
 
-    document.getElementById('toolbarTitle').textContent = mostrarPassados
-      ? 'Todos os eventos'
-      : 'Próximos eventos';
-    document.getElementById('toolbarSub').textContent = eventosOrdenados.length === 0
+    // Subtítulo
+    subtitulo = eventosOrdenados.length === 0
       ? 'Nenhum evento encontrado'
-      : `${eventosOrdenados.length} evento${eventosOrdenados.length !== 1 ? 's' : ''} ${mostrarPassados ? 'no total' : 'a partir de hoje'}`;
+      : `${eventosOrdenados.length} evento${eventosOrdenados.length !== 1 ? 's' : ''}`;
+    if (filtroAtual === 'todas' && !document.getElementById('togglePassados').checked) {
+      subtitulo += ' a partir de hoje';
+    }
+
+    document.getElementById('toolbarTitle').textContent = titulo;
+    document.getElementById('toolbarSub').textContent = subtitulo;
+    document.getElementById('periodNavLabel').textContent = navLabel;
 
     const container = document.getElementById('listView');
 
     if (eventosOrdenados.length === 0) {
+      const vazio = filtroAtual === 'semana'
+        ? 'Nenhum evento nesta semana.'
+        : (filtroAtual === 'mes' ? 'Nenhum evento neste mês.' : 'Nenhum evento encontrado.');
       container.innerHTML = `<div class="list-empty-box">
-        ${mostrarPassados ? 'Nenhum evento cadastrado.' : 'Nenhum evento futuro agendado.'}
-        <br><br>
+        ${vazio}<br><br>
         <button class="btn btn-primary" onclick="novoEvento()">+ Adicionar evento</button>
       </div>`;
     } else {
@@ -361,12 +512,21 @@
     document.getElementById('resumoTotal').textContent = fmtMoeda(totalVisivel);
   }
 
+  // ---------- NOVO EVENTO ----------
   function novoEvento() {
     const agora = new Date();
+    let dataBase = agora;
+    if (filtroAtual === 'semana' || filtroAtual === 'mes') {
+      // se estiver navegando em outro período, usa o início dele
+      const p = getPeriodo();
+      const hojeISO = formatarDataISO(agora);
+      dataBase = (hojeISO >= p.ini && hojeISO <= p.fim) ? agora : new Date(p.ini + 'T00:00:00');
+    }
     const proxHora = String(Math.min(agora.getHours() + 1, 23)).padStart(2, '0') + ':00';
-    abrirModalEvento(formatarDataISO(agora), proxHora);
+    abrirModalEvento(formatarDataISO(dataBase), proxHora);
   }
 
+  // ---------- MODAL ----------
   function adicionarCampoGasto(descricao = '', valor = '') {
     const container = document.getElementById('listaGastosAtracao');
     const div = document.createElement('div');
@@ -465,6 +625,7 @@
     if (error) { console.error(error); return alert('Erro ao salvar: ' + error.message); }
     closeModal('modalEvento');
     await carregarEventos();
+    renderLista();
   });
 
   async function excluirEventoDoModal() {
@@ -474,6 +635,7 @@
     if (error) return alert('Erro: ' + error.message);
     closeModal('modalEvento');
     await carregarEventos();
+    renderLista();
   }
 
   async function concluirEventoDoModal() {
@@ -485,11 +647,13 @@
     if (error) return alert('Erro: ' + error.message);
     closeModal('modalEvento');
     await carregarEventos();
+    renderLista();
   }
 
   function openModal(id) { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+  // ---------- BOOTSTRAP ----------
   document.addEventListener('DOMContentLoaded', () => {
     let tentativas = 0;
     const check = setInterval(() => {
