@@ -3,26 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agenda Semanal — Cronograma</title>
+<title>Agenda — Calendário</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .week-nav {
+  /* === NAVEGAÇÃO DO CALENDÁRIO === */
+  .calendar-nav {
     display: flex; justify-content: space-between; align-items: center;
     background: #fff; border: 1px solid var(--border); border-radius: 10px;
     padding: 15px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
   }
-  .week-nav h2 { margin: 0; color: #1a1f2b; font-size: 1.1rem; }
-  .week-nav .week-label { font-size: 0.85rem; color: #666; margin-top: 4px; }
-  .week-nav-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .calendar-nav-left { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+  .calendar-nav h2 { margin: 0; color: #1a1f2b; font-size: 1.3rem; min-width: 200px; }
+  .calendar-nav-btns { display: flex; gap: 8px; }
   .week-btn {
     background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
-    padding: 8px 16px; cursor: pointer; font-weight: 600; color: #374151;
-    transition: all 0.2s;
+    padding: 8px 16px; cursor: pointer; font-weight: 600; color: #374151; transition: all 0.2s;
   }
   .week-btn:hover { background: #e5e7eb; }
   .week-btn-today { background: #4f46e5; color: #fff; border-color: #4f46e5; }
   .week-btn-today:hover { background: #4338ca; }
 
+  /* Seletor Dia/Semana/Mês */
+  .view-selector { display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 3px; }
+  .view-btn {
+    background: transparent; border: none; padding: 8px 20px; border-radius: 6px;
+    font-weight: 600; font-size: 0.9rem; color: #4b5563; cursor: pointer; transition: all 0.15s;
+  }
+  .view-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* Filtro de Responsável */
+  .filter-resp {
+    background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 12px; font-weight: 600; color: #374151; cursor: pointer;
+    outline: none; font-family: inherit;
+  }
+
+  /* === RESUMO === */
+  .resumo-box {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+  }
+  .resumo-item { display: flex; flex-direction: column; }
+  .resumo-item span { font-size: 0.78rem; color: #6b7280; }
+  .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
+  .resumo-item strong.total { color: #dc2626; }
+
+  /* =======================================
+     VISÃO DE MÊS (GRADE)
+     ======================================= */
+  .month-grid-wrapper {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 280px); min-height: 600px;
+  }
+  .month-header {
+    display: grid; grid-template-columns: repeat(7, 1fr); background: #f9fafb;
+    border-bottom: 2px solid var(--border); text-align: center; font-size: 0.8rem;
+    font-weight: 600; color: #374151; padding: 10px 0;
+  }
+  .month-body {
+    display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(5, 1fr);
+    flex: 1; overflow-y: auto;
+  }
+  .month-day {
+    border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;
+    padding: 6px; display: flex; flex-direction: column; gap: 4px;
+    cursor: pointer; transition: background 0.15s; position: relative;
+  }
+  .month-day:nth-child(7n) { border-right: none; }
+  .month-day:hover { background: #f9fafb; }
+  .month-day.outro-mes { background: #fafafa; color: #9ca3af; }
+  .month-day.hoje .day-number { background: #4f46e5; color: #fff; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
+  .day-number { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; align-self: flex-start; }
+  
+  .month-event {
+    font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background: #e0e7ff; color: #3730a3; border-left: 3px solid #4f46e5;
+    display: flex; justify-content: space-between;
+  }
+  .month-event.pago { background: #fee2e2; color: #991b1b; border-left-color: #dc2626; }
+  .month-event.gratuito { background: #dcfce7; color: #166534; border-left-color: #16a34a; }
+  .month-event.concluido { opacity: 0.5; text-decoration: line-through; }
+  .month-more { font-size: 0.7rem; color: #6b7280; font-weight: 600; padding-left: 4px; margin-top: 2px; }
+
+  /* =======================================
+     VISÃO DE SEMANA / DIA (CRONOGRAMA)
+     ======================================= */
   .agenda-wrapper { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
   .agenda-table { width: 100%; border-collapse: collapse; min-width: 900px; }
   .agenda-table th {
@@ -39,8 +106,7 @@
   .evento-cell { cursor: pointer; position: relative; }
   .evento-cell:hover { background: #f9fafb; }
   .evento-cell:hover::after {
-    content: '+'; position: absolute; top: 4px; right: 6px; color: #9ca3af;
-    font-size: 1rem; font-weight: bold;
+    content: '+'; position: absolute; top: 4px; right: 6px; color: #9ca3af; font-size: 1rem; font-weight: bold;
   }
   .evento-texto {
     font-size: 0.72rem; padding: 4px 6px; border-radius: 5px; font-weight: 600;
@@ -50,22 +116,13 @@
   .evento-texto.pago { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
   .evento-texto.concluido { opacity: 0.55; text-decoration: line-through; }
   .evento-valor { font-size: 0.65rem; color: #374151; margin-top: 2px; font-weight: 700; }
-  .evento-viagem {
-    font-size: 0.6rem; color: #4f46e5; background: #eef2ff;
-    padding: 1px 5px; border-radius: 6px; margin-top: 2px; font-weight: 700;
-    display: inline-block; max-width: 100%;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  .evento-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+  .tag-mini {
+    font-size: 0.6rem; padding: 1px 5px; border-radius: 6px; font-weight: 700;
+    display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-
-  .resumo-box {
-    background: #fff; border: 1px solid var(--border); border-radius: 10px;
-    padding: 18px 20px; margin-bottom: 20px;
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
-  }
-  .resumo-item { display: flex; flex-direction: column; }
-  .resumo-item span { font-size: 0.78rem; color: #6b7280; }
-  .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
-  .resumo-item strong.total { color: #dc2626; }
+  .tag-viagem-mini { color: #4f46e5; background: #eef2ff; }
+  .tag-resp-mini { color: #b45309; background: #fef3c7; }
 
   .legend-row { display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #374151; }
@@ -79,56 +136,65 @@
 
   <main class="main">
     <div class="topbar">
-      <h1>Agenda Semanal</h1>
+      <h1>Agenda</h1>
       <div class="user-info"><strong id="userName">Carregando...</strong></div>
     </div>
 
     <div class="header-green">
       <div>
-        <h1>Minha Agenda</h1>
-        <p>Organize seus eventos e compromissos da semana — incluindo os das suas viagens</p>
+        <h1>Calendário</h1>
+        <p>Gerencie seus eventos por dia, semana ou mês</p>
       </div>
       <button class="btn-white" onclick="abrirModalConfig()">⚙️ Configurar Horários</button>
     </div>
 
-    <div class="week-nav">
-      <div>
-        <h2 id="weekTitle">Semana</h2>
-        <div class="week-label" id="weekRange"></div>
-      </div>
-      <div class="week-nav-btns">
-        <button class="week-btn" onclick="mudarSemana(-1)">← Semana Anterior</button>
+    <!-- NAVEGAÇÃO DO CALENDÁRIO -->
+    <div class="calendar-nav">
+      <div class="calendar-nav-left">
         <button class="week-btn week-btn-today" onclick="irParaHoje()">Hoje</button>
-        <button class="week-btn" onclick="mudarSemana(1)">Próxima Semana →</button>
+        <div class="calendar-nav-btns">
+          <button class="week-btn" onclick="navegar(-1)">←</button>
+          <button class="week-btn" onclick="navegar(1)">→</button>
+        </div>
+        <h2 id="calendarTitle">Novembro de 2026</h2>
+        
+        <!-- FILTRO DE RESPONSÁVEL -->
+        <select id="filtroResponsavelAgenda" class="filter-resp" onchange="mudarFiltroResponsavel(this.value)">
+          <option value="Todos">👥 Todos os eventos</option>
+          <option value="Casal">👫 Apenas Casal</option>
+          <!-- Membros preenchidos via JS -->
+        </select>
+      </div>
+      
+      <div class="view-selector">
+        <button class="view-btn" id="btnViewDia" onclick="mudarVisualizacao('dia')">Dia</button>
+        <button class="view-btn" id="btnViewSemana" onclick="mudarVisualizacao('semana')">Semana</button>
+        <button class="view-btn active" id="btnViewMes" onclick="mudarVisualizacao('mes')">Mês</button>
       </div>
     </div>
 
     <div class="resumo-box">
       <div class="resumo-item">
-        <span>Eventos na semana</span>
+        <span>Eventos no período</span>
         <strong id="resumoQtd">0</strong>
       </div>
       <div class="resumo-item">
-        <span>Eventos concluídos</span>
+        <span>Concluídos</span>
         <strong id="resumoConcluidos">0</strong>
       </div>
       <div class="resumo-item">
-        <span>Total gasto na semana</span>
+        <span>Total gasto</span>
         <strong class="total" id="resumoTotal">R$ 0,00</strong>
       </div>
     </div>
 
-    <div class="agenda-wrapper">
-      <table class="agenda-table" id="agendaTable">
-        <thead id="agendaThead"></thead>
-        <tbody id="agendaTbody"></tbody>
-      </table>
-    </div>
+    <!-- CONTAINER DO CALENDÁRIO -->
+    <div id="calendarContainer"></div>
 
     <div class="legend-row">
       <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border-left:3px solid #16a34a;"></div> Evento Gratuito</div>
       <div class="legend-item"><div class="legend-dot" style="background:#fee2e2;border-left:3px solid #dc2626;"></div> Evento Pago</div>
-      <div class="legend-item" style="color:#9ca3af;">Clique em uma célula vazia para adicionar um evento</div>
+      <div class="legend-item" style="color:#9ca3af;">Clique em um dia/célula vazia para adicionar</div>
     </div>
   </main>
 </div>
@@ -150,6 +216,15 @@
         </div>
 
         <div class="field"><label>Nome do Evento</label><input type="text" id="nomeAtracao" required></div>
+        
+        <div class="field">
+          <label>Quem é o responsável?</label>
+          <select id="responsavelEvento">
+            <option value="Casal">👫 Casal</option>
+            <!-- Membros via JS -->
+          </select>
+        </div>
+
         <div class="field"><label>Endereço / Local</label><input type="text" id="endereco"></div>
         <div class="field"><label>Observações</label><textarea id="observacoes" placeholder="Detalhes..."></textarea></div>
 
@@ -187,7 +262,7 @@
 <div class="modal-overlay" id="modalConfig">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Configurar Horários</h2>
+      <h2>Configurar Horários (Semana/Dia)</h2>
       <button class="btn-close" onclick="closeModal('modalConfig')">&times;</button>
     </div>
     <div class="modal-body">
@@ -213,9 +288,20 @@
 <script>
   let todosEventos = [];
   let mapaFerias = {};
-  let dataSemanaAtual = new Date();
+  let dataReferencia = new Date();
+  let visualizacaoAtual = 'mes';
   let horaInicioDia = '05:00';
   let horaFimDia = '23:00';
+  let membrosCasal = [];
+  let filtroResponsavel = 'Todos';
+
+  // --- HELPERS ---
+  function formatarDataISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dia}`;
+  }
 
   function getInicioSemana(ref) {
     const d = new Date(ref);
@@ -224,24 +310,6 @@
     const diff = dia === 0 ? -6 : 1 - dia;
     d.setDate(d.getDate() + diff);
     return d;
-  }
-
-  function formatarDataISO(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const dia = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${dia}`;
-  }
-
-  function getDiasDaSemana(ref) {
-    const inicio = getInicioSemana(ref);
-    const dias = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(inicio);
-      d.setDate(inicio.getDate() + i);
-      dias.push(d);
-    }
-    return dias;
   }
 
   function fmtMoeda(v) {
@@ -257,11 +325,13 @@
     return base + extras;
   }
 
+  // --- INIT ---
   async function initAgendaApp() {
     if (!window.currentUser) return;
     document.getElementById('userName').textContent = window.currentUser.email;
     await carregarConfig();
-    await carregarEventosSemana();
+    await carregarMembros();
+    await carregarEventos();
   }
 
   async function carregarConfig() {
@@ -274,93 +344,226 @@
     } catch (e) {}
   }
 
-  async function carregarEventosSemana() {
-    const dias = getDiasDaSemana(dataSemanaAtual);
-    const dataIni = formatarDataISO(dias[0]);
-    const dataFim = formatarDataISO(dias[6]);
+  async function carregarMembros() {
+    try {
+      const { data } = await db.from('gestao_casal_membros').select('nome').eq('user_id', window.currentUser.id);
+      if (data) {
+        membrosCasal = data.map(m => m.nome);
+      }
+    } catch (e) {}
 
-    // 1. Viagens do usuário
-    const { data: viagens } = await db
-      .from('ferias')
-      .select('id, nome_ferias')
-      .eq('user_id', window.currentUser.id);
+    // Popula os dois selects (Filtro e Modal)
+    const selectFiltro = document.getElementById('filtroResponsavelAgenda');
+    const selectModal = document.getElementById('responsavelEvento');
+    
+    selectFiltro.innerHTML = '<option value="Todos">👥 Todos os eventos</option><option value="Casal">👫 Apenas Casal</option>';
+    selectModal.innerHTML = '<option value="Casal">👫 Casal</option>';
 
+    membrosCasal.forEach(nome => {
+      selectFiltro.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+      selectModal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+    });
+  }
+
+  async function carregarEventos() {
+    const { data: viagens } = await db.from('ferias').select('id, nome_ferias').eq('user_id', window.currentUser.id);
     mapaFerias = {};
     const feriasIds = [];
-    (viagens || []).forEach(f => {
-      mapaFerias[f.id] = f.nome_ferias;
-      feriasIds.push(f.id);
-    });
+    (viagens || []).forEach(f => { mapaFerias[f.id] = f.nome_ferias; feriasIds.push(f.id); });
 
-    // 2. Eventos da semana (user_id OU ferias_id)
-    let query = db.from('eventos')
-      .select('*')
-      .gte('data', dataIni)
-      .lte('data', dataFim);
+    let dataIni, dataFim;
+    const ano = dataReferencia.getFullYear();
+    const mes = dataReferencia.getMonth();
 
+    if (visualizacaoAtual === 'mes') {
+      const primeiroDiaMes = new Date(ano, mes, 1);
+      const startGrid = getInicioSemana(primeiroDiaMes);
+      const endGrid = new Date(startGrid);
+      endGrid.setDate(startGrid.getDate() + 41);
+      dataIni = formatarDataISO(startGrid);
+      dataFim = formatarDataISO(endGrid);
+    } else if (visualizacaoAtual === 'semana') {
+      const ini = getInicioSemana(dataReferencia);
+      const fim = new Date(ini);
+      fim.setDate(ini.getDate() + 6);
+      dataIni = formatarDataISO(ini);
+      dataFim = formatarDataISO(fim);
+    } else {
+      dataIni = dataFim = formatarDataISO(dataReferencia);
+    }
+
+    let query = db.from('eventos').select('*').gte('data', dataIni).lte('data', dataFim);
     if (feriasIds.length > 0) {
-      query = query.or(
-        `user_id.eq.${window.currentUser.id},ferias_id.in.(${feriasIds.join(',')})`
-      );
+      query = query.or(`user_id.eq.${window.currentUser.id},ferias_id.in.(${feriasIds.join(',')})`);
     } else {
       query = query.eq('user_id', window.currentUser.id);
     }
 
-    const { data, error } = await query
-      .order('data')
-      .order('hora_inicio');
-
-    if (error) {
-      console.error('Erro ao carregar eventos:', error);
-      todosEventos = [];
-    } else {
-      // Deduplica por id (OR pode trazer o mesmo evento 2x)
+    const { data, error } = await query.order('data').order('hora_inicio');
+    if (error) { console.error(error); todosEventos = []; }
+    else {
       const mapa = {};
       (data || []).forEach(ev => { mapa[ev.id] = ev; });
       todosEventos = Object.values(mapa);
     }
 
-    renderAgenda();
+    renderizarCalendario();
   }
 
-  function mudarSemana(delta) {
-    dataSemanaAtual.setDate(dataSemanaAtual.getDate() + delta * 7);
-    carregarEventosSemana();
+  // --- NAVEGAÇÃO E CONTROLES ---
+  function mudarVisualizacao(view) {
+    visualizacaoAtual = view;
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btnView${view.charAt(0).toUpperCase() + view.slice(1)}`).classList.add('active');
+    carregarEventos(); 
+  }
+
+  function navegar(delta) {
+    if (visualizacaoAtual === 'mes') dataReferencia.setMonth(dataReferencia.getMonth() + delta);
+    else if (visualizacaoAtual === 'semana') dataReferencia.setDate(dataReferencia.getDate() + (delta * 7));
+    else dataReferencia.setDate(dataReferencia.getDate() + delta);
+    carregarEventos();
   }
 
   function irParaHoje() {
-    dataSemanaAtual = new Date();
-    carregarEventosSemana();
+    dataReferencia = new Date();
+    carregarEventos();
   }
 
-  function renderAgenda() {
-    const dias = getDiasDaSemana(dataSemanaAtual);
-    const hoje = formatarDataISO(new Date());
-    const fmtCurto = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-    const fmtLongo = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  function mudarFiltroResponsavel(valor) {
+    filtroResponsavel = valor;
+    renderizarCalendario();
+  }
 
-    document.getElementById('weekTitle').textContent = `Semana de ${fmtCurto(dias[0])} a ${fmtCurto(dias[6])}`;
-    document.getElementById('weekRange').textContent = `${fmtLongo(dias[0])} — ${fmtLongo(dias[6])}`;
+  // --- RENDERIZAÇÃO ---
+  function renderizarCalendario() {
+    atualizarTitulo();
+    
+    // Filtra os eventos pelo responsável antes de renderizar
+    let eventosFiltrados = todosEventos;
+    if (filtroResponsavel !== 'Todos') {
+      eventosFiltrados = eventosFiltrados.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
+    }
 
-    const thead = document.getElementById('agendaThead');
-    let theadHtml = '<tr><th style="width:70px;"></th>';
+    atualizarResumo(eventosFiltrados);
+
+    const container = document.getElementById('calendarContainer');
+    if (visualizacaoAtual === 'mes') {
+      container.innerHTML = renderizarMes(eventosFiltrados);
+    } else {
+      container.innerHTML = renderizarTimeline(eventosFiltrados);
+    }
+  }
+
+  function atualizarTitulo() {
+    const opcoesMes = { month: 'long', year: 'numeric' };
+    const opcoesDia = { day: 'numeric', month: 'long', year: 'numeric' };
+    let texto = '';
+
+    if (visualizacaoAtual === 'mes') {
+      texto = dataReferencia.toLocaleDateString('pt-BR', opcoesMes);
+      texto = texto.charAt(0).toUpperCase() + texto.slice(1);
+    } else if (visualizacaoAtual === 'semana') {
+      const ini = getInicioSemana(dataReferencia);
+      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+      texto = `${ini.toLocaleDateString('pt-BR', {day: '2-digit', month: 'short'})} - ${fim.toLocaleDateString('pt-BR', {day: '2-digit', month: 'short', year: 'numeric'})}`;
+    } else {
+      texto = dataReferencia.toLocaleDateString('pt-BR', opcoesDia);
+      texto = texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+    document.getElementById('calendarTitle').textContent = texto;
+  }
+
+  function atualizarResumo(eventos) {
+    const total = eventos.reduce((s, ev) => s + calcularValorEvento(ev), 0);
+    document.getElementById('resumoQtd').textContent = eventos.length;
+    document.getElementById('resumoConcluidos').textContent = eventos.filter(ev => ev.concluido).length;
+    document.getElementById('resumoTotal').textContent = fmtMoeda(total);
+  }
+
+  // --- VISÃO: MÊS ---
+  function renderizarMes(eventosFiltrados) {
+    const hojeStr = formatarDataISO(new Date());
+    const ano = dataReferencia.getFullYear();
+    const mes = dataReferencia.getMonth();
+    const startGrid = getInicioSemana(new Date(ano, mes, 1));
+    
+    let html = `
+      <div class="month-grid-wrapper">
+        <div class="month-header">
+          <div>DOM.</div><div>SEG.</div><div>TER.</div><div>QUA.</div><div>QUI.</div><div>SEX.</div><div>SÁB.</div>
+        </div>
+        <div class="month-body">
+    `;
+
+    for (let i = 0; i < 42; i++) {
+      const diaAtual = new Date(startGrid);
+      diaAtual.setDate(startGrid.getDate() + i);
+      const iso = formatarDataISO(diaAtual);
+      
+      const isOutroMes = diaAtual.getMonth() !== mes;
+      const isHoje = iso === hojeStr;
+      const evsDoDia = eventosFiltrados.filter(ev => ev.data === iso);
+      
+      let evsHtml = '';
+      const maxVisiveis = 3;
+      
+      evsDoDia.slice(0, maxVisiveis).forEach(ev => {
+        const valor = calcularValorEvento(ev);
+        const classe = (valor > 0 ? 'pago' : 'gratuito') + (ev.concluido ? ' concluido' : '');
+        const resp = ev.responsavel && ev.responsavel !== 'Casal' ? ` • ${ev.responsavel}` : '';
+        evsHtml += `<div class="month-event ${classe}" onclick="event.stopPropagation(); abrirModalEvento('${iso}', '${ev.hora_inicio}', ${ev.id})" title="${ev.nome_atracao}${resp}">
+          ${ev.nome_atracao}
+        </div>`;
+      });
+
+      if (evsDoDia.length > maxVisiveis) {
+        evsHtml += `<div class="month-more">+ ${evsDoDia.length - maxVisiveis} mais</div>`;
+      }
+
+      html += `
+        <div class="month-day ${isOutroMes ? 'outro-mes' : ''} ${isHoje ? 'hoje' : ''}" 
+             onclick="abrirModalEvento('${iso}', '12:00')">
+          <div class="day-number">${diaAtual.getDate()}</div>
+          ${evsHtml}
+        </div>
+      `;
+    }
+
+    html += `</div></div>`;
+    return html;
+  }
+
+  // --- VISÃO: SEMANA / DIA (LINHA DO TEMPO) ---
+  function renderizarTimeline(eventosFiltrados) {
+    const hojeStr = formatarDataISO(new Date());
+    let dias = [];
+
+    if (visualizacaoAtual === 'semana') {
+      const ini = getInicioSemana(dataReferencia);
+      for(let i=0; i<7; i++) {
+        const d = new Date(ini); d.setDate(ini.getDate() + i); dias.push(d);
+      }
+    } else {
+      dias.push(dataReferencia);
+    }
+
     const nomesDia = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    dias.forEach(d => {
-      const iso = formatarDataISO(d);
-      const isHoje = iso === hoje;
-      theadHtml += `<th class="${isHoje ? 'dia-hoje' : ''}">
-        ${nomesDia[d.getDay()]}<small>${fmtCurto(d)}${isHoje ? ' • HOJE' : ''}</small>
-      </th>`;
-    });
-    theadHtml += '</tr>';
-    thead.innerHTML = theadHtml;
-
-    const tbody = document.getElementById('agendaTbody');
     const hIni = parseInt(horaInicioDia.split(':')[0], 10);
     const hFim = parseInt(horaFimDia.split(':')[0], 10);
 
+    let theadHtml = '<tr><th style="width:70px;"></th>';
+    dias.forEach(d => {
+      const iso = formatarDataISO(d);
+      const isHoje = iso === hojeStr;
+      theadHtml += `<th class="${isHoje ? 'dia-hoje' : ''}">
+        ${nomesDia[d.getDay()]}<small>${d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}${isHoje ? ' • HOJE' : ''}</small>
+      </th>`;
+    });
+    theadHtml += '</tr>';
+
     const mapaEventos = {};
-    todosEventos.forEach(ev => {
+    eventosFiltrados.forEach(ev => {
       mapaEventos[`${ev.data}|${ev.hora_inicio.substring(0, 5)}`] = ev;
     });
 
@@ -368,20 +571,26 @@
     for (let h = hIni; h <= hFim; h++) {
       const horaStr = String(h).padStart(2, '0') + ':00';
       tbodyHtml += `<tr><td class="hora-col">${horaStr}</td>`;
+      
       dias.forEach(d => {
         const iso = formatarDataISO(d);
         const ev = mapaEventos[`${iso}|${horaStr}`];
         if (ev) {
           const valorTotal = calcularValorEvento(ev);
           const classe = (valorTotal > 0 ? 'pago' : 'gratuito') + (ev.concluido ? ' concluido' : '');
-          const nomeViagem = ev.ferias_id ? mapaFerias[ev.ferias_id] : null;
-          const viagemBadge = nomeViagem
-            ? `<div class="evento-viagem" title="${nomeViagem}">✈️ ${nomeViagem}</div>`
-            : '';
+          
+          const tagsHtml = [];
+          if (ev.ferias_id && mapaFerias[ev.ferias_id]) {
+            tagsHtml.push(`<div class="tag-mini tag-viagem-mini">✈️ ${mapaFerias[ev.ferias_id]}</div>`);
+          }
+          if (ev.responsavel) {
+            tagsHtml.push(`<div class="tag-mini tag-resp-mini">👤 ${ev.responsavel}</div>`);
+          }
+
           tbodyHtml += `<td class="evento-cell" onclick="abrirModalEvento('${iso}','${horaStr}',${ev.id})" title="${ev.nome_atracao}">
             <div class="evento-texto ${classe}">${ev.nome_atracao}</div>
             ${valorTotal > 0 ? `<div class="evento-valor">${fmtMoeda(valorTotal)}</div>` : ''}
-            ${viagemBadge}
+            <div class="evento-tags">${tagsHtml.join('')}</div>
           </td>`;
         } else {
           tbodyHtml += `<td class="evento-cell" onclick="abrirModalEvento('${iso}','${horaStr}')"></td>`;
@@ -389,14 +598,18 @@
       });
       tbodyHtml += '</tr>';
     }
-    tbody.innerHTML = tbodyHtml;
 
-    const totalSemana = todosEventos.reduce((s, ev) => s + calcularValorEvento(ev), 0);
-    document.getElementById('resumoQtd').textContent = todosEventos.length;
-    document.getElementById('resumoConcluidos').textContent = todosEventos.filter(ev => ev.concluido).length;
-    document.getElementById('resumoTotal').textContent = fmtMoeda(totalSemana);
+    return `
+      <div class="agenda-wrapper">
+        <table class="agenda-table">
+          <thead>${theadHtml}</thead>
+          <tbody>${tbodyHtml}</tbody>
+        </table>
+      </div>
+    `;
   }
 
+  // --- MODAIS E AÇÕES ---
   function adicionarCampoGasto(descricao = '', valor = '') {
     const container = document.getElementById('listaGastosAtracao');
     const div = document.createElement('div');
@@ -409,14 +622,17 @@
     container.appendChild(div);
   }
 
-  function abrirModalEvento(dataStr, horaStr, eventoId = null) {
+  function abrirModalEvento(dataStr, horaStr = '12:00', eventoId = null) {
+    horaStr = horaStr.substring(0, 5);
+
     document.getElementById('eventoTitle').textContent = eventoId ? 'Editar Evento' : 'Adicionar Evento';
     document.getElementById('eventoForm').reset();
     document.getElementById('listaGastosAtracao').innerHTML = '';
-
+    
     document.getElementById('dataEventoDisplay').value = dataStr;
     document.getElementById('horaInicio').value = horaStr;
     document.getElementById('eventoId').value = eventoId || '';
+    document.getElementById('responsavelEvento').value = 'Casal';
 
     const btnExcluir = document.getElementById('btnExcluirEventoModal');
     const btnConcluir = document.getElementById('btnConcluirEventoModal');
@@ -431,7 +647,9 @@
         document.getElementById('observacoes').value = ev.observacoes || '';
         document.getElementById('quantidade_pessoas').value = ev.quantidade_pessoas || 1;
         document.getElementById('valor_por_pessoa').value = ev.valor_por_pessoa || 0;
-        document.getElementById('horaInicio').value = ev.hora_inicio;
+        document.getElementById('horaInicio').value = ev.hora_inicio.substring(0, 5);
+        document.getElementById('responsavelEvento').value = ev.responsavel || 'Casal';
+        
         if (Array.isArray(ev.gastos_extras)) {
           ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
         }
@@ -454,10 +672,9 @@
 
   document.getElementById('eventoForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const { data: sessData } = await db.auth.getSession();
     const userId = sessData?.session?.user?.id || window.currentUser?.id;
-    if (!userId) return alert('Sessão não encontrada. Faça login novamente.');
+    if (!userId) return alert('Sessão não encontrada.');
 
     const eventoId = document.getElementById('eventoId').value;
     const qtd = Number(document.getElementById('quantidade_pessoas').value);
@@ -480,7 +697,8 @@
       quantidade_pessoas: qtd,
       valor_por_pessoa: valorUnit,
       valor: qtd * valorUnit,
-      gastos_extras: gastosExtras
+      gastos_extras: gastosExtras,
+      responsavel: document.getElementById('responsavelEvento').value
     };
 
     let error;
@@ -494,7 +712,7 @@
 
     if (error) { console.error(error); return alert('Erro ao salvar: ' + error.message); }
     closeModal('modalEvento');
-    await carregarEventosSemana();
+    await carregarEventos();
   });
 
   async function excluirEventoDoModal() {
@@ -503,7 +721,7 @@
     const { error } = await db.from('eventos').delete().eq('id', eventoId);
     if (error) return alert('Erro: ' + error.message);
     closeModal('modalEvento');
-    await carregarEventosSemana();
+    await carregarEventos();
   }
 
   async function concluirEventoDoModal() {
@@ -514,7 +732,7 @@
     const { error } = await db.from('eventos').update({ concluido: !ev.concluido }).eq('id', eventoId);
     if (error) return alert('Erro: ' + error.message);
     closeModal('modalEvento');
-    await carregarEventosSemana();
+    await carregarEventos();
   }
 
   function abrirModalConfig() {
@@ -536,7 +754,7 @@
     } catch (err) {}
 
     closeModal('modalConfig');
-    renderAgenda();
+    renderizarCalendario();
   });
 
   function openModal(id) { document.getElementById(id).classList.add('active'); }

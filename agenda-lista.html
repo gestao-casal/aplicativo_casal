@@ -17,6 +17,14 @@
 
   .toolbar-controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
+  /* Seletor de Responsável */
+  .filter-select {
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 12px; font-weight: 600; color: #374151; cursor: pointer;
+    outline: none; font-family: inherit; font-size: 0.85rem; transition: all 0.15s;
+  }
+  .filter-select:hover { background: #f9fafb; }
+
   .filter-tabs { display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 3px; }
   .filter-tab {
     background: transparent; border: none; padding: 7px 16px; border-radius: 6px;
@@ -84,13 +92,15 @@
   .list-event-location { font-size: 0.8rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .list-event-notes { font-size: 0.78rem; color: #9ca3af; font-style: italic; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .list-event-trip {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 0.7rem; font-weight: 700; color: #4f46e5;
-    background: #eef2ff; padding: 2px 9px; border-radius: 10px;
-    margin-top: 6px; width: fit-content; max-width: 100%;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* Badges na lista */
+  .list-event-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .list-event-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.7rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
   }
+  .tag-viagem { color: #4f46e5; background: #eef2ff; }
+  .tag-responsavel { color: #b45309; background: #fef3c7; }
 
   .list-event-meta {
     flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;
@@ -108,11 +118,10 @@
     padding: 50px 20px; text-align: center; color: #9ca3af; font-size: 0.9rem;
   }
 
-  /* === IMPORT ICS === */
+  /* === IMPORT/EXPORT ICS === */
   .ics-dropzone {
     border: 2px dashed #c7d2fe; border-radius: 12px; padding: 30px 20px;
-    text-align: center; background: #f8faff; cursor: pointer;
-    transition: all 0.15s;
+    text-align: center; background: #f8faff; cursor: pointer; transition: all 0.15s;
   }
   .ics-dropzone:hover { border-color: #4f46e5; background: #eef2ff; }
   .ics-dropzone.dragging { border-color: #4f46e5; background: #e0e7ff; }
@@ -135,37 +144,19 @@
   }
   .ics-item {
     display: flex; align-items: center; gap: 12px; padding: 10px 12px;
-    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;
-    transition: all 0.15s;
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.15s;
   }
   .ics-item:hover { background: #f3f4f6; }
   .ics-item.duplicate { background: #fef3c7; border-color: #fcd34d; }
-  .ics-item input[type="checkbox"] {
-    width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5; flex-shrink: 0;
-  }
+  .ics-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5; flex-shrink: 0; }
   .ics-item-content { flex: 1; min-width: 0; }
-  .ics-item-name {
-    font-weight: 600; color: #1a1f2b; font-size: 0.9rem; margin-bottom: 2px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
+  .ics-item-name { font-weight: 600; color: #1a1f2b; font-size: 0.9rem; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ics-item-meta { font-size: 0.78rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ics-item-warn {
-    background: #fef3c7; color: #92400e; font-size: 0.68rem; font-weight: 700;
-    padding: 2px 8px; border-radius: 8px; white-space: nowrap;
-  }
-  .ics-item-dup {
-    background: #fcd34d; color: #78350f; font-size: 0.68rem; font-weight: 700;
-    padding: 2px 8px; border-radius: 8px; white-space: nowrap;
-  }
+  .ics-item-warn { background: #fef3c7; color: #92400e; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; white-space: nowrap; }
+  .ics-item-dup { background: #fcd34d; color: #78350f; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; white-space: nowrap; }
 
-  .ics-empty {
-    padding: 30px; text-align: center; color: #9ca3af; font-size: 0.9rem;
-  }
-
-  .ics-footer {
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-    padding-top: 15px; border-top: 1px solid var(--border); flex-wrap: wrap;
-  }
+  .ics-empty { padding: 30px; text-align: center; color: #9ca3af; font-size: 0.9rem; }
+  .ics-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border); flex-wrap: wrap; }
   .ics-footer-info { font-size: 0.85rem; color: #6b7280; }
 
   @media (max-width: 600px) {
@@ -174,6 +165,7 @@
     .list-event-date .date-day, .list-event-date .date-time { margin-top: 0; }
     .list-event-meta { align-items: flex-start; }
     .filter-tab { padding: 7px 12px; font-size: 0.8rem; }
+    .toolbar-controls { width: 100%; justify-content: space-between; }
   }
 </style>
 </head>
@@ -194,6 +186,7 @@
         <p>Todos os compromissos agendados — incluindo os das suas viagens</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-white" onclick="exportarICS()">📤 Exportar .ics</button>
         <button class="btn-white" onclick="abrirModalImportICS()">📥 Importar .ics</button>
         <button class="btn-white" onclick="novoEvento()">+ Novo Evento</button>
       </div>
@@ -205,11 +198,20 @@
         <small id="toolbarSub">Carregando...</small>
       </div>
       <div class="toolbar-controls">
+        
+        <!-- FILTRO DE RESPONSÁVEL -->
+        <select id="filtroResponsavelLista" class="filter-select" onchange="mudarFiltroResponsavel(this.value)">
+          <option value="Todos">👥 Todos os eventos</option>
+          <option value="Casal">👫 Apenas Casal</option>
+          <!-- Membros preenchidos via JS -->
+        </select>
+
         <div class="filter-tabs" role="tablist">
           <button class="filter-tab active" data-filter="semana" onclick="mudarFiltro('semana')">Semana</button>
           <button class="filter-tab" data-filter="mes" onclick="mudarFiltro('mes')">Mês</button>
           <button class="filter-tab" data-filter="todas" onclick="mudarFiltro('todas')">Todas</button>
         </div>
+        
         <label class="toolbar-toggle" id="togglePassadosWrap" style="display:none;">
           <input type="checkbox" id="togglePassados" onchange="renderLista()">
           Mostrar passados
@@ -248,6 +250,14 @@
         <input type="hidden" id="eventoId">
         <div class="field"><label>Data</label><input type="date" id="dataEventoDisplay" required></div>
         <div class="field"><label>Nome do Evento</label><input type="text" id="nomeAtracao" required></div>
+        
+        <div class="field">
+          <label>Quem é o responsável?</label>
+          <select id="responsavelEvento">
+            <option value="Casal">👫 Casal</option>
+          </select>
+        </div>
+
         <div class="field"><label>Endereço / Local</label><input type="text" id="endereco"></div>
         <div class="field"><label>Observações</label><textarea id="observacoes" placeholder="Detalhes..."></textarea></div>
         <div class="field" style="display: flex; gap: 10px;">
@@ -276,26 +286,14 @@
       <button class="btn-close" onclick="closeModal('modalImportICS')">&times;</button>
     </div>
     <div class="modal-body">
-
-      <!-- ETAPA 1: escolher arquivo -->
       <div id="icsStep1">
-        <div class="ics-dropzone" id="icsDropzone"
-             onclick="document.getElementById('icsFileInput').click()"
-             ondragover="event.preventDefault(); this.classList.add('dragging');"
-             ondragleave="this.classList.remove('dragging');"
-             ondrop="handleICSDrop(event)">
+        <div class="ics-dropzone" id="icsDropzone" onclick="document.getElementById('icsFileInput').click()" ondragover="event.preventDefault(); this.classList.add('dragging');" ondragleave="this.classList.remove('dragging');" ondrop="handleICSDrop(event)">
           <div class="ics-dropzone-icon">📅</div>
           <div class="ics-dropzone-text">Clique ou arraste um arquivo .ics</div>
-          <div class="ics-dropzone-hint">Exportado do Google Calendar, Apple Calendar ou Outlook</div>
+          <div class="ics-dropzone-hint">Google Calendar, Apple Calendar ou Outlook</div>
           <input type="file" id="icsFileInput" accept=".ics,text/calendar" onchange="handleICSFileChange(event)">
         </div>
-        <p style="font-size:0.8rem;color:#6b7280;margin-top:14px;line-height:1.5;">
-          ⓘ Eventos recorrentes (RRULE) serão importados apenas na <strong>primeira ocorrência</strong>.
-          Eventos all-day entram às 00:00.
-        </p>
       </div>
-
-      <!-- ETAPA 2: preview -->
       <div id="icsStep2" style="display:none;">
         <div class="ics-preview-header">
           <h3>Pré-visualização</h3>
@@ -314,7 +312,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -324,11 +321,13 @@
 <script>
   let todosEventos = [];
   let mapaFerias = {};
+  let membrosCasal = [];
   let filtroAtual = 'semana';
+  let filtroResponsavel = 'Todos'; // NOVO: Estado do filtro
   let referenciaPeriodo = new Date();
-  let icsEventosPendentes = []; // eventos parseados aguardando confirmação
+  let icsEventosPendentes = [];
 
-  // ---------- HELPERS ----------
+  // --- HELPERS ---
   function formatarDataISO(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -358,15 +357,12 @@
     return base + extras;
   }
 
-  function isPassado(ev, hojeISO) {
-    return ev.data < hojeISO;
-  }
+  function isPassado(ev, hojeISO) { return ev.data < hojeISO; }
 
   function getPeriodo() {
     if (filtroAtual === 'semana') {
       const ini = getInicioSemana(referenciaPeriodo);
-      const fim = new Date(ini);
-      fim.setDate(ini.getDate() + 6);
+      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
       const fmtCurto = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
       return { ini: formatarDataISO(ini), fim: formatarDataISO(fim), label: `Semana de ${fmtCurto(ini)} a ${fmtCurto(fim)}` };
     }
@@ -379,13 +375,36 @@
     return null;
   }
 
-  // ---------- INIT ----------
+  // --- INIT ---
   async function initAgendaApp() {
     if (!window.currentUser) return;
     document.getElementById('userName').textContent = window.currentUser.email;
+    await carregarMembros();
     await carregarEventos();
     atualizarUIFiltro();
     renderLista();
+  }
+
+  async function carregarMembros() {
+    try {
+      const { data, error } = await db.from('gestao_casal_membros').select('nome').eq('user_id', window.currentUser.id);
+      if (error) throw error;
+      if (data) membrosCasal = data.map(m => m.nome);
+    } catch (e) { console.error(e); }
+
+    // Popula o select de filtro
+    const selectFiltro = document.getElementById('filtroResponsavelLista');
+    selectFiltro.innerHTML = '<option value="Todos">👥 Todos os eventos</option><option value="Casal">👫 Apenas Casal</option>';
+    membrosCasal.forEach(nome => {
+      selectFiltro.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+    });
+
+    // Popula o select do modal
+    const selectModal = document.getElementById('responsavelEvento');
+    selectModal.innerHTML = '<option value="Casal">👫 Casal</option>';
+    membrosCasal.forEach(nome => {
+      selectModal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+    });
   }
 
   async function carregarEventos() {
@@ -401,6 +420,7 @@
       query = query.eq('user_id', window.currentUser.id);
     }
     const { data, error } = await query.order('data', { ascending: true }).order('hora_inicio', { ascending: true });
+    
     if (error) { console.error(error); todosEventos = []; }
     else {
       const mapa = {};
@@ -409,11 +429,16 @@
     }
   }
 
-  // ---------- FILTRO / NAVEGAÇÃO ----------
+  // --- FILTROS ---
   function mudarFiltro(filtro) {
     filtroAtual = filtro;
     referenciaPeriodo = new Date();
     atualizarUIFiltro();
+    renderLista();
+  }
+
+  function mudarFiltroResponsavel(valor) {
+    filtroResponsavel = valor;
     renderLista();
   }
 
@@ -423,10 +448,7 @@
     renderLista();
   }
 
-  function irParaHoje() {
-    referenciaPeriodo = new Date();
-    renderLista();
-  }
+  function irParaHoje() { referenciaPeriodo = new Date(); renderLista(); }
 
   function atualizarUIFiltro() {
     document.querySelectorAll('.filter-tab').forEach(b => b.classList.toggle('active', b.dataset.filter === filtroAtual));
@@ -441,31 +463,36 @@
     }
   }
 
-  // ---------- RENDER LISTA ----------
+  // --- RENDER LISTA ---
   function renderLista() {
     const hojeISO = formatarDataISO(new Date());
+
+    // 1. Filtra por Responsável
+    let baseEventos = [...todosEventos];
+    if (filtroResponsavel !== 'Todos') {
+      baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
+    }
+
+    // 2. Aplica filtro de período (Semana/Mês/Todas)
     let eventosParaMostrar = [];
-    let titulo = '';
-    let subtitulo = '';
-    let navLabel = '';
+    let titulo = '', subtitulo = '', navLabel = '';
 
     if (filtroAtual === 'todas') {
       const mostrarPassados = document.getElementById('togglePassados').checked;
-      eventosParaMostrar = mostrarPassados ? [...todosEventos] : todosEventos.filter(ev => !isPassado(ev, hojeISO));
+      eventosParaMostrar = mostrarPassados ? baseEventos : baseEventos.filter(ev => !isPassado(ev, hojeISO));
       titulo = mostrarPassados ? 'Todos os eventos' : 'Próximos eventos';
     } else {
       const p = getPeriodo();
-      eventosParaMostrar = todosEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
+      eventosParaMostrar = baseEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
       titulo = filtroAtual === 'semana' ? 'Semana' : 'Mês';
       navLabel = p.label;
     }
 
-    const eventosOrdenados = eventosParaMostrar.sort((a, b) =>
-      `${a.data}T${a.hora_inicio}`.localeCompare(`${b.data}T${b.hora_inicio}`)
-    );
+    const eventosOrdenados = eventosParaMostrar.sort((a, b) => `${a.data}T${a.hora_inicio}`.localeCompare(`${b.data}T${b.hora_inicio}`));
 
     subtitulo = eventosOrdenados.length === 0 ? 'Nenhum evento encontrado' : `${eventosOrdenados.length} evento${eventosOrdenados.length !== 1 ? 's' : ''}`;
     if (filtroAtual === 'todas' && !document.getElementById('togglePassados').checked) subtitulo += ' a partir de hoje';
+    if (filtroResponsavel !== 'Todos') subtitulo += ` (${filtroResponsavel})`;
 
     document.getElementById('toolbarTitle').textContent = titulo;
     document.getElementById('toolbarSub').textContent = subtitulo;
@@ -485,11 +512,10 @@
         const isHoje = ev.data === hojeISO;
         const passado = isPassado(ev, hojeISO);
         const nomeViagem = ev.ferias_id ? mapaFerias[ev.ferias_id] : null;
+        const responsavel = ev.responsavel || 'Casal';
+        
         const rowClasses = ['list-event-row', ev.concluido ? 'concluido' : '', isHoje ? 'hoje' : '', passado ? 'passado' : ''].filter(Boolean).join(' ');
-        const badge = ev.concluido
-          ? '<span class="list-event-badge concluido">✓ Concluído</span>'
-          : (passado ? '<span class="list-event-badge passado">Passado</span>' : '<span class="list-event-badge pendente">Pendente</span>');
-        const tripBadge = nomeViagem ? `<div class="list-event-trip">✈️ ${nomeViagem}</div>` : '';
+        const badgeStatus = ev.concluido ? '<span class="list-event-badge concluido">✓ Concluído</span>' : (passado ? '<span class="list-event-badge passado">Passado</span>' : '<span class="list-event-badge pendente">Pendente</span>');
 
         return `<div class="${rowClasses}" onclick="abrirModalEvento('${ev.data}','${hora}',${ev.id})">
           <div class="list-event-date">
@@ -501,11 +527,16 @@
             <div class="list-event-name">${ev.nome_atracao}</div>
             ${ev.endereco ? `<div class="list-event-location">📍 ${ev.endereco}</div>` : ''}
             ${ev.observacoes ? `<div class="list-event-notes">${ev.observacoes}</div>` : ''}
-            ${tripBadge}
+            
+            <div class="list-event-tags">
+              ${nomeViagem ? `<span class="list-event-tag tag-viagem">✈️ ${nomeViagem}</span>` : ''}
+              <span class="list-event-tag tag-responsavel">👤 ${responsavel}</span>
+            </div>
+
           </div>
           <div class="list-event-meta">
             <span class="list-event-value ${valor > 0 ? '' : 'gratuito'}">${valor > 0 ? fmtMoeda(valor) : 'Grátis'}</span>
-            ${badge}
+            ${badgeStatus}
           </div>
         </div>`;
       }).join('');
@@ -529,309 +560,71 @@
     abrirModalEvento(formatarDataISO(dataBase), proxHora);
   }
 
-  // ====================================================
-  // =========== IMPORTAÇÃO DE ARQUIVO .ICS =============
-  // ====================================================
-
-  function abrirModalImportICS() {
-    icsEventosPendentes = [];
-    document.getElementById('icsStep1').style.display = 'block';
-    document.getElementById('icsStep2').style.display = 'none';
-    document.getElementById('icsFileInput').value = '';
-    openModal('modalImportICS');
-  }
-
-  function voltarEtapaICS() {
-    icsEventosPendentes = [];
-    document.getElementById('icsStep1').style.display = 'block';
-    document.getElementById('icsStep2').style.display = 'none';
-    document.getElementById('icsFileInput').value = '';
-  }
-
-  function handleICSDrop(e) {
-    e.preventDefault();
-    document.getElementById('icsDropzone').classList.remove('dragging');
-    const file = e.dataTransfer.files[0];
-    if (file) processarICSFile(file);
-  }
-
-  function handleICSFileChange(e) {
-    const file = e.target.files[0];
-    if (file) processarICSFile(file);
-  }
-
-  async function processarICSFile(file) {
-    if (!file.name.toLowerCase().endsWith('.ics')) {
-      return alert('Por favor, selecione um arquivo .ics.');
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      return alert('Arquivo muito grande (máx. 5 MB).');
-    }
-
-    try {
-      const text = await file.text();
-      const eventos = parseICS(text);
-
-      if (eventos.length === 0) {
-        return alert('Nenhum evento encontrado no arquivo.');
-      }
-      if (eventos.length > 1000) {
-        return alert(`O arquivo contém ${eventos.length} eventos. Por segurança, importe em lotes menores (máx. 1000).`);
-      }
-
-      icsEventosPendentes = eventos;
-      renderPreviewICS();
-      document.getElementById('icsStep1').style.display = 'none';
-      document.getElementById('icsStep2').style.display = 'block';
-    } catch (err) {
-      console.error(err);
-      alert('Erro ao ler o arquivo: ' + err.message);
-    }
-  }
-
-  // ---------- PARSER ICS ----------
-  function parseICS(content) {
-    // 1) Desdobra linhas (continuação começa com espaço ou tab)
-    const unfolded = content.replace(/\r?\n[ \t]/g, '');
-    const linhas = unfolded.split(/\r?\n/);
-
-    const rawEvents = [];
-    let atual = null;
-
-    for (const linha of linhas) {
-      if (linha === 'BEGIN:VEVENT') { atual = {}; continue; }
-      if (linha === 'END:VEVENT') { if (atual) rawEvents.push(atual); atual = null; continue; }
-      if (!atual) continue;
-
-      const idx = linha.indexOf(':');
-      if (idx === -1) continue;
-      const chaveCompleta = linha.substring(0, idx);
-      const valor = linha.substring(idx + 1);
-
-      // Separa propriedade dos parâmetros (DTSTART;TZID=...:valor)
-      const [chave] = chaveCompleta.split(';');
-
-      if (chave === 'DTSTART') atual.dtstart = valor;
-      else if (chave === 'DTEND') atual.dtend = valor;
-      else if (chave === 'SUMMARY') atual.summary = unescapeICS(valor);
-      else if (chave === 'LOCATION') atual.location = unescapeICS(valor);
-      else if (chave === 'DESCRIPTION') atual.description = unescapeICS(valor);
-      else if (chave === 'RRULE') atual.rrule = valor;
-      else if (chave === 'UID') atual.uid = valor;
-    }
-
-    // 2) Transforma em objetos de evento do app
+  // --- EXPORTAR ICS ---
+  function exportarICS() {
     const hojeISO = formatarDataISO(new Date());
-    const resultado = [];
+    let eventosParaExportar = [];
 
-    for (const raw of rawEvents) {
-      if (!raw.dtstart) continue;
-      const parsedDate = parseICSDate(raw.dtstart);
-      if (!parsedDate) continue;
-
-      // Duplicata? (mesma data + hora + nome)
-      const horaNorm = parsedDate.time || '00:00';
-      const duplicado = todosEventos.some(ev =>
-        ev.data === parsedDate.date &&
-        ev.hora_inicio.substring(0, 5) === horaNorm &&
-        ev.nome_atracao === (raw.summary || '(Sem título)')
-      );
-
-      resultado.push({
-        selected: !duplicado,
-        duplicado,
-        recorrente: !!raw.rrule,
-        summary: raw.summary || '(Sem título)',
-        date: parsedDate.date,
-        time: horaNorm,
-        allDay: parsedDate.allDay,
-        location: raw.location || '',
-        description: raw.description || '',
-        uid: raw.uid || ''
-      });
+    // Pega apenas os eventos que estão visíveis na tela no momento (respeitando o filtro de responsável)
+    let baseEventos = [...todosEventos];
+    if (filtroResponsavel !== 'Todos') {
+      baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
     }
 
-    // Ordena por data/hora
-    resultado.sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
-    return resultado;
-  }
-
-  function unescapeICS(s) {
-    if (!s) return '';
-    return s
-      .replace(/\\n/gi, '\n')
-      .replace(/\\N/g, '\n')
-      .replace(/\\,/g, ',')
-      .replace(/\\;/g, ';')
-      .replace(/\\\\/g, '\\');
-  }
-
-  function parseICSDate(valor) {
-    // Formatos suportados:
-    //   YYYYMMDD              → all-day
-    //   YYYYMMDDTHHMMSS       → hora local
-    //   YYYYMMDDTHHMMSSZ      → UTC (converte para local)
-    const m = valor.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
-    if (!m) return null;
-
-    const [, y, mo, d, hh, mi, ss, z] = m;
-
-    if (!hh) {
-      return { date: `${y}-${mo}-${d}`, time: null, allDay: true };
-    }
-
-    if (z) {
-      // UTC → local
-      const utc = new Date(Date.UTC(
-        parseInt(y, 10), parseInt(mo, 10) - 1, parseInt(d, 10),
-        parseInt(hh, 10), parseInt(mi, 10), parseInt(ss, 10)
-      ));
-      return {
-        date: formatarDataISO(utc),
-        time: `${String(utc.getHours()).padStart(2, '0')}:${String(utc.getMinutes()).padStart(2, '0')}`,
-        allDay: false
-      };
-    }
-
-    return { date: `${y}-${mo}-${d}`, time: `${hh}:${mi}`, allDay: false };
-  }
-
-  // ---------- PREVIEW ----------
-  function renderPreviewICS() {
-    const list = document.getElementById('icsList');
-    const count = document.getElementById('icsPreviewCount');
-    const info = document.getElementById('icsFooterInfo');
-    const btnImportar = document.getElementById('icsBtnImportar');
-
-    if (icsEventosPendentes.length === 0) {
-      list.innerHTML = `<div class="ics-empty">Nenhum evento no arquivo.</div>`;
-      btnImportar.disabled = true;
-      return;
-    }
-
-    list.innerHTML = icsEventosPendentes.map((ev, i) => {
-      const dataObj = new Date(ev.date + 'T00:00:00');
-      const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-      const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-
-      const badges = [];
-      if (ev.duplicado) badges.push('<span class="ics-item-dup">já existe</span>');
-      if (ev.recorrente) badges.push('<span class="ics-item-warn">⚠️ recorrente</span>');
-
-      const classes = ['ics-item', ev.duplicado ? 'duplicate' : ''].filter(Boolean).join(' ');
-
-      return `<div class="${classes}" onclick="toggleICSItem(${i}, event)">
-        <input type="checkbox" ${ev.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleICSItem(${i}, event)" />
-        <div class="ics-item-content">
-          <div class="ics-item-name">${escapeHtml(ev.summary)}</div>
-          <div class="ics-item-meta">
-            ${diaSemana} ${diaMes} ${ev.allDay ? '(dia inteiro)' : 'às ' + ev.time}
-            ${ev.location ? ' • ' + escapeHtml(ev.location) : ''}
-          </div>
-        </div>
-        ${badges.join(' ')}
-      </div>`;
-    }).join('');
-
-    atualizarContadoresICS();
-  }
-
-  function atualizarContadoresICS() {
-    const total = icsEventosPendentes.length;
-    const selecionados = icsEventosPendentes.filter(e => e.selected).length;
-    const duplicados = icsEventosPendentes.filter(e => e.duplicado).length;
-    const recorrentes = icsEventosPendentes.filter(e => e.recorrente).length;
-
-    document.getElementById('icsPreviewCount').textContent = `${selecionados} de ${total} selecionados`;
-
-    const partes = [];
-    if (duplicados > 0) partes.push(`${duplicados} já existem`);
-    if (recorrentes > 0) partes.push(`${recorrentes} recorrentes (só 1ª ocorrência)`);
-    document.getElementById('icsFooterInfo').textContent = partes.join(' • ');
-
-    document.getElementById('icsBtnImportar').disabled = selecionados === 0;
-  }
-
-  function toggleICSItem(i, e) {
-    if (e) e.stopPropagation();
-    icsEventosPendentes[i].selected = !icsEventosPendentes[i].selected;
-    renderPreviewICS();
-  }
-
-  function selecionarTodosICS(valor) {
-    icsEventosPendentes.forEach(ev => {
-      // Não força selecionar duplicados
-      if (valor && ev.duplicado) return;
-      ev.selected = valor;
-    });
-    renderPreviewICS();
-  }
-
-  function escapeHtml(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-  }
-
-  // ---------- IMPORTAÇÃO ----------
-  async function confirmarImportacao() {
-    const selecionados = icsEventosPendentes.filter(ev => ev.selected);
-    if (selecionados.length === 0) return alert('Nenhum evento selecionado.');
-
-    const { data: sessData } = await db.auth.getSession();
-    const userId = sessData?.session?.user?.id || window.currentUser?.id;
-    if (!userId) return alert('Sessão não encontrada.');
-
-    const btn = document.getElementById('icsBtnImportar');
-    const txtOriginal = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = `Importando ${selecionados.length}...`;
-
-    const payloads = selecionados.map(ev => ({
-      user_id: userId,
-      data: ev.date,
-      hora_inicio: ev.time + ':00',
-      nome_atracao: ev.summary,
-      endereco: ev.location,
-      observacoes: ev.description,
-      quantidade_pessoas: 1,
-      valor_por_pessoa: 0,
-      valor: 0,
-      gastos_extras: []
-    }));
-
-    // Insere em lotes de 50 para não estourar o limite do Supabase
-    let inseridos = 0;
-    let erros = 0;
-    for (let i = 0; i < payloads.length; i += 50) {
-      const lote = payloads.slice(i, i + 50);
-      const { error } = await db.from('eventos').insert(lote);
-      if (error) {
-        console.error('Erro no lote', i, error);
-        erros += lote.length;
-      } else {
-        inseridos += lote.length;
-      }
-    }
-
-    btn.textContent = txtOriginal;
-    btn.disabled = false;
-
-    closeModal('modalImportICS');
-    await carregarEventos();
-    renderLista();
-
-    if (erros === 0) {
-      alert(`✅ ${inseridos} evento${inseridos !== 1 ? 's' : ''} importado${inseridos !== 1 ? 's' : ''} com sucesso!`);
+    if (filtroAtual === 'todas') {
+      const mostrarPassados = document.getElementById('togglePassados').checked;
+      eventosParaExportar = mostrarPassados ? baseEventos : baseEventos.filter(ev => !isPassado(ev, hojeISO));
     } else {
-      alert(`⚠️ ${inseridos} importados, ${erros} com erro. Veja o console para detalhes.`);
+      const p = getPeriodo();
+      eventosParaExportar = baseEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
     }
+
+    if (eventosParaExportar.length === 0) {
+      return alert("Não há eventos visíveis para exportar.");
+    }
+
+    let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Gestao Casal//Agenda//PT-BR\r\nCALSCALE:GREGORIAN\r\n";
+    const dtstamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    eventosParaExportar.forEach(ev => {
+      const dtstart = ev.data.replace(/-/g, '') + 'T' + ev.hora_inicio.replace(/:/g, '');
+      const summary = ev.nome_atracao.replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+      const location = (ev.endereco || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+      
+      let description = ev.observacoes || '';
+      if (ev.responsavel) description += `\n\nResponsável: ${ev.responsavel}`;
+      description = description.replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+
+      icsContent += "BEGIN:VEVENT\r\n";
+      icsContent += `UID:${ev.id}-${dtstamp}@gestaocasal\r\n`;
+      icsContent += `DTSTAMP:${dtstamp}\r\n`;
+      icsContent += `DTSTART:${dtstart}\r\n`;
+      icsContent += `SUMMARY:${summary}\r\n`;
+      if (location) icsContent += `LOCATION:${location}\r\n`;
+      if (description) icsContent += `DESCRIPTION:${description}\r\n`;
+      icsContent += "END:VEVENT\r\n";
+    });
+
+    icsContent += "END:VCALENDAR\r\n";
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    
+    let sufixo = 'eventos';
+    if (filtroAtual === 'semana') sufixo = 'semana';
+    if (filtroAtual === 'mes') sufixo = 'mes';
+    if (filtroResponsavel !== 'Todos') sufixo += `-${filtroResponsavel.toLowerCase().replace(/\s+/g, '-')}`;
+    
+    a.download = `agenda-${sufixo}-${new Date().toISOString().split('T')[0]}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
-  // ====================================================
-  // =========== MODAL DE EVENTO (normal) ===============
-  // ====================================================
-
+  // --- MODAL EVENTO ---
   function adicionarCampoGasto(descricao = '', valor = '') {
     const container = document.getElementById('listaGastosAtracao');
     const div = document.createElement('div');
@@ -851,6 +644,7 @@
     document.getElementById('dataEventoDisplay').value = dataStr;
     document.getElementById('horaInicio').value = horaStr;
     document.getElementById('eventoId').value = eventoId || '';
+    document.getElementById('responsavelEvento').value = 'Casal';
 
     const btnExcluir = document.getElementById('btnExcluirEventoModal');
     const btnConcluir = document.getElementById('btnConcluirEventoModal');
@@ -866,7 +660,10 @@
         document.getElementById('quantidade_pessoas').value = ev.quantidade_pessoas || 1;
         document.getElementById('valor_por_pessoa').value = ev.valor_por_pessoa || 0;
         document.getElementById('horaInicio').value = ev.hora_inicio;
+        document.getElementById('responsavelEvento').value = ev.responsavel || 'Casal'; 
+        
         if (Array.isArray(ev.gastos_extras)) ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
+        
         if (ev.concluido) { btnConcluir.textContent = 'Desmarcar Conclusão'; btnConcluir.style.background = '#666'; }
         else { btnConcluir.textContent = 'Marcar como Concluído'; btnConcluir.style.background = '#f57c00'; }
       }
@@ -883,7 +680,7 @@
     e.preventDefault();
     const { data: sessData } = await db.auth.getSession();
     const userId = sessData?.session?.user?.id || window.currentUser?.id;
-    if (!userId) return alert('Sessão não encontrada. Faça login novamente.');
+    if (!userId) return alert('Sessão não encontrada.');
 
     const eventoId = document.getElementById('eventoId').value;
     const qtd = Number(document.getElementById('quantidade_pessoas').value);
@@ -906,7 +703,8 @@
       quantidade_pessoas: qtd,
       valor_por_pessoa: valorUnit,
       valor: qtd * valorUnit,
-      gastos_extras: gastosExtras
+      gastos_extras: gastosExtras,
+      responsavel: document.getElementById('responsavelEvento').value 
     };
 
     let error;
@@ -944,6 +742,227 @@
     closeModal('modalEvento');
     await carregarEventos();
     renderLista();
+  }
+
+  // --- IMPORTAR ICS ---
+  function abrirModalImportICS() {
+    icsEventosPendentes = [];
+    document.getElementById('icsStep1').style.display = 'block';
+    document.getElementById('icsStep2').style.display = 'none';
+    document.getElementById('icsFileInput').value = '';
+    openModal('modalImportICS');
+  }
+
+  function voltarEtapaICS() {
+    icsEventosPendentes = [];
+    document.getElementById('icsStep1').style.display = 'block';
+    document.getElementById('icsStep2').style.display = 'none';
+    document.getElementById('icsFileInput').value = '';
+  }
+
+  function handleICSDrop(e) {
+    e.preventDefault();
+    document.getElementById('icsDropzone').classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) processarICSFile(file);
+  }
+
+  function handleICSFileChange(e) {
+    const file = e.target.files[0];
+    if (file) processarICSFile(file);
+  }
+
+  async function processarICSFile(file) {
+    if (!file.name.toLowerCase().endsWith('.ics')) return alert('Por favor, selecione um arquivo .ics.');
+    if (file.size > 5 * 1024 * 1024) return alert('Arquivo muito grande (máx. 5 MB).');
+
+    try {
+      const text = await file.text();
+      const eventos = parseICS(text);
+      if (eventos.length === 0) return alert('Nenhum evento encontrado no arquivo.');
+      if (eventos.length > 1000) return alert(`O arquivo contém ${eventos.length} eventos. Importe em lotes menores.`);
+
+      icsEventosPendentes = eventos;
+      renderPreviewICS();
+      document.getElementById('icsStep1').style.display = 'none';
+      document.getElementById('icsStep2').style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao ler o arquivo: ' + err.message);
+    }
+  }
+
+  function parseICS(content) {
+    const unfolded = content.replace(/\r?\n[ \t]/g, '');
+    const linhas = unfolded.split(/\r?\n/);
+    const rawEvents = [];
+    let atual = null;
+
+    for (const linha of linhas) {
+      if (linha === 'BEGIN:VEVENT') { atual = {}; continue; }
+      if (linha === 'END:VEVENT') { if (atual) rawEvents.push(atual); atual = null; continue; }
+      if (!atual) continue;
+
+      const idx = linha.indexOf(':');
+      if (idx === -1) continue;
+      const [chave] = linha.substring(0, idx).split(';');
+      const valor = linha.substring(idx + 1);
+
+      if (chave === 'DTSTART') atual.dtstart = valor;
+      else if (chave === 'SUMMARY') atual.summary = unescapeICS(valor);
+      else if (chave === 'LOCATION') atual.location = unescapeICS(valor);
+      else if (chave === 'DESCRIPTION') atual.description = unescapeICS(valor);
+      else if (chave === 'RRULE') atual.rrule = valor;
+      else if (chave === 'UID') atual.uid = valor;
+    }
+
+    const resultado = [];
+    for (const raw of rawEvents) {
+      if (!raw.dtstart) continue;
+      const parsedDate = parseICSDate(raw.dtstart);
+      if (!parsedDate) continue;
+
+      const horaNorm = parsedDate.time || '00:00';
+      const duplicado = todosEventos.some(ev =>
+        ev.data === parsedDate.date && ev.hora_inicio.substring(0, 5) === horaNorm && ev.nome_atracao === (raw.summary || '(Sem título)')
+      );
+
+      resultado.push({
+        selected: !duplicado, duplicado, recorrente: !!raw.rrule,
+        summary: raw.summary || '(Sem título)', date: parsedDate.date, time: horaNorm, allDay: parsedDate.allDay,
+        location: raw.location || '', description: raw.description || '', uid: raw.uid || ''
+      });
+    }
+
+    resultado.sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
+    return resultado;
+  }
+
+  function unescapeICS(s) {
+    if (!s) return '';
+    return s.replace(/\\n/gi, '\n').replace(/\\N/g, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
+  }
+
+  function parseICSDate(valor) {
+    const m = valor.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+    if (!m) return null;
+    const [, y, mo, d, hh, mi, ss, z] = m;
+
+    if (!hh) return { date: `${y}-${mo}-${d}`, time: null, allDay: true };
+
+    if (z) {
+      const utc = new Date(Date.UTC(parseInt(y, 10), parseInt(mo, 10) - 1, parseInt(d, 10), parseInt(hh, 10), parseInt(mi, 10), parseInt(ss, 10)));
+      return { date: formatarDataISO(utc), time: `${String(utc.getHours()).padStart(2, '0')}:${String(utc.getMinutes()).padStart(2, '0')}`, allDay: false };
+    }
+    return { date: `${y}-${mo}-${d}`, time: `${hh}:${mi}`, allDay: false };
+  }
+
+  function renderPreviewICS() {
+    const list = document.getElementById('icsList');
+    const count = document.getElementById('icsPreviewCount');
+    const info = document.getElementById('icsFooterInfo');
+    const btnImportar = document.getElementById('icsBtnImportar');
+
+    if (icsEventosPendentes.length === 0) {
+      list.innerHTML = `<div class="ics-empty">Nenhum evento no arquivo.</div>`;
+      btnImportar.disabled = true; return;
+    }
+
+    list.innerHTML = icsEventosPendentes.map((ev, i) => {
+      const dataObj = new Date(ev.date + 'T00:00:00');
+      const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+      const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const badges = [];
+      if (ev.duplicado) badges.push('<span class="ics-item-dup">já existe</span>');
+      if (ev.recorrente) badges.push('<span class="ics-item-warn">⚠️ recorrente</span>');
+      const classes = ['ics-item', ev.duplicado ? 'duplicate' : ''].filter(Boolean).join(' ');
+
+      return `<div class="${classes}" onclick="toggleICSItem(${i}, event)">
+        <input type="checkbox" ${ev.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleICSItem(${i}, event)" />
+        <div class="ics-item-content">
+          <div class="ics-item-name">${escapeHtml(ev.summary)}</div>
+          <div class="ics-item-meta">${diaSemana} ${diaMes} ${ev.allDay ? '(dia inteiro)' : 'às ' + ev.time} ${ev.location ? ' • ' + escapeHtml(ev.location) : ''}</div>
+        </div>
+        ${badges.join(' ')}
+      </div>`;
+    }).join('');
+
+    atualizarContadoresICS();
+  }
+
+  function atualizarContadoresICS() {
+    const total = icsEventosPendentes.length;
+    const selecionados = icsEventosPendentes.filter(e => e.selected).length;
+    const duplicados = icsEventosPendentes.filter(e => e.duplicado).length;
+    const recorrentes = icsEventosPendentes.filter(e => e.recorrente).length;
+
+    document.getElementById('icsPreviewCount').textContent = `${selecionados} de ${total} selecionados`;
+    const partes = [];
+    if (duplicados > 0) partes.push(`${duplicados} já existem`);
+    if (recorrentes > 0) partes.push(`${recorrentes} recorrentes (só 1ª ocorrência)`);
+    document.getElementById('icsFooterInfo').textContent = partes.join(' • ');
+    document.getElementById('icsBtnImportar').disabled = selecionados === 0;
+  }
+
+  function toggleICSItem(i, e) {
+    if (e) e.stopPropagation();
+    icsEventosPendentes[i].selected = !icsEventosPendentes[i].selected;
+    renderPreviewICS();
+  }
+
+  function selecionarTodosICS(valor) {
+    icsEventosPendentes.forEach(ev => {
+      if (valor && ev.duplicado) return;
+      ev.selected = valor;
+    });
+    renderPreviewICS();
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  async function confirmarImportacao() {
+    const selecionados = icsEventosPendentes.filter(ev => ev.selected);
+    if (selecionados.length === 0) return alert('Nenhum evento selecionado.');
+
+    const { data: sessData } = await db.auth.getSession();
+    const userId = sessData?.session?.user?.id || window.currentUser?.id;
+    if (!userId) return alert('Sessão não encontrada.');
+
+    const btn = document.getElementById('icsBtnImportar');
+    const txtOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = `Importando ${selecionados.length}...`;
+
+    const payloads = selecionados.map(ev => ({
+      user_id: userId,
+      data: ev.date,
+      hora_inicio: ev.time + ':00',
+      nome_atracao: ev.summary,
+      endereco: ev.location,
+      observacoes: ev.description,
+      quantidade_pessoas: 1,
+      valor_por_pessoa: 0,
+      valor: 0,
+      gastos_extras: [],
+      responsavel: 'Casal'
+    }));
+
+    let inseridos = 0, erros = 0;
+    for (let i = 0; i < payloads.length; i += 50) {
+      const lote = payloads.slice(i, i + 50);
+      const { error } = await db.from('eventos').insert(lote);
+      if (error) { console.error('Erro no lote', i, error); erros += lote.length; }
+      else { inseridos += lote.length; }
+    }
+
+    btn.textContent = txtOriginal; btn.disabled = false;
+    closeModal('modalImportICS');
+    await carregarEventos(); renderLista();
+
+    if (erros === 0) alert(`✅ ${inseridos} evento${inseridos !== 1 ? 's' : ''} importado${inseridos !== 1 ? 's' : ''} com sucesso!`);
+    else alert(`⚠️ ${inseridos} importados, ${erros} com erro. Veja o console.`);
   }
 
   function openModal(id) { document.getElementById(id).classList.add('active'); }
