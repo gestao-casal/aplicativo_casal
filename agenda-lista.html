@@ -786,8 +786,28 @@
         return;
       }
 
+      // Se o evento era ÚNICO, mas agora ganhou recorrência ou Data Término
+      if (recTipo !== 'nenhuma' || dataFim !== dataInicio) {
+        await db.from('eventos').delete().eq('id', eventoId);
+        
+        const recId = crypto.randomUUID();
+        const datas = gerarDatasRecorrentes(dataInicio, recTipo === 'nenhuma' ? 'diario' : recTipo, dataFim);
+        const payloads = datas.map(dataIso => {
+          let p = { ...payloadBase, data: dataIso, recorrencia_id: recId };
+          delete p.dataFimRecorrencia;
+          return p;
+        });
+        const res = await db.from('eventos').insert(payloads);
+        if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+        
+        closeModal('modalEvento');
+        await carregarEventos();
+        renderLista();
+        return;
+      }
+
       const payloadDB = { ...payloadBase };
-      delete payloadDB.dataFimRecorrencia; // 🔥 Previne erro de coluna
+      delete payloadDB.dataFimRecorrencia; 
       
       const res = await db.from('eventos').update(payloadDB).eq('id', eventoId);
       if (res.error) return alert('Erro ao salvar: ' + res.error.message);
@@ -799,7 +819,7 @@
         
         const payloads = datas.map(dataIso => {
           let p = { ...payloadBase, data: dataIso, recorrencia_id: recId };
-          delete p.dataFimRecorrencia; // 🔥 Previne erro de coluna
+          delete p.dataFimRecorrencia; 
           return p;
         });
 
@@ -807,7 +827,7 @@
         if (res.error) return alert('Erro ao salvar: ' + res.error.message);
       } else {
         const payloadDB = { ...payloadBase };
-        delete payloadDB.dataFimRecorrencia; // 🔥 Previne erro de coluna
+        delete payloadDB.dataFimRecorrencia; 
         
         const res = await db.from('eventos').insert([payloadDB]);
         if (res.error) return alert('Erro ao salvar: ' + res.error.message);
@@ -824,8 +844,17 @@
     const { tipo, evento: ev, payload } = acaoPendente;
     if (!ev) return;
 
-    const dataFim = payload.dataFimRecorrencia;
-    const recTipo = payload.recorrencia;
+    // 🔥 CORREÇÃO: Só tenta ler o payload se ele existir (evita erro no delete)
+    let dataFim = null;
+    let recTipo = null;
+
+    if (payload) {
+      dataFim = payload.dataFimRecorrencia;
+      recTipo = payload.recorrencia;
+      if (recTipo === 'nenhuma' && dataFim !== payload.data) {
+        recTipo = 'diario';
+      }
+    }
 
     if (tipo === 'delete') {
       if (escopo === 'este') {

@@ -705,8 +705,7 @@
     const dataInicio = document.getElementById('dataEventoDisplay').value;
     const dataFim = document.getElementById('dataFimRecorrencia').value || dataInicio;
 
-    // 🔥 INTELIGÊNCIA: Se o usuário colocou uma data final mas deixou "nenhuma",
-    // o sistema assume que ele quer todos os dias do período.
+    // 🔥 INTELIGÊNCIA: Se colocou data final diferente, cria todos os dias do período
     if (recTipo === 'nenhuma' && dataFim !== dataInicio) {
       recTipo = 'diario';
     }
@@ -731,37 +730,58 @@
       gastos_extras: gastosExtras,
       responsavel: document.getElementById('responsavelEvento').value,
       recorrencia: recTipo,
-      dataFimRecorrencia: dataFim // Usado apenas no frontend para as lógicas abaixo
+      dataFimRecorrencia: dataFim
     };
 
     if (eventoId) {
       const evOriginal = todosEventos.find(e => String(e.id) === String(eventoId));
       
+      // Se o evento original JÁ É uma série, pergunta o escopo
       if (evOriginal && evOriginal.recorrencia_id) {
         acaoPendente = { tipo: 'edit', evento: evOriginal, payload: payloadBase };
         document.getElementById('escopoTitulo').textContent = 'Editar Evento Recorrente';
         document.getElementById('escopoMensagem').textContent = 'Este evento faz parte de uma série. Como deseja aplicar as alterações?';
         document.getElementById('btnEscopoFuturos').style.display = 'block';
         openModal('modalEscopo');
-        return; // Pausa até escolher o escopo
+        return;
       }
 
-      // Edição de evento único (não recorrente)
+      // Se o evento era ÚNICO, mas agora ganhou recorrência ou Data Término
+      if (recTipo !== 'nenhuma' || dataFim !== dataInicio) {
+        // Apaga o evento único antigo
+        await db.from('eventos').delete().eq('id', eventoId);
+        
+        // Cria a nova série
+        const recId = crypto.randomUUID();
+        const datas = gerarDatasRecorrentes(dataInicio, recTipo === 'nenhuma' ? 'diario' : recTipo, dataFim);
+        const payloads = datas.map(dataIso => {
+          let p = { ...payloadBase, data: dataIso, recorrencia_id: recId };
+          delete p.dataFimRecorrencia;
+          return p;
+        });
+        const res = await db.from('eventos').insert(payloads);
+        if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+        
+        closeModal('modalEvento');
+        await carregarEventos();
+        return;
+      }
+
+      // Edição normal de evento único (sem mudar período)
       const payloadDB = { ...payloadBase };
-      delete payloadDB.dataFimRecorrencia; // 🔥 IMPEDE O ERRO DE COLUNA
+      delete payloadDB.dataFimRecorrencia; 
       
       const res = await db.from('eventos').update(payloadDB).eq('id', eventoId);
       if (res.error) return alert('Erro ao salvar: ' + res.error.message);
       
     } else {
-      // Criação de novo evento
       if (recTipo !== 'nenhuma') {
         const recId = crypto.randomUUID();
         const datas = gerarDatasRecorrentes(dataInicio, recTipo, dataFim);
         
         const payloads = datas.map(dataIso => {
           let p = { ...payloadBase, data: dataIso, recorrencia_id: recId };
-          delete p.dataFimRecorrencia; // 🔥 IMPEDE O ERRO DE COLUNA
+          delete p.dataFimRecorrencia; 
           return p;
         });
 
@@ -769,7 +789,7 @@
         if (res.error) return alert('Erro ao salvar: ' + res.error.message);
       } else {
         const payloadDB = { ...payloadBase };
-        delete payloadDB.dataFimRecorrencia; // 🔥 IMPEDE O ERRO DE COLUNA
+        delete payloadDB.dataFimRecorrencia; 
         
         const res = await db.from('eventos').insert([payloadDB]);
         if (res.error) return alert('Erro ao salvar: ' + res.error.message);
@@ -785,8 +805,18 @@
     const { tipo, evento: ev, payload } = acaoPendente;
     if (!ev) return;
 
-    const dataFim = payload.dataFimRecorrencia;
-    const recTipo = payload.recorrencia;
+    // 🔥 CORREÇÃO: Só tenta ler o payload se ele existir (evita erro no delete)
+    let dataFim = null;
+    let recTipo = null;
+
+    if (payload) {
+      dataFim = payload.dataFimRecorrencia;
+      recTipo = payload.recorrencia;
+      // Se o usuário limpou a recorrência mas manteve a data final, transforma em diário
+      if (recTipo === 'nenhuma' && dataFim !== payload.data) {
+        recTipo = 'diario';
+      }
+    }
 
     if (tipo === 'delete') {
       if (escopo === 'este') {
