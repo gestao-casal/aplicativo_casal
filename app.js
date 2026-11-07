@@ -89,7 +89,8 @@ async function initLogin() {
       return;
     }
 
-    window.location.href = "ferias.html";
+    // REDIRECIONA PARA A NOVA HOME
+    window.location.href = "home.html"; 
   });
 }
 
@@ -118,22 +119,17 @@ async function logout() {
 }
 
 // ==========================================
-// FUNÇÃO PARA INJETAR O BOTÃO MOBILE
+// INJETAR BOTÃO DE INÍCIO NO CELULAR
 // ==========================================
 function injetarBotaoMobile() {
   if (window.innerWidth <= 768) {
-    if (!document.querySelector('.btn-mobile-home')) {
+    const page = document.body.dataset.page;
+    // Não mostra o botão home na tela de login nem na própria home
+    if (page !== 'login' && page !== 'home' && !document.querySelector('.btn-mobile-home')) {
       const btnHome = document.createElement('button');
       btnHome.className = 'btn-mobile-home';
       btnHome.innerHTML = '🏠';
-      
-      // NOTA: Mude para 'home.html' se você criar uma página separada para a Home.
-      // Se usar 'index.html', o usuário vai deslogar. 
-      // Se quiser voltar para o painel principal, use 'ferias.html' ou 'home.html'
-      btnHome.onclick = () => {
-        window.location.href = 'ferias.html'; // Recomendo mudar para a sua home real
-      };
-      
+      btnHome.onclick = () => { window.location.href = 'home.html'; };
       document.body.appendChild(btnHome);
     }
   }
@@ -145,14 +141,15 @@ function injetarBotaoMobile() {
 document.addEventListener("DOMContentLoaded", async function () {
   const page = document.body.dataset.page;
 
-  // 1. Se for a tela de login, configura o login e para o código
+  // 1. Tela de Login
   if (page === "login" || $("loginForm")) {
     await initLogin();
     return;
   }
 
-  // 2. Se for uma página protegida, verifica o login e carrega o menu
+  // 2. Páginas Protegidas (Incluindo a própria Home)
   const paginasProtegidas = [
+    "home", // <--- Adicionado aqui
     "ferias", "financeiro", "movimentacoes", "relatorio_detalhe", "membros",
     "checklists", "checklist_detalhe", "filmes", "listas_compras",
     "lista_detalhe", "restaurantes", "veiculos", "abastecimento", 
@@ -161,11 +158,15 @@ document.addEventListener("DOMContentLoaded", async function () {
   
   if (paginasProtegidas.includes(page)) {
     const auth = await requireAuth();
+    
     if (auth) {
       await loadMenu();
-      // Só injeta o botão se o usuário estiver logado e for página protegida
-      injetarBotaoMobile();
+      
+      // Se NÃO for a home, injeta o botão de voltar
+      if (page !== "home") {
+        injetarBotaoMobile();
+      }
     }
-    return; // Impede que o código continue, mas o botão já foi injetado
+    return; 
   }
 });

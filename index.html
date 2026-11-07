@@ -1,207 +1,32 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu Sistema</title>
-  <!-- Seu CSS principal -->
-  <link rel="stylesheet" href="style.css">
-  
-  <style>
-    /* =========================================
-       ESTILOS EXCLUSIVOS DA HOME MOBILE
-       ========================================= */
-    /* Esconde o botão flutuante no Desktop */
-    .btn-mobile-home {
-      display: none;
-    }
-
-    @media (max-width: 768px) {
-      /* 1. Esconde a barra lateral original no celular */
-      .sidebar, #menu {
-        display: none !important;
-      }
-
-      /* 2. Ocupa a tela inteira */
-      .main {
-        margin-left: 0 !important;
-        width: 100% !important;
-        padding: 15px 15px 85px 15px !important;
-      }
-
-      /* 3. Botão Flutuante "Voltar ao Início" */
-      .btn-mobile-home {
-        display: flex !important;
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        width: 55px;
-        height: 55px;
-        background: #111827;
-        color: #fff;
-        border-radius: 50%;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 9998;
-        border: none;
-        cursor: pointer;
-      }
-
-      /* 4. Tela Inicial Mobile */
-      #mobileHomePage {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: #f5f7fb; /* var(--bg) */
-        z-index: 9999;
-        padding: 20px;
-        overflow-y: auto;
-      }
-
-      #mobileHomePage.active {
-        display: block !important;
-      }
-
-      .mobile-home-header {
-        text-align: center;
-        margin-bottom: 30px;
-        margin-top: 20px;
-      }
-
-      .mobile-home-header h1 {
-        font-size: 26px;
-        color: #111827;
-      }
-
-      .mobile-home-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-      }
-
-      .mobile-home-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 20px 10px;
-        text-align: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        border: 1px solid #e5e7eb;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        transition: transform 0.1s;
-      }
-
-      .mobile-home-card:active {
-        transform: scale(0.95);
-        background: #f9fafb;
-      }
-
-      .mobile-home-card .icon {
-        font-size: 36px;
-      }
-
-      .mobile-home-card .title {
-        font-weight: 700;
-        font-size: 14px;
-        color: #374151;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Login - Férias</title>
+<style>
+  body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+  .login-box { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+  h2 { text-align: center; color: #229954; margin-bottom: 20px; }
+  input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+  button { width: 100%; padding: 10px; background: #229954; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+  button:hover { background: #1e8449; }
+  a { display: block; text-align: center; margin-top: 15px; font-size: 0.9rem; color: #666; text-decoration: none; }
+</style>
 </head>
-<body data-page="home">
+<body data-page="login">
 
-  <div class="app">
-    <!-- Barra Lateral / Menu (Controlada pelo app.js) -->
-    <div id="menu"></div>
-    
-    <!-- Conteúdo Principal (Onde as páginas abrem) -->
-    <main class="main" id="mainContent">
-      <!-- O conteúdo de cada página será injetado aqui -->
-    </main>
+  <div class="login-box">
+    <h2>Entrar no Sistema</h2>
+    <div id="loginMessage"></div>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="E-mail" required>
+      <input type="password" id="loginPassword" placeholder="Senha" required>
+      <button type="submit">Entrar</button>
+    </form>
+    <a href="cadastro.html">Não tem conta? Cadastre-se</a>
   </div>
 
-  <!-- =========================================
-       ELEMENTOS EXCLUSIVOS DO CELULAR
-       ========================================= -->
-       
-  <!-- Botão de Início Flutuante -->
-  <button class="btn-mobile-home" onclick="abrirMobileHome()">🏠</button>
-
-  <!-- Tela Inicial Mobile (Grade de Apps) -->
-  <div id="mobileHomePage">
-    <div class="mobile-home-header">
-      <h1>Bem-vindo(a)</h1>
-      <p style="color: #6b7280; margin-top: 5px;">O que vamos fazer hoje?</p>
-    </div>
-    
-    <div class="mobile-home-grid">
-      <!-- NOTA: Certifique-se de que os nomes dentro de navegarMobile('...') são iguais aos da sua função go() -->
-      <div class="mobile-home-card" onclick="navegarMobile('agenda')">
-        <span class="icon">📅</span>
-        <span class="title">Agenda</span>
-      </div>
-      
-      <div class="mobile-home-card" onclick="navegarMobile('listas_compras')">
-        <span class="icon">✅</span>
-        <span class="title">Check-list</span>
-      </div>
-      
-      <div class="mobile-home-card" onclick="navegarMobile('ferias')">
-        <span class="icon">✈️</span>
-        <span class="title">Minhas Viagens</span>
-      </div>
-      
-      <div class="mobile-home-card" onclick="navegarMobile('filmes')">
-        <span class="icon">🎬</span>
-        <span class="title">Filmes</span>
-      </div>
-      
-      <div class="mobile-home-card" onclick="navegarMobile('financeiro')">
-        <span class="icon">💰</span>
-        <span class="title">Financeiro</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scripts do Sistema -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
-  
-  <!-- Script para gerenciar a Home Mobile -->
-  <script>
-    function abrirMobileHome() {
-      document.getElementById('mobileHomePage').classList.add('active');
-      // Esconde o botão home enquanto estiver na própria home
-      document.querySelector('.btn-mobile-home').style.display = 'none';
-    }
-
-    function navegarMobile(pagina) {
-      // Fecha a tela inicial
-      document.getElementById('mobileHomePage').classList.remove('active');
-      // Mostra o botão home novamente
-      document.querySelector('.btn-mobile-home').style.display = 'flex';
-      
-      // Chama a sua função de navegação original
-      if (typeof go === 'function') {
-        go(pagina);
-      } else {
-        console.error('A função go() não foi encontrada no app.js');
-      }
-    }
-
-    // Ao carregar o aplicativo no celular, abre a Home Mobile automaticamente
-    document.addEventListener('DOMContentLoaded', () => {
-      // Verifica se é tela de celular
-      if (window.innerWidth <= 768) {
-        // Abre a home mobile assim que o sistema carregar
-        abrirMobileHome();
-      }
-    });
-  </script>
 </body>
 </html>

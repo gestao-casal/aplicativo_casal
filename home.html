@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Início - Meu Sistema</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    /* Estilos específicos para a grade de botões da Home */
+    .home-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .home-header {
+      text-align: center;
+      margin-bottom: 40px;
+      margin-top: 40px;
+    }
+    
+    .home-header h1 {
+      font-size: 28px;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 20px;
+    }
+    
+    .home-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 25px 15px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .home-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    
+    .home-card:active {
+      transform: scale(0.95);
+    }
+    
+    .home-card .icon {
+      font-size: 40px;
+    }
+    
+    .home-card .title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #374151;
+    }
+
+    /* Ajustes finos para celular */
+    @media (max-width: 768px) {
+      .home-container {
+        padding: 15px;
+      }
+      .home-grid {
+        grid-template-columns: 1fr 1fr; /* Força 2 colunas no celular */
+        gap: 15px;
+      }
+      .home-header h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<!-- O data-page="home" é importante para o app.js saber que esta é a Home -->
+<body data-page="home">
+
+  <div class="home-container">
+    <div class="home-header">
+      <h1>Bem-vindo(a)</h1>
+      <p style="color: #6b7280;">O que vamos fazer hoje?</p>
+    </div>
+    
+    <div class="home-grid">
+      <div class="home-card" onclick="go('agenda')">
+        <span class="icon">📅</span>
+        <span class="title">Agenda</span>
+      </div>
+      
+      <div class="home-card" onclick="go('listas_compras')">
+        <span class="icon">✅</span>
+        <span class="title">Check-list</span>
+      </div>
+      
+      <div class="home-card" onclick="go('ferias')">
+        <span class="icon">✈️</span>
+        <span class="title">Minhas Viagens</span>
+      </div>
+      
+      <div class="home-card" onclick="go('filmes')">
+        <span class="icon">🎬</span>
+        <span class="title">Filmes</span>
+      </div>
+      
+      <div class="home-card" onclick="go('financeiro')">
+        <span class="icon">💰</span>
+        <span class="title">Financeiro</span>
+      </div>
+
+      <div class="home-card" onclick="go('veiculos')">
+        <span class="icon">🚗</span>
+        <span class="title">Veículos</span>
+      </div>
+      
+      <!-- Botão para deslogar -->
+      <div class="home-card" onclick="logout()" style="border-color: #fecaca;">
+        <span class="icon">🚪</span>
+        <span class="title" style="color: #dc2626;">Sair</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
