@@ -9,6 +9,19 @@ window.db = db;
 
 let currentUser = null;
 
+// ==========================================
+// ADICIONAR FAVICON (ÍCONE) EM TODAS AS PÁGINAS
+// ==========================================
+(function adicionarFavicon() {
+  if (!document.querySelector("link[rel*='icon']")) {
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/png';
+    link.href = 'logo.png'; // Nome do seu arquivo
+    document.head.appendChild(link);
+  }
+})();
+
 function $(id) { return document.getElementById(id); }
 
 function go(page) {
