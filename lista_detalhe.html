@@ -8,12 +8,13 @@
 <style>
   .section-title { font-size: 1.1rem; font-weight: 700; margin: 20px 0 10px 0; color: #333; }
   
-  .item-card { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; transition: opacity 0.2s; }
+  .item-card { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; transition: opacity 0.2s, background 0.2s, border-color 0.2s; }
   .item-card.concluido { opacity: 0.6; }
   .item-card.concluido .item-text { text-decoration: line-through; color: #666; }
+  .item-card.clickable { cursor: pointer; }
+  .item-card.clickable:hover { border-color: #cbd5e1; background: #fafafa; }
   
   .item-left { display: flex; align-items: flex-start; gap: 15px; flex: 1; }
-  .item-left input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #16a34a; margin-top: 2px; }
   .item-info { display: flex; flex-direction: column; }
   .item-text { font-size: 1rem; font-weight: 600; color: #111827; }
   .item-details { font-size: 0.8rem; color: #666; margin-top: 3px; }
@@ -28,11 +29,7 @@
   .fab-btn { position: fixed; bottom: 30px; right: 30px; background: #16a34a; color: #fff; border: none; padding: 15px 25px; border-radius: 30px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4); cursor: pointer; transition: transform 0.2s, background 0.2s; z-index: 100; }
   .fab-btn:hover { transform: scale(1.05); background: #15803d; }
 
-  /* Área de Compra (Painel Lateral) */
-  .painel-compra { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
-  .painel-compra.active { display: block; }
-  .painel-compra h3 { margin: 0 0 15px 0; font-size: 1.2rem; color: #111827; }
-  
+  /* Conteúdo do Modal de Compra */
   .input-group { margin-bottom: 15px; }
   .input-group label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; font-weight: 600; }
   .input-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; outline: none; }
@@ -45,6 +42,8 @@
   .total-label { font-size: 0.9rem; color: #64748b; font-weight: 600; }
   .total-valor { font-size: 1.5rem; color: #4f46e5; font-weight: 800; }
   .btn-comprar { background: #4f46e5; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .btn-cancelar { background: #e5e7eb; color: #374151; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  .btn-cancelar:hover { background: #d1d5db; }
   
   /* Total Geral da Compra Concluída */
   .total-compra-box { background: linear-gradient(90deg, #06b6d4 0%, #4f46e5 100%); color: #fff; padding: 20px; border-radius: 12px; margin-top: 30px; }
@@ -68,30 +67,6 @@
     <div id="areaPendentes">
       <div class="section-title">Itens Pendentes</div>
       <div id="listaPendentes"></div>
-      
-      <!-- Painel de Compra (Aparece ao clicar no checkbox) -->
-      <div class="painel-compra" id="painelCompra">
-        <h3 id="painelItemNome">Item</h3>
-        <div class="input-group">
-          <label>Preço Unitário (R$)</label>
-          <input type="text" id="inputPreco" placeholder="Ex: R$ 2,00">
-        </div>
-        <div class="input-group">
-          <label>Quantidade</label>
-          <div class="qtd-control">
-            <button type="button" onclick="mudarQtd(-1)">-</button>
-            <input type="number" id="inputQtd" value="1" min="0.1" step="0.1">
-            <button type="button" onclick="mudarQtd(1)">+</button>
-          </div>
-        </div>
-        <div class="painel-footer">
-          <div>
-            <div class="total-label">Total</div>
-            <div class="total-valor" id="painelTotal">R$ 0,00</div>
-          </div>
-          <button class="btn-comprar" onclick="confirmarCompra()">🛒 Comprar</button>
-        </div>
-      </div>
     </div>
 
     <div id="areaConcluidos">
@@ -112,6 +87,40 @@
 </div>
 
 <button class="fab-btn" onclick="abrirModalItem()">+ Novo Produto</button>
+
+<!-- MODAL DE COMPRA -->
+<div class="modal-overlay" id="modalCompra">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2 id="painelItemNome">Item</h2>
+      <button class="btn-close" onclick="fecharPainelCompra()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="input-group">
+        <label>Preço Unitário (R$)</label>
+        <input type="text" id="inputPreco" placeholder="Ex: R$ 2,00">
+      </div>
+      <div class="input-group">
+        <label>Quantidade</label>
+        <div class="qtd-control">
+          <button type="button" onclick="mudarQtd(-1)">-</button>
+          <input type="number" id="inputQtd" value="1" min="0.1" step="0.1">
+          <button type="button" onclick="mudarQtd(1)">+</button>
+        </div>
+      </div>
+      <div class="painel-footer">
+        <div>
+          <div class="total-label">Total</div>
+          <div class="total-valor" id="painelTotal">R$ 0,00</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="btn-cancelar" onclick="fecharPainelCompra()">Cancelar</button>
+          <button class="btn-comprar" onclick="confirmarCompra()">🛒 Comprar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL ITEM (NOVO/EDITAR) -->
 <div class="modal-overlay" id="modalItem">
@@ -158,7 +167,7 @@
 <script>
   let listaId = null;
   let itens = [];
-  let itemSelecionado = null; // Para o painel lateral
+  let itemSelecionado = null; // Para o modal de compra
 
   function getQueryParam(param) {
     const val = new URLSearchParams(window.location.search).get(param);
@@ -194,7 +203,7 @@
     if (l) {
       document.getElementById('tituloLista').textContent = l.titulo;
       if (l.concluida) {
-        document.querySelector('.fab-btn').style.display = 'none'; // Esconde o botão de novo item
+        document.querySelector('.fab-btn').style.display = 'none';
       }
     }
 
@@ -221,7 +230,6 @@
     if (comprados.length === 0) divConc.innerHTML = '<p style="color: #666;">Nenhum item comprado ainda.</p>';
     else divConc.innerHTML = comprados.map(i => renderCard(i)).join('');
 
-    // Calcula o total
     let total = 0;
     comprados.forEach(i => { total += (i.preco_unitario * i.quantidade); });
     
@@ -238,22 +246,23 @@
     const totalItem = (i.preco_unitario * i.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const unitario = i.preco_unitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     
-    // Detalhes embaixo do nome
     let detalhes = `Qtd: ${i.quantidade}`;
     if (i.comprado && i.preco_unitario > 0) {
       detalhes = `Unidade: <span style="color:#16a34a">${unitario}</span> <br> Qtd: ${i.quantidade} • <strong>${totalItem}</strong>`;
     }
 
+    const clickAttr = i.comprado ? '' : `onclick="abrirPainelCompra('${i.id}')"`;
+
     return `
-      <div class="item-card ${i.comprado ? 'concluido' : ''}">
+      <div class="item-card ${i.comprado ? 'concluido' : 'clickable'}" ${clickAttr}>
         <div class="item-left">
-          <input type="checkbox" ${i.comprado ? 'checked' : ''} onchange="toggleComprado('${i.id}', this.checked)">
           <div class="item-info">
             <span class="item-text">${i.descricao}</span>
             <span class="item-details">${detalhes}</span>
           </div>
         </div>
-        <div class="item-actions">
+        <div class="item-actions" onclick="event.stopPropagation()">
+          ${i.comprado ? `<button class="btn-icon-small" onclick="desfazerCompra('${i.id}')" title="Desfazer compra">↩️</button>` : ''}
           <button class="btn-icon-small" onclick="abrirModalItem('${i.id}')">✏️</button>
           <button class="btn-icon-small danger" onclick="excluirItem('${i.id}')">🗑️</button>
         </div>
@@ -262,16 +271,9 @@
   }
 
   // ==========================================
-  // FLUXO DE COMPRA (CHECKBOX -> PAINEL)
+  // FLUXO DE COMPRA (CLIQUE NO ITEM -> MODAL)
   // ==========================================
-  function toggleComprado(id, isChecked) {
-    if (!isChecked) {
-      // Se desmarcar, volta direto para pendente
-      db.from('gestao_casal_itens_compra').update({ comprado: false }).eq('id', id).then(() => carregarItens());
-      return;
-    }
-
-    // Se marcar, abre o painel de compra
+  function abrirPainelCompra(id) {
     const item = itens.find(x => String(x.id) === String(id));
     if (!item) return;
     
@@ -282,10 +284,18 @@
     document.getElementById('inputQtd').value = item.quantidade || 1;
     
     calcularTotalPainel();
-    document.getElementById('painelCompra').classList.add('active');
-    
-    // Rola a tela até o painel
-    document.getElementById('painelCompra').scrollIntoView({ behavior: 'smooth' });
+    openModal('modalCompra');
+  }
+
+  function fecharPainelCompra() {
+    closeModal('modalCompra');
+    itemSelecionado = null;
+  }
+
+  async function desfazerCompra(id) {
+    if (!confirm('Desfazer a compra deste item? Ele voltará para pendentes.')) return;
+    await db.from('gestao_casal_itens_compra').update({ comprado: false }).eq('id', id);
+    carregarItens();
   }
 
   function mudarQtd(delta) {
@@ -305,7 +315,6 @@
     document.getElementById('painelTotal').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  // Monitora a digitação no preço do painel para formatar e recalcular
   document.getElementById('inputPreco').addEventListener('input', function(e) {
     e.target.value = formatarMoeda(e.target.value);
     calcularTotalPainel();
@@ -325,7 +334,7 @@
       quantidade: qtd
     }).eq('id', itemSelecionado.id);
 
-    document.getElementById('painelCompra').classList.remove('active');
+    closeModal('modalCompra');
     itemSelecionado = null;
     carregarItens();
   }
@@ -360,7 +369,6 @@
     openModal('modalItem');
   }
 
-  // Formata o input de preço no modal
   document.getElementById('itemPreco').addEventListener('input', function(e) {
     e.target.value = formatarMoeda(e.target.value);
   });

@@ -3,7 +3,6 @@
    ========================================================= */
 const SUPABASE_URL = "https://tzolokxetilunyfzovav.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_0HJWnbqDMg1LFwLuhaRLDg_FvEXwxZd";
-
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.db = db;
@@ -20,7 +19,6 @@ function go(page) {
   }
 }
 
-// Atualize a função de toggle para receber a seta
 function toggleSubmenu(submenuId, arrowId) {
   const submenu = document.getElementById(submenuId);
   const arrow = document.getElementById(arrowId);
@@ -29,7 +27,6 @@ function toggleSubmenu(submenuId, arrowId) {
     submenu.style.display = "none";
     if (arrow) arrow.textContent = "▼";
   } else {
-    // Fecha todos os outros submenus abertos antes de abrir o novo
     document.querySelectorAll('.submenu').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.arrow').forEach(el => el.textContent = '▼');
 
@@ -38,7 +35,6 @@ function toggleSubmenu(submenuId, arrowId) {
   }
 }
 
-// Atualize a função loadMenu para abrir o submenu correto
 async function loadMenu() {
   const menuDiv = $("menu");
   if (!menuDiv) return;
@@ -50,12 +46,10 @@ async function loadMenu() {
     
     const page = document.body.dataset.page;
 
-    // Marca o botão ativo
     document.querySelectorAll(".nav button").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.page === page);
     });
 
-    // Abre o submenu correto se estiver em uma página filha
     if (['financeiro', 'movimentacoes', 'membros'].includes(page)) {
       const submenu = document.getElementById('submenu-financeiro');
       const arrow = document.getElementById('arrow-financeiro');
@@ -123,34 +117,55 @@ async function logout() {
   window.location.replace("index.html");
 }
 
+// ==========================================
+// FUNÇÃO PARA INJETAR O BOTÃO MOBILE
+// ==========================================
+function injetarBotaoMobile() {
+  if (window.innerWidth <= 768) {
+    if (!document.querySelector('.btn-mobile-home')) {
+      const btnHome = document.createElement('button');
+      btnHome.className = 'btn-mobile-home';
+      btnHome.innerHTML = '🏠';
+      
+      // NOTA: Mude para 'home.html' se você criar uma página separada para a Home.
+      // Se usar 'index.html', o usuário vai deslogar. 
+      // Se quiser voltar para o painel principal, use 'ferias.html' ou 'home.html'
+      btnHome.onclick = () => {
+        window.location.href = 'ferias.html'; // Recomendo mudar para a sua home real
+      };
+      
+      document.body.appendChild(btnHome);
+    }
+  }
+}
+
+// ==========================================
+// INICIALIZAÇÃO DO SISTEMA
+// ==========================================
 document.addEventListener("DOMContentLoaded", async function () {
   const page = document.body.dataset.page;
 
+  // 1. Se for a tela de login, configura o login e para o código
   if (page === "login" || $("loginForm")) {
     await initLogin();
     return;
   }
 
-  // ATUALIZADO: Adicionado 'checklists' e 'checklist_detalhe'
+  // 2. Se for uma página protegida, verifica o login e carrega o menu
   const paginasProtegidas = [
-    "ferias", 
-    "financeiro", 
-    "movimentacoes", 
-    "relatorio_detalhe", 
-    "membros",
-    "checklists",
-    "checklist_detalhe",
-    "filmes",
-    "listas_compras",
-    "lista_detalhe",
-    "restaurantes", "veiculos", "abastecimento", "historico_km", "manutencao", "agenda","agenda-lista"
+    "ferias", "financeiro", "movimentacoes", "relatorio_detalhe", "membros",
+    "checklists", "checklist_detalhe", "filmes", "listas_compras",
+    "lista_detalhe", "restaurantes", "veiculos", "abastecimento", 
+    "historico_km", "manutencao", "agenda", "agenda-lista"
   ];
   
   if (paginasProtegidas.includes(page)) {
     const auth = await requireAuth();
     if (auth) {
       await loadMenu();
+      // Só injeta o botão se o usuário estiver logado e for página protegida
+      injetarBotaoMobile();
     }
-    return;
+    return; // Impede que o código continue, mas o botão já foi injetado
   }
 });

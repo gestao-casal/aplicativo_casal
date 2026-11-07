@@ -1197,48 +1197,147 @@ th {
     }
 }
 
-@media (max-width: 700px) {
+/* ==============================
+   RESPONSIVIDADE MOBILE (CELULAR)
+   ============================== */
+@media (max-width: 768px) {
+    /* 1. Esconde a barra lateral original no celular */
     .sidebar {
-        width: 70px;
-        padding: 15px 8px;
+        display: none !important;
     }
-    .brand {
-        font-size: 0;
-        text-align: center;
-    }
-    .brand:before {
-        content: "MS";
-        font-size: 20px;
-    }
-    .brand small { display: none; }
-    .nav { padding-right: 0; }
-    .nav button {
-        font-size: 0;
-        text-align: center;
-        padding: 12px 4px;
-    }
-    .nav button:first-letter { font-size: 20px; }
-    .logout {
-        width: 100%;
-        padding: 11px 4px;
-        font-size: 0;
-    }
-    .logout:before {
-        content: "↪";
-        font-size: 20px;
-    }
+
+    /* 2. Ocupa a tela inteira */
     .main {
-        margin-left: 70px;
-        width: calc(100% - 70px);
-        padding: 18px 12px;
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px 15px 85px 15px !important;
     }
-    .grid2 { grid-template-columns: 1fr; }
-    .topbar { align-items: flex-start; }
-    .user-info { display: none; }
-    .modal-overlay { padding: 10px; }
-    .modal-content { max-height: 94vh; }
+
+    /* 3. Botão Flutuante "Voltar ao Início" */
+    .btn-mobile-home {
+        display: flex !important;
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 55px;
+        height: 55px;
+        background: #111827;
+        color: #fff;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 9998;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* 4. Tela Inicial Mobile (Apenas para celular) */
+    #mobileHomePage {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--bg);
+        z-index: 9999;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    #mobileHomePage.active {
+        display: block !important;
+    }
+
+    .mobile-home-header {
+        text-align: center;
+        margin-bottom: 30px;
+        margin-top: 20px;
+    }
+
+    .mobile-home-header h1 {
+        font-size: 26px;
+        color: #111827;
+    }
+
+    .mobile-home-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .mobile-home-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px 10px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.1s;
+    }
+
+    .mobile-home-card:active {
+        transform: scale(0.95);
+    }
+
+    .mobile-home-card .icon {
+        font-size: 36px;
+    }
+
+    .mobile-home-card .title {
+        font-weight: 700;
+        font-size: 14px;
+        color: #374151;
+    }
 }
 
+/* Esconde por padrão no Desktop */
+.btn-mobile-home {
+    display: none;
+}
+/* =========================================
+   BOTÃO DE INÍCIO MOBILE GLOBAL
+   ========================================= */
+.btn-mobile-home {
+    display: none; /* Esconde no desktop */
+}
+
+@media (max-width: 768px) {
+    /* Esconde a barra lateral no celular em todas as páginas */
+    .sidebar, #menu {
+        display: none !important;
+    }
+
+    .main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px 15px 85px 15px !important;
+    }
+
+    /* O Botão Flutuante */
+    .btn-mobile-home {
+        display: flex !important;
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 55px;
+        height: 55px;
+        background: #111827;
+        color: #fff;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 9998;
+        border: none;
+        cursor: pointer;
+    }
+}
 @media (max-width: 500px) {
     .cards { grid-template-columns: 1fr 1fr; }
     .card { padding: 14px; }
