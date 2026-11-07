@@ -89,8 +89,14 @@ async function initLogin() {
       return;
     }
 
-    // REDIRECIONA PARA A NOVA HOME
-    window.location.href = "home.html"; 
+    // ========================================================
+    // AQUI ESTÁ A MÁGICA: VERIFICA SE É CELULAR OU COMPUTADOR
+    // ========================================================
+    if (window.innerWidth <= 768) {
+      window.location.href = "home.html"; // Celular vai para a grade de botões
+    } else {
+      window.location.href = "agenda.html"; // Computador vai direto para a Agenda
+    }
   });
 }
 

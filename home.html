@@ -16,8 +16,8 @@
     
     .home-header {
       text-align: center;
-      margin-bottom: 40px;
-      margin-top: 40px;
+      margin-bottom: 30px;
+      margin-top: 20px;
     }
     
     .home-header h1 {
@@ -26,16 +26,28 @@
       margin-bottom: 8px;
     }
     
+    /* Títulos das categorias (Geral, Agenda, Veículos, etc) */
+    .category-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 25px 0 15px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
     .home-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 20px;
+      gap: 15px;
     }
     
     .home-card {
       background: #fff;
       border-radius: 16px;
-      padding: 25px 15px;
+      padding: 20px 10px;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       border: 1px solid #e5e7eb;
@@ -43,12 +55,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       transition: transform 0.2s, box-shadow 0.2s;
     }
     
     .home-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     }
     
@@ -57,12 +69,12 @@
     }
     
     .home-card .icon {
-      font-size: 40px;
+      font-size: 36px;
     }
     
     .home-card .title {
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14px;
       color: #374151;
     }
 
@@ -73,10 +85,19 @@
       }
       .home-grid {
         grid-template-columns: 1fr 1fr; /* Força 2 colunas no celular */
-        gap: 15px;
+        gap: 12px;
       }
       .home-header h1 {
         font-size: 24px;
+      }
+      .home-card {
+        padding: 15px 5px;
+      }
+      .home-card .icon {
+        font-size: 32px;
+      }
+      .home-card .title {
+        font-size: 13px;
       }
     }
   </style>
@@ -89,13 +110,10 @@
       <h1>Bem-vindo(a)</h1>
       <p style="color: #6b7280;">O que vamos fazer hoje?</p>
     </div>
-    
+
+    <!-- CATEGORIA: GERAL -->
+    <div class="category-title">Geral</div>
     <div class="home-grid">
-      <div class="home-card" onclick="go('agenda')">
-        <span class="icon">📅</span>
-        <span class="title">Agenda</span>
-      </div>
-      
       <div class="home-card" onclick="go('listas_compras')">
         <span class="icon">✅</span>
         <span class="title">Check-list</span>
@@ -111,22 +129,78 @@
         <span class="title">Filmes</span>
       </div>
       
-      <div class="home-card" onclick="go('financeiro')">
-        <span class="icon">💰</span>
-        <span class="title">Financeiro</span>
+      <div class="home-card" onclick="go('restaurantes')">
+        <span class="icon">🍔</span>
+        <span class="title">Restaurantes</span>
       </div>
+    </div>
 
+    <!-- CATEGORIA: AGENDA -->
+    <div class="category-title">Agenda</div>
+    <div class="home-grid">
+      <div class="home-card" onclick="go('agenda')">
+        <span class="icon">📅</span>
+        <span class="title">Agenda</span>
+      </div>
+      
+      <div class="home-card" onclick="go('agenda-lista')">
+        <span class="icon">📝</span>
+        <span class="title">Lista da Agenda</span>
+      </div>
+    </div>
+
+    <!-- CATEGORIA: VEÍCULOS -->
+    <div class="category-title">Veículos</div>
+    <div class="home-grid">
       <div class="home-card" onclick="go('veiculos')">
         <span class="icon">🚗</span>
         <span class="title">Veículos</span>
       </div>
       
-      <!-- Botão para deslogar -->
-      <div class="home-card" onclick="logout()" style="border-color: #fecaca;">
-        <span class="icon">🚪</span>
-        <span class="title" style="color: #dc2626;">Sair</span>
+      <div class="home-card" onclick="go('manutencao')">
+        <span class="icon">🔧</span>
+        <span class="title">Manutenção</span>
+      </div>
+      
+      <div class="home-card" onclick="go('abastecimento')">
+        <span class="icon">⛽</span>
+        <span class="title">Abastecimento</span>
+      </div>
+
+      <div class="home-card" onclick="go('historico_km')">
+        <span class="icon">⏱️</span>
+        <span class="title">Histórico KM</span>
       </div>
     </div>
+
+    <!-- CATEGORIA: FINANCEIRO -->
+    <div class="category-title">Financeiro</div>
+    <div class="home-grid">
+      <div class="home-card" onclick="go('financeiro')">
+        <span class="icon">💰</span>
+        <span class="title">Financeiro</span>
+      </div>
+      
+      <div class="home-card" onclick="go('movimentacoes')">
+        <span class="icon">📊</span>
+        <span class="title">Movimentações</span>
+      </div>
+      
+      <div class="home-card" onclick="go('membros')">
+        <span class="icon">👥</span>
+        <span class="title">Membros</span>
+      </div>
+    </div>
+
+    <!-- BOTÃO SAIR -->
+    <div class="category-title" style="margin-top: 35px; border: none;"></div>
+    <div class="home-grid">
+      <div class="home-card" onclick="logout()" style="border-color: #fecaca; grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 15px; padding: 15px;">
+        <span class="icon" style="font-size: 24px;">🚪</span>
+        <span class="title" style="color: #dc2626; font-size: 16px;">Sair do Sistema</span>
+      </div>
+    </div>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
