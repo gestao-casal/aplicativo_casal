@@ -17,7 +17,6 @@
 
   .toolbar-controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
-  /* Seletor de Responsável */
   .filter-select {
     background: #fff; border: 1px solid var(--border); border-radius: 8px;
     padding: 7px 12px; font-weight: 600; color: #374151; cursor: pointer;
@@ -87,12 +86,12 @@
   .list-event-name {
     font-weight: 600; color: #1a1f2b; font-size: 0.98rem; margin-bottom: 4px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
   }
   .list-event-row.concluido .list-event-name { text-decoration: line-through; }
   .list-event-location { font-size: 0.8rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .list-event-notes { font-size: 0.78rem; color: #9ca3af; font-style: italic; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* Badges na lista */
   .list-event-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
   .list-event-tag {
     display: inline-flex; align-items: center; gap: 4px;
@@ -101,6 +100,7 @@
   }
   .tag-viagem { color: #4f46e5; background: #eef2ff; }
   .tag-responsavel { color: #b45309; background: #fef3c7; }
+  .tag-recorrente { color: #0284c7; background: #e0f2fe; }
 
   .list-event-meta {
     flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;
@@ -118,7 +118,6 @@
     padding: 50px 20px; text-align: center; color: #9ca3af; font-size: 0.9rem;
   }
 
-  /* === IMPORT/EXPORT ICS === */
   .ics-dropzone {
     border: 2px dashed #c7d2fe; border-radius: 12px; padding: 30px 20px;
     text-align: center; background: #f8faff; cursor: pointer; transition: all 0.15s;
@@ -155,7 +154,6 @@
   .ics-item-warn { background: #fef3c7; color: #92400e; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; white-space: nowrap; }
   .ics-item-dup { background: #fcd34d; color: #78350f; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; white-space: nowrap; }
 
-  /* Seletor de responsável dentro do preview do ICS */
   .ics-select-resp {
     padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db;
     font-size: 0.75rem; font-weight: 600; color: #374151; background: #fff;
@@ -208,11 +206,9 @@
       </div>
       <div class="toolbar-controls">
         
-        <!-- FILTRO DE RESPONSÁVEL -->
         <select id="filtroResponsavelLista" class="filter-select" onchange="mudarFiltroResponsavel(this.value)">
           <option value="Todos">👥 Todos os eventos</option>
           <option value="Casal">👫 Apenas Casal</option>
-          <!-- Membros preenchidos via JS -->
         </select>
 
         <div class="filter-tabs" role="tablist">
@@ -257,13 +253,35 @@
     <div class="modal-body">
       <form id="eventoForm">
         <input type="hidden" id="eventoId">
-        <div class="field"><label>Data</label><input type="date" id="dataEventoDisplay" required></div>
+        
+        <div class="field" style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label>Data Início</label>
+            <input type="date" id="dataEventoDisplay" required>
+          </div>
+          <div style="flex: 1;">
+            <label>Data Término (Opcional)</label>
+            <input type="date" id="dataFimRecorrencia">
+          </div>
+        </div>
+
         <div class="field"><label>Nome do Evento</label><input type="text" id="nomeAtracao" required></div>
         
         <div class="field">
           <label>Quem é o responsável?</label>
           <select id="responsavelEvento">
             <option value="Casal">👫 Casal</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Repetir</label>
+          <select id="recorrenciaEvento">
+            <option value="nenhuma">Não repete (apenas este dia)</option>
+            <option value="diario">Todos os dias (ex: semana inteira)</option>
+            <option value="semanal">Toda semana</option>
+            <option value="mensal">Todo mês</option>
+            <option value="anual">Todo ano</option>
           </select>
         </div>
 
@@ -283,6 +301,25 @@
         <button type="button" class="btn-conclude" id="btnConcluirEventoModal" onclick="concluirEventoDoModal()">Marcar como Concluído</button>
         <button type="button" class="btn-danger" id="btnExcluirEventoModal" onclick="excluirEventoDoModal()">Excluir Evento</button>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESCOPO (RECORRÊNCIA) -->
+<div class="modal-overlay" id="modalEscopo" style="z-index: 1050;">
+  <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <div class="modal-header">
+      <h2 id="escopoTitulo">Gerenciar Recorrência</h2>
+      <button class="btn-close" onclick="closeModal('modalEscopo')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="escopoMensagem" style="margin-bottom: 20px; color: #4b5563;">Este evento faz parte de uma série. O que deseja fazer?</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn btn-primary" onclick="executarAcaoEscopo('este')">Apenas este evento</button>
+        <button class="btn btn-primary" onclick="executarAcaoEscopo('futuros')" id="btnEscopoFuturos">Este e os próximos</button>
+        <button class="btn btn-danger" onclick="executarAcaoEscopo('todos')" id="btnEscopoTodos">Todos os eventos</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalEscopo')">Cancelar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -307,11 +344,9 @@
         <div class="ics-preview-header">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <h3>Pré-visualização</h3>
-            <!-- Atalho para definir todos de uma vez -->
             <select id="icsResponsavelGlobal" class="filter-select" onchange="aplicarResponsavelGlobalICS(this.value)" style="padding:4px 8px; font-size:0.8rem;">
               <option value="">Definir todos como...</option>
               <option value="Casal">👫 Casal</option>
-              <!-- Membros via JS -->
             </select>
           </div>
           <div class="ics-preview-actions">
@@ -343,8 +378,8 @@
   let filtroResponsavel = 'Todos';
   let referenciaPeriodo = new Date();
   let icsEventosPendentes = [];
+  let acaoPendente = { tipo: null, evento: null, payload: null };
 
-  // --- HELPERS ---
   function formatarDataISO(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -355,9 +390,7 @@
   function getInicioSemana(ref) {
     const d = new Date(ref);
     d.setHours(0, 0, 0, 0);
-    const dia = d.getDay();
-    const diff = dia === 0 ? -6 : 1 - dia;
-    d.setDate(d.getDate() + diff);
+    d.setDate(d.getDate() - d.getDay());
     return d;
   }
 
@@ -392,7 +425,29 @@
     return null;
   }
 
-  // --- INIT ---
+  function gerarDatasRecorrentes(dataInicioStr, tipo, dataFimStr) {
+    const datas = [];
+    let atual = new Date(dataInicioStr + 'T12:00:00');
+    const fim = new Date(dataFimStr + 'T12:00:00');
+    const diaOriginal = atual.getDate();
+    let limit = 500;
+
+    if (tipo === 'nenhuma') return [dataInicioStr];
+
+    while (atual <= fim && limit > 0) {
+      datas.push(formatarDataISO(atual));
+      if (tipo === 'diario') atual.setDate(atual.getDate() + 1);
+      else if (tipo === 'semanal') atual.setDate(atual.getDate() + 7);
+      else if (tipo === 'mensal') {
+        atual.setMonth(atual.getMonth() + 1);
+        if (atual.getDate() !== diaOriginal) atual.setDate(0);
+      }
+      else if (tipo === 'anual') atual.setFullYear(atual.getFullYear() + 1);
+      limit--;
+    }
+    return datas;
+  }
+
   async function initAgendaApp() {
     if (!window.currentUser) return;
     document.getElementById('userName').textContent = window.currentUser.email;
@@ -409,26 +464,17 @@
       if (data) membrosCasal = data.map(m => m.nome);
     } catch (e) { console.error(e); }
 
-    // 1. Popula o select de filtro principal
     const selectFiltro = document.getElementById('filtroResponsavelLista');
     selectFiltro.innerHTML = '<option value="Todos">👥 Todos os eventos</option><option value="Casal">👫 Apenas Casal</option>';
-    membrosCasal.forEach(nome => {
-      selectFiltro.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
-    });
+    membrosCasal.forEach(nome => { selectFiltro.innerHTML += `<option value="${nome}">👤 ${nome}</option>`; });
 
-    // 2. Popula o select do modal de criar/editar evento
     const selectModal = document.getElementById('responsavelEvento');
     selectModal.innerHTML = '<option value="Casal">👫 Casal</option>';
-    membrosCasal.forEach(nome => {
-      selectModal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
-    });
+    membrosCasal.forEach(nome => { selectModal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`; });
 
-    // 3. Popula o select global do modal de importação
     const selectIcsGlobal = document.getElementById('icsResponsavelGlobal');
     selectIcsGlobal.innerHTML = '<option value="">Definir todos como...</option><option value="Casal">👫 Casal</option>';
-    membrosCasal.forEach(nome => {
-      selectIcsGlobal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
-    });
+    membrosCasal.forEach(nome => { selectIcsGlobal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`; });
   }
 
   async function carregarEventos() {
@@ -453,7 +499,6 @@
     }
   }
 
-  // --- FILTROS ---
   function mudarFiltro(filtro) {
     filtroAtual = filtro;
     referenciaPeriodo = new Date();
@@ -487,14 +532,11 @@
     }
   }
 
-  // --- RENDER LISTA ---
   function renderLista() {
     const hojeISO = formatarDataISO(new Date());
 
     let baseEventos = [...todosEventos];
-    if (filtroResponsavel !== 'Todos') {
-      baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
-    }
+    if (filtroResponsavel !== 'Todos') baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
 
     let eventosParaMostrar = [];
     let titulo = '', subtitulo = '', navLabel = '';
@@ -535,6 +577,7 @@
         const passado = isPassado(ev, hojeISO);
         const nomeViagem = ev.ferias_id ? mapaFerias[ev.ferias_id] : null;
         const responsavel = ev.responsavel || 'Casal';
+        const isRec = ev.recorrencia_id ? ' 🔄' : '';
         
         const rowClasses = ['list-event-row', ev.concluido ? 'concluido' : '', isHoje ? 'hoje' : '', passado ? 'passado' : ''].filter(Boolean).join(' ');
         const badgeStatus = ev.concluido ? '<span class="list-event-badge concluido">✓ Concluído</span>' : (passado ? '<span class="list-event-badge passado">Passado</span>' : '<span class="list-event-badge pendente">Pendente</span>');
@@ -546,15 +589,15 @@
             <span class="date-time">${hora}</span>
           </div>
           <div class="list-event-body">
-            <div class="list-event-name">${ev.nome_atracao}</div>
+            <div class="list-event-name">${ev.nome_atracao}${isRec}</div>
             ${ev.endereco ? `<div class="list-event-location">📍 ${ev.endereco}</div>` : ''}
             ${ev.observacoes ? `<div class="list-event-notes">${ev.observacoes}</div>` : ''}
             
             <div class="list-event-tags">
               ${nomeViagem ? `<span class="list-event-tag tag-viagem">✈️ ${nomeViagem}</span>` : ''}
               <span class="list-event-tag tag-responsavel">👤 ${responsavel}</span>
+              ${ev.recorrencia_id ? `<span class="list-event-tag tag-recorrente">🔄 ${ev.recorrencia}</span>` : ''}
             </div>
-
           </div>
           <div class="list-event-meta">
             <span class="list-event-value ${valor > 0 ? '' : 'gratuito'}">${valor > 0 ? fmtMoeda(valor) : 'Grátis'}</span>
@@ -582,15 +625,11 @@
     abrirModalEvento(formatarDataISO(dataBase), proxHora);
   }
 
-  // --- EXPORTAR ICS ---
   function exportarICS() {
     const hojeISO = formatarDataISO(new Date());
     let eventosParaExportar = [];
-
     let baseEventos = [...todosEventos];
-    if (filtroResponsavel !== 'Todos') {
-      baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
-    }
+    if (filtroResponsavel !== 'Todos') baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
 
     if (filtroAtual === 'todas') {
       const mostrarPassados = document.getElementById('togglePassados').checked;
@@ -600,9 +639,7 @@
       eventosParaExportar = baseEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
     }
 
-    if (eventosParaExportar.length === 0) {
-      return alert("Não há eventos visíveis para exportar.");
-    }
+    if (eventosParaExportar.length === 0) return alert("Não há eventos visíveis para exportar.");
 
     let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Gestao Casal//Agenda//PT-BR\r\nCALSCALE:GREGORIAN\r\n";
     const dtstamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
@@ -611,41 +648,29 @@
       const dtstart = ev.data.replace(/-/g, '') + 'T' + ev.hora_inicio.replace(/:/g, '');
       const summary = ev.nome_atracao.replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
       const location = (ev.endereco || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
-      
       let description = ev.observacoes || '';
       if (ev.responsavel) description += `\n\nResponsável: ${ev.responsavel}`;
       description = description.replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
 
       icsContent += "BEGIN:VEVENT\r\n";
       icsContent += `UID:${ev.id}-${dtstamp}@gestaocasal\r\n`;
-      icsContent += `DTSTAMP:${dtstamp}\r\n`;
-      icsContent += `DTSTART:${dtstart}\r\n`;
-      icsContent += `SUMMARY:${summary}\r\n`;
+      icsContent += `DTSTAMP:${dtstamp}\r\nDTSTART:${dtstart}\r\nSUMMARY:${summary}\r\n`;
       if (location) icsContent += `LOCATION:${location}\r\n`;
       if (description) icsContent += `DESCRIPTION:${description}\r\n`;
       icsContent += "END:VEVENT\r\n";
     });
-
     icsContent += "END:VCALENDAR\r\n";
 
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    
-    let sufixo = 'eventos';
-    if (filtroAtual === 'semana') sufixo = 'semana';
-    if (filtroAtual === 'mes') sufixo = 'mes';
+    let sufixo = filtroAtual === 'semana' ? 'semana' : (filtroAtual === 'mes' ? 'mes' : 'eventos');
     if (filtroResponsavel !== 'Todos') sufixo += `-${filtroResponsavel.toLowerCase().replace(/\s+/g, '-')}`;
-    
     a.download = `agenda-${sufixo}-${new Date().toISOString().split('T')[0]}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
-  // --- MODAL EVENTO ---
   function adicionarCampoGasto(descricao = '', valor = '') {
     const container = document.getElementById('listaGastosAtracao');
     const div = document.createElement('div');
@@ -662,10 +687,14 @@
     document.getElementById('eventoTitle').textContent = eventoId ? 'Editar Evento' : 'Adicionar Evento';
     document.getElementById('eventoForm').reset();
     document.getElementById('listaGastosAtracao').innerHTML = '';
+    
     document.getElementById('dataEventoDisplay').value = dataStr;
+    document.getElementById('dataFimRecorrencia').value = dataStr;
     document.getElementById('horaInicio').value = horaStr;
     document.getElementById('eventoId').value = eventoId || '';
     document.getElementById('responsavelEvento').value = 'Casal';
+    document.getElementById('recorrenciaEvento').value = 'nenhuma';
+    document.getElementById('recorrenciaEvento').disabled = false;
 
     const btnExcluir = document.getElementById('btnExcluirEventoModal');
     const btnConcluir = document.getElementById('btnConcluirEventoModal');
@@ -682,7 +711,13 @@
         document.getElementById('valor_por_pessoa').value = ev.valor_por_pessoa || 0;
         document.getElementById('horaInicio').value = ev.hora_inicio;
         document.getElementById('responsavelEvento').value = ev.responsavel || 'Casal'; 
+        document.getElementById('dataEventoDisplay').value = ev.data;
         
+        if (ev.recorrencia_id) {
+          document.getElementById('recorrenciaEvento').value = ev.recorrencia || 'nenhuma';
+          document.getElementById('recorrenciaEvento').disabled = true;
+        }
+
         if (Array.isArray(ev.gastos_extras)) ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
         
         if (ev.concluido) { btnConcluir.textContent = 'Desmarcar Conclusão'; btnConcluir.style.background = '#666'; }
@@ -706,6 +741,15 @@
     const eventoId = document.getElementById('eventoId').value;
     const qtd = Number(document.getElementById('quantidade_pessoas').value);
     const valorUnit = Number(document.getElementById('valor_por_pessoa').value);
+    
+    let recTipo = document.getElementById('recorrenciaEvento').value;
+    const dataInicio = document.getElementById('dataEventoDisplay').value;
+    const dataFim = document.getElementById('dataFimRecorrencia').value || dataInicio;
+
+    // 🔥 INTELIGÊNCIA: Se colocou data final, cria todos os dias do período
+    if (recTipo === 'nenhuma' && dataFim !== dataInicio) {
+      recTipo = 'diario';
+    }
 
     const gastosExtras = [];
     document.querySelectorAll('.gasto-item').forEach(item => {
@@ -714,9 +758,9 @@
       if (desc && val > 0) gastosExtras.push({ descricao: desc, valor: val });
     });
 
-    const payload = {
+    const payloadBase = {
       user_id: userId,
-      data: document.getElementById('dataEventoDisplay').value,
+      data: dataInicio,
       hora_inicio: document.getElementById('horaInicio').value,
       nome_atracao: document.getElementById('nomeAtracao').value,
       endereco: document.getElementById('endereco').value,
@@ -725,32 +769,129 @@
       valor_por_pessoa: valorUnit,
       valor: qtd * valorUnit,
       gastos_extras: gastosExtras,
-      responsavel: document.getElementById('responsavelEvento').value 
+      responsavel: document.getElementById('responsavelEvento').value,
+      recorrencia: recTipo,
+      dataFimRecorrencia: dataFim
     };
 
-    let error;
     if (eventoId) {
-      const res = await db.from('eventos').update(payload).eq('id', eventoId);
-      error = res.error;
+      const evOriginal = todosEventos.find(e => String(e.id) === String(eventoId));
+      
+      if (evOriginal && evOriginal.recorrencia_id) {
+        acaoPendente = { tipo: 'edit', evento: evOriginal, payload: payloadBase };
+        document.getElementById('escopoTitulo').textContent = 'Editar Evento Recorrente';
+        document.getElementById('escopoMensagem').textContent = 'Este evento faz parte de uma série. Como deseja aplicar as alterações?';
+        document.getElementById('btnEscopoFuturos').style.display = 'block';
+        openModal('modalEscopo');
+        return;
+      }
+
+      const payloadDB = { ...payloadBase };
+      delete payloadDB.dataFimRecorrencia; // 🔥 Previne erro de coluna
+      
+      const res = await db.from('eventos').update(payloadDB).eq('id', eventoId);
+      if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+      
     } else {
-      const res = await db.from('eventos').insert([payload]);
-      error = res.error;
+      if (recTipo !== 'nenhuma') {
+        const recId = crypto.randomUUID();
+        const datas = gerarDatasRecorrentes(dataInicio, recTipo, dataFim);
+        
+        const payloads = datas.map(dataIso => {
+          let p = { ...payloadBase, data: dataIso, recorrencia_id: recId };
+          delete p.dataFimRecorrencia; // 🔥 Previne erro de coluna
+          return p;
+        });
+
+        const res = await db.from('eventos').insert(payloads);
+        if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+      } else {
+        const payloadDB = { ...payloadBase };
+        delete payloadDB.dataFimRecorrencia; // 🔥 Previne erro de coluna
+        
+        const res = await db.from('eventos').insert([payloadDB]);
+        if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+      }
     }
 
-    if (error) { console.error(error); return alert('Erro ao salvar: ' + error.message); }
     closeModal('modalEvento');
     await carregarEventos();
     renderLista();
   });
 
-  async function excluirEventoDoModal() {
-    const eventoId = document.getElementById('eventoId').value;
-    if (!eventoId || !confirm('Excluir este evento?')) return;
-    const { error } = await db.from('eventos').delete().eq('id', eventoId);
-    if (error) return alert('Erro: ' + error.message);
-    closeModal('modalEvento');
+  async function executarAcaoEscopo(escopo) {
+    closeModal('modalEscopo');
+    const { tipo, evento: ev, payload } = acaoPendente;
+    if (!ev) return;
+
+    const dataFim = payload.dataFimRecorrencia;
+    const recTipo = payload.recorrencia;
+
+    if (tipo === 'delete') {
+      if (escopo === 'este') {
+        await db.from('eventos').delete().eq('id', ev.id);
+      } else if (escopo === 'futuros') {
+        await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
+      } else if (escopo === 'todos') {
+        const hoje = formatarDataISO(new Date());
+        await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', hoje);
+      }
+    } 
+    else if (tipo === 'edit') {
+      if (escopo === 'este') {
+        const payloadUnico = { ...payload, recorrencia: 'nenhuma', recorrencia_id: null };
+        delete payloadUnico.dataFimRecorrencia;
+        await db.from('eventos').update(payloadUnico).eq('id', ev.id);
+      } else {
+        if (escopo === 'futuros') {
+          await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
+        } else {
+          await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', formatarDataISO(new Date()));
+        }
+        
+        if (recTipo !== 'nenhuma') {
+          const datas = gerarDatasRecorrentes(payload.data, recTipo, dataFim);
+          const payloads = datas.map(dataIso => {
+            let p = { ...payload, data: dataIso, recorrencia_id: ev.recorrencia_id };
+            delete p.dataFimRecorrencia;
+            return p;
+          });
+          await db.from('eventos').insert(payloads);
+        } else {
+          let p = { ...payload, recorrencia: 'nenhuma', recorrencia_id: null };
+          delete p.dataFimRecorrencia;
+          await db.from('eventos').insert([p]);
+        }
+      }
+    }
+
+    acaoPendente = { tipo: null, evento: null, payload: null };
     await carregarEventos();
     renderLista();
+  }
+
+  async function excluirEventoDoModal() {
+    const eventoId = document.getElementById('eventoId').value;
+    if (!eventoId) return;
+
+    const ev = todosEventos.find(e => String(e.id) === String(eventoId));
+    if (!ev) return;
+
+    if (ev.recorrencia_id) {
+      acaoPendente = { tipo: 'delete', evento: ev, payload: null };
+      document.getElementById('escopoTitulo').textContent = 'Excluir Evento Recorrente';
+      document.getElementById('escopoMensagem').textContent = 'Este evento faz parte de uma série. Como deseja excluir?';
+      document.getElementById('btnEscopoFuturos').style.display = 'block';
+      document.getElementById('btnEscopoTodos').textContent = 'Todos os eventos futuros';
+      closeModal('modalEvento');
+      openModal('modalEscopo');
+    } else {
+      if (!confirm('Excluir este evento?')) return;
+      await db.from('eventos').delete().eq('id', eventoId);
+      closeModal('modalEvento');
+      await carregarEventos();
+      renderLista();
+    }
   }
 
   async function concluirEventoDoModal() {
@@ -765,13 +906,12 @@
     renderLista();
   }
 
-  // --- IMPORTAR ICS ---
   function abrirModalImportICS() {
     icsEventosPendentes = [];
     document.getElementById('icsStep1').style.display = 'block';
     document.getElementById('icsStep2').style.display = 'none';
     document.getElementById('icsFileInput').value = '';
-    document.getElementById('icsResponsavelGlobal').value = ''; // Reseta o seletor global
+    document.getElementById('icsResponsavelGlobal').value = '';
     openModal('modalImportICS');
   }
 
@@ -853,7 +993,7 @@
         selected: !duplicado, duplicado, recorrente: !!raw.rrule,
         summary: raw.summary || '(Sem título)', date: parsedDate.date, time: horaNorm, allDay: parsedDate.allDay,
         location: raw.location || '', description: raw.description || '', uid: raw.uid || '',
-        responsavel: 'Casal' // Define Casal como padrão inicial
+        responsavel: 'Casal'
       });
     }
 
@@ -901,24 +1041,18 @@
       if (ev.recorrente) badges.push('<span class="ics-item-warn">⚠️ recorrente</span>');
       
       const classes = ['ics-item', ev.duplicado ? 'duplicate' : ''].filter(Boolean).join(' ');
-
-      // Opções do seletor de responsável individual
       const opcoesResp = `<option value="Casal" ${ev.responsavel === 'Casal' ? 'selected' : ''}>👫 Casal</option>` + 
         membrosCasal.map(nome => `<option value="${nome}" ${ev.responsavel === nome ? 'selected' : ''}>👤 ${nome}</option>`).join('');
 
       return `<div class="${classes}" onclick="toggleICSItem(${i}, event)">
         <input type="checkbox" ${ev.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleICSItem(${i}, event)" />
-        
         <div class="ics-item-content">
           <div class="ics-item-name">${escapeHtml(ev.summary)}</div>
           <div class="ics-item-meta">${diaSemana} ${diaMes} ${ev.allDay ? '(dia inteiro)' : 'às ' + ev.time} ${ev.location ? ' • ' + escapeHtml(ev.location) : ''}</div>
         </div>
-
-        <!-- Seletor de Responsável por Evento -->
         <select class="ics-select-resp" onclick="event.stopPropagation()" onchange="mudarResponsavelICS(${i}, this.value)">
           ${opcoesResp}
         </select>
-
         ${badges.join(' ')}
       </div>`;
     }).join('');
@@ -926,14 +1060,10 @@
     atualizarContadoresICS();
   }
 
-  // Função para mudar o responsável de um item individual na importação
   function mudarResponsavelICS(index, valor) {
-    if (icsEventosPendentes[index]) {
-      icsEventosPendentes[index].responsavel = valor;
-    }
+    if (icsEventosPendentes[index]) icsEventosPendentes[index].responsavel = valor;
   }
 
-  // Função para aplicar o responsável a todos os itens de uma vez
   function aplicarResponsavelGlobalICS(valor) {
     if (!valor) return;
     icsEventosPendentes.forEach(ev => { ev.responsavel = valor; });
@@ -996,7 +1126,7 @@
       valor_por_pessoa: 0,
       valor: 0,
       gastos_extras: [],
-      responsavel: ev.responsavel // Usa o responsável escolhido no preview
+      responsavel: ev.responsavel
     }));
 
     let inseridos = 0, erros = 0;

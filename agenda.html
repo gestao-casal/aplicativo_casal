@@ -6,7 +6,6 @@
 <title>Agenda — Calendário</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  /* === NAVEGAÇÃO DO CALENDÁRIO === */
   .calendar-nav {
     display: flex; justify-content: space-between; align-items: center;
     background: #fff; border: 1px solid var(--border); border-radius: 10px;
@@ -23,7 +22,6 @@
   .week-btn-today { background: #4f46e5; color: #fff; border-color: #4f46e5; }
   .week-btn-today:hover { background: #4338ca; }
 
-  /* Seletor Dia/Semana/Mês */
   .view-selector { display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 3px; }
   .view-btn {
     background: transparent; border: none; padding: 8px 20px; border-radius: 6px;
@@ -31,14 +29,12 @@
   }
   .view-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-  /* Filtro de Responsável */
   .filter-resp {
     background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
     padding: 8px 12px; font-weight: 600; color: #374151; cursor: pointer;
     outline: none; font-family: inherit;
   }
 
-  /* === RESUMO === */
   .resumo-box {
     background: #fff; border: 1px solid var(--border); border-radius: 10px;
     padding: 18px 20px; margin-bottom: 20px;
@@ -49,9 +45,6 @@
   .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
   .resumo-item strong.total { color: #dc2626; }
 
-  /* =======================================
-     VISÃO DE MÊS (GRADE)
-     ======================================= */
   .month-grid-wrapper {
     background: #fff; border: 1px solid var(--border); border-radius: 10px;
     overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 280px); min-height: 600px;
@@ -80,16 +73,13 @@
     font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     background: #e0e7ff; color: #3730a3; border-left: 3px solid #4f46e5;
-    display: flex; justify-content: space-between;
+    display: flex; justify-content: space-between; align-items: center;
   }
   .month-event.pago { background: #fee2e2; color: #991b1b; border-left-color: #dc2626; }
   .month-event.gratuito { background: #dcfce7; color: #166534; border-left-color: #16a34a; }
   .month-event.concluido { opacity: 0.5; text-decoration: line-through; }
   .month-more { font-size: 0.7rem; color: #6b7280; font-weight: 600; padding-left: 4px; margin-top: 2px; }
 
-  /* =======================================
-     VISÃO DE SEMANA / DIA (CRONOGRAMA)
-     ======================================= */
   .agenda-wrapper { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
   .agenda-table { width: 100%; border-collapse: collapse; min-width: 900px; }
   .agenda-table th {
@@ -111,6 +101,7 @@
   .evento-texto {
     font-size: 0.72rem; padding: 4px 6px; border-radius: 5px; font-weight: 600;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: flex; align-items: center; gap: 4px;
   }
   .evento-texto.gratuito { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
   .evento-texto.pago { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
@@ -148,7 +139,6 @@
       <button class="btn-white" onclick="abrirModalConfig()">⚙️ Configurar Horários</button>
     </div>
 
-    <!-- NAVEGAÇÃO DO CALENDÁRIO -->
     <div class="calendar-nav">
       <div class="calendar-nav-left">
         <button class="week-btn week-btn-today" onclick="irParaHoje()">Hoje</button>
@@ -158,11 +148,9 @@
         </div>
         <h2 id="calendarTitle">Novembro de 2026</h2>
         
-        <!-- FILTRO DE RESPONSÁVEL -->
         <select id="filtroResponsavelAgenda" class="filter-resp" onchange="mudarFiltroResponsavel(this.value)">
           <option value="Todos">👥 Todos os eventos</option>
           <option value="Casal">👫 Apenas Casal</option>
-          <!-- Membros preenchidos via JS -->
         </select>
       </div>
       
@@ -174,21 +162,11 @@
     </div>
 
     <div class="resumo-box">
-      <div class="resumo-item">
-        <span>Eventos no período</span>
-        <strong id="resumoQtd">0</strong>
-      </div>
-      <div class="resumo-item">
-        <span>Concluídos</span>
-        <strong id="resumoConcluidos">0</strong>
-      </div>
-      <div class="resumo-item">
-        <span>Total gasto</span>
-        <strong class="total" id="resumoTotal">R$ 0,00</strong>
-      </div>
+      <div class="resumo-item"><span>Eventos no período</span><strong id="resumoQtd">0</strong></div>
+      <div class="resumo-item"><span>Concluídos</span><strong id="resumoConcluidos">0</strong></div>
+      <div class="resumo-item"><span>Total gasto</span><strong class="total" id="resumoTotal">R$ 0,00</strong></div>
     </div>
 
-    <!-- CONTAINER DO CALENDÁRIO -->
     <div id="calendarContainer"></div>
 
     <div class="legend-row">
@@ -210,9 +188,15 @@
       <form id="eventoForm">
         <input type="hidden" id="eventoId">
 
-        <div class="field">
-          <label>Data</label>
-          <input type="date" id="dataEventoDisplay" disabled style="background:#f3f4f6;">
+        <div class="field" style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label>Data Início</label>
+            <input type="date" id="dataEventoDisplay" required>
+          </div>
+          <div style="flex: 1;">
+            <label>Data Término (Opcional)</label>
+            <input type="date" id="dataFimRecorrencia">
+          </div>
         </div>
 
         <div class="field"><label>Nome do Evento</label><input type="text" id="nomeAtracao" required></div>
@@ -221,7 +205,17 @@
           <label>Quem é o responsável?</label>
           <select id="responsavelEvento">
             <option value="Casal">👫 Casal</option>
-            <!-- Membros via JS -->
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Repetir</label>
+          <select id="recorrenciaEvento">
+            <option value="nenhuma">Não repete (apenas este dia)</option>
+            <option value="diario">Todos os dias (ex: semana inteira)</option>
+            <option value="semanal">Toda semana</option>
+            <option value="mensal">Todo mês</option>
+            <option value="anual">Todo ano</option>
           </select>
         </div>
 
@@ -258,11 +252,30 @@
   </div>
 </div>
 
+<!-- MODAL ESCOPO (RECORRÊNCIA) -->
+<div class="modal-overlay" id="modalEscopo" style="z-index: 1050;">
+  <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <div class="modal-header">
+      <h2 id="escopoTitulo">Gerenciar Recorrência</h2>
+      <button class="btn-close" onclick="closeModal('modalEscopo')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="escopoMensagem" style="margin-bottom: 20px; color: #4b5563;">Este evento faz parte de uma série. O que deseja fazer?</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn btn-primary" onclick="executarAcaoEscopo('este')">Apenas este evento</button>
+        <button class="btn btn-primary" onclick="executarAcaoEscopo('futuros')" id="btnEscopoFuturos">Este e os próximos</button>
+        <button class="btn btn-danger" onclick="executarAcaoEscopo('todos')" id="btnEscopoTodos">Todos os eventos</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalEscopo')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIG -->
 <div class="modal-overlay" id="modalConfig">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Configurar Horários (Semana/Dia)</h2>
+      <h2>Configurar Horários</h2>
       <button class="btn-close" onclick="closeModal('modalConfig')">&times;</button>
     </div>
     <div class="modal-body">
@@ -294,8 +307,8 @@
   let horaFimDia = '23:00';
   let membrosCasal = [];
   let filtroResponsavel = 'Todos';
+  let acaoPendente = { tipo: null, evento: null, payload: null };
 
-  // --- HELPERS ---
   function formatarDataISO(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -306,9 +319,7 @@
   function getInicioSemana(ref) {
     const d = new Date(ref);
     d.setHours(0, 0, 0, 0);
-    const dia = d.getDay();
-    const diff = dia === 0 ? -6 : 1 - dia;
-    d.setDate(d.getDate() + diff);
+    d.setDate(d.getDate() - d.getDay()); // 0=Dom, 1=Seg...
     return d;
   }
 
@@ -325,7 +336,29 @@
     return base + extras;
   }
 
-  // --- INIT ---
+  function gerarDatasRecorrentes(dataInicioStr, tipo, dataFimStr) {
+    const datas = [];
+    let atual = new Date(dataInicioStr + 'T12:00:00');
+    const fim = new Date(dataFimStr + 'T12:00:00');
+    const diaOriginal = atual.getDate();
+    let limit = 500;
+
+    if (tipo === 'nenhuma') return [dataInicioStr];
+
+    while (atual <= fim && limit > 0) {
+      datas.push(formatarDataISO(atual));
+      if (tipo === 'diario') atual.setDate(atual.getDate() + 1);
+      else if (tipo === 'semanal') atual.setDate(atual.getDate() + 7);
+      else if (tipo === 'mensal') {
+        atual.setMonth(atual.getMonth() + 1);
+        if (atual.getDate() !== diaOriginal) atual.setDate(0);
+      }
+      else if (tipo === 'anual') atual.setFullYear(atual.getFullYear() + 1);
+      limit--;
+    }
+    return datas;
+  }
+
   async function initAgendaApp() {
     if (!window.currentUser) return;
     document.getElementById('userName').textContent = window.currentUser.email;
@@ -347,12 +380,9 @@
   async function carregarMembros() {
     try {
       const { data } = await db.from('gestao_casal_membros').select('nome').eq('user_id', window.currentUser.id);
-      if (data) {
-        membrosCasal = data.map(m => m.nome);
-      }
+      if (data) membrosCasal = data.map(m => m.nome);
     } catch (e) {}
 
-    // Popula os dois selects (Filtro e Modal)
     const selectFiltro = document.getElementById('filtroResponsavelAgenda');
     const selectModal = document.getElementById('responsavelEvento');
     
@@ -410,7 +440,6 @@
     renderizarCalendario();
   }
 
-  // --- NAVEGAÇÃO E CONTROLES ---
   function mudarVisualizacao(view) {
     visualizacaoAtual = view;
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
@@ -425,21 +454,13 @@
     carregarEventos();
   }
 
-  function irParaHoje() {
-    dataReferencia = new Date();
-    carregarEventos();
-  }
+  function irParaHoje() { dataReferencia = new Date(); carregarEventos(); }
 
-  function mudarFiltroResponsavel(valor) {
-    filtroResponsavel = valor;
-    renderizarCalendario();
-  }
+  function mudarFiltroResponsavel(valor) { filtroResponsavel = valor; renderizarCalendario(); }
 
-  // --- RENDERIZAÇÃO ---
   function renderizarCalendario() {
     atualizarTitulo();
     
-    // Filtra os eventos pelo responsável antes de renderizar
     let eventosFiltrados = todosEventos;
     if (filtroResponsavel !== 'Todos') {
       eventosFiltrados = eventosFiltrados.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
@@ -481,7 +502,6 @@
     document.getElementById('resumoTotal').textContent = fmtMoeda(total);
   }
 
-  // --- VISÃO: MÊS ---
   function renderizarMes(eventosFiltrados) {
     const hojeStr = formatarDataISO(new Date());
     const ano = dataReferencia.getFullYear();
@@ -500,7 +520,6 @@
       const diaAtual = new Date(startGrid);
       diaAtual.setDate(startGrid.getDate() + i);
       const iso = formatarDataISO(diaAtual);
-      
       const isOutroMes = diaAtual.getMonth() !== mes;
       const isHoje = iso === hojeStr;
       const evsDoDia = eventosFiltrados.filter(ev => ev.data === iso);
@@ -511,19 +530,16 @@
       evsDoDia.slice(0, maxVisiveis).forEach(ev => {
         const valor = calcularValorEvento(ev);
         const classe = (valor > 0 ? 'pago' : 'gratuito') + (ev.concluido ? ' concluido' : '');
-        const resp = ev.responsavel && ev.responsavel !== 'Casal' ? ` • ${ev.responsavel}` : '';
-        evsHtml += `<div class="month-event ${classe}" onclick="event.stopPropagation(); abrirModalEvento('${iso}', '${ev.hora_inicio}', ${ev.id})" title="${ev.nome_atracao}${resp}">
-          ${ev.nome_atracao}
+        const isRec = ev.recorrencia_id ? ' 🔄' : '';
+        evsHtml += `<div class="month-event ${classe}" onclick="event.stopPropagation(); abrirModalEvento('${iso}', '${ev.hora_inicio}', ${ev.id})" title="${ev.nome_atracao}">
+          ${ev.nome_atracao}${isRec}
         </div>`;
       });
 
-      if (evsDoDia.length > maxVisiveis) {
-        evsHtml += `<div class="month-more">+ ${evsDoDia.length - maxVisiveis} mais</div>`;
-      }
+      if (evsDoDia.length > maxVisiveis) evsHtml += `<div class="month-more">+ ${evsDoDia.length - maxVisiveis} mais</div>`;
 
       html += `
-        <div class="month-day ${isOutroMes ? 'outro-mes' : ''} ${isHoje ? 'hoje' : ''}" 
-             onclick="abrirModalEvento('${iso}', '12:00')">
+        <div class="month-day ${isOutroMes ? 'outro-mes' : ''} ${isHoje ? 'hoje' : ''}" onclick="abrirModalEvento('${iso}', '12:00')">
           <div class="day-number">${diaAtual.getDate()}</div>
           ${evsHtml}
         </div>
@@ -534,7 +550,6 @@
     return html;
   }
 
-  // --- VISÃO: SEMANA / DIA (LINHA DO TEMPO) ---
   function renderizarTimeline(eventosFiltrados) {
     const hojeStr = formatarDataISO(new Date());
     let dias = [];
@@ -580,15 +595,13 @@
           const classe = (valorTotal > 0 ? 'pago' : 'gratuito') + (ev.concluido ? ' concluido' : '');
           
           const tagsHtml = [];
-          if (ev.ferias_id && mapaFerias[ev.ferias_id]) {
-            tagsHtml.push(`<div class="tag-mini tag-viagem-mini">✈️ ${mapaFerias[ev.ferias_id]}</div>`);
-          }
-          if (ev.responsavel) {
-            tagsHtml.push(`<div class="tag-mini tag-resp-mini">👤 ${ev.responsavel}</div>`);
-          }
+          if (ev.ferias_id && mapaFerias[ev.ferias_id]) tagsHtml.push(`<div class="tag-mini tag-viagem-mini">✈️ ${mapaFerias[ev.ferias_id]}</div>`);
+          if (ev.responsavel) tagsHtml.push(`<div class="tag-mini tag-resp-mini">👤 ${ev.responsavel}</div>`);
+
+          const isRec = ev.recorrencia_id ? ' 🔄' : '';
 
           tbodyHtml += `<td class="evento-cell" onclick="abrirModalEvento('${iso}','${horaStr}',${ev.id})" title="${ev.nome_atracao}">
-            <div class="evento-texto ${classe}">${ev.nome_atracao}</div>
+            <div class="evento-texto ${classe}">${ev.nome_atracao}${isRec}</div>
             ${valorTotal > 0 ? `<div class="evento-valor">${fmtMoeda(valorTotal)}</div>` : ''}
             <div class="evento-tags">${tagsHtml.join('')}</div>
           </td>`;
@@ -609,7 +622,6 @@
     `;
   }
 
-  // --- MODAIS E AÇÕES ---
   function adicionarCampoGasto(descricao = '', valor = '') {
     const container = document.getElementById('listaGastosAtracao');
     const div = document.createElement('div');
@@ -630,9 +642,12 @@
     document.getElementById('listaGastosAtracao').innerHTML = '';
     
     document.getElementById('dataEventoDisplay').value = dataStr;
+    document.getElementById('dataFimRecorrencia').value = dataStr;
     document.getElementById('horaInicio').value = horaStr;
     document.getElementById('eventoId').value = eventoId || '';
     document.getElementById('responsavelEvento').value = 'Casal';
+    document.getElementById('recorrenciaEvento').value = 'nenhuma';
+    document.getElementById('recorrenciaEvento').disabled = false;
 
     const btnExcluir = document.getElementById('btnExcluirEventoModal');
     const btnConcluir = document.getElementById('btnConcluirEventoModal');
@@ -649,7 +664,13 @@
         document.getElementById('valor_por_pessoa').value = ev.valor_por_pessoa || 0;
         document.getElementById('horaInicio').value = ev.hora_inicio.substring(0, 5);
         document.getElementById('responsavelEvento').value = ev.responsavel || 'Casal';
+        document.getElementById('dataEventoDisplay').value = ev.data;
         
+        if (ev.recorrencia_id) {
+          document.getElementById('recorrenciaEvento').value = ev.recorrencia || 'nenhuma';
+          document.getElementById('recorrenciaEvento').disabled = true;
+        }
+
         if (Array.isArray(ev.gastos_extras)) {
           ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
         }
@@ -679,6 +700,16 @@
     const eventoId = document.getElementById('eventoId').value;
     const qtd = Number(document.getElementById('quantidade_pessoas').value);
     const valorUnit = Number(document.getElementById('valor_por_pessoa').value);
+    
+    let recTipo = document.getElementById('recorrenciaEvento').value;
+    const dataInicio = document.getElementById('dataEventoDisplay').value;
+    const dataFim = document.getElementById('dataFimRecorrencia').value || dataInicio;
+
+    // 🔥 INTELIGÊNCIA: Se o usuário colocou uma data final mas deixou "nenhuma",
+    // o sistema assume que ele quer todos os dias do período.
+    if (recTipo === 'nenhuma' && dataFim !== dataInicio) {
+      recTipo = 'diario';
+    }
 
     const gastosExtras = [];
     document.querySelectorAll('.gasto-item').forEach(item => {
@@ -687,9 +718,9 @@
       if (desc && val > 0) gastosExtras.push({ descricao: desc, valor: val });
     });
 
-    const payload = {
+    const payloadBase = {
       user_id: userId,
-      data: document.getElementById('dataEventoDisplay').value,
+      data: dataInicio,
       hora_inicio: document.getElementById('horaInicio').value,
       nome_atracao: document.getElementById('nomeAtracao').value,
       endereco: document.getElementById('endereco').value,
@@ -698,30 +729,132 @@
       valor_por_pessoa: valorUnit,
       valor: qtd * valorUnit,
       gastos_extras: gastosExtras,
-      responsavel: document.getElementById('responsavelEvento').value
+      responsavel: document.getElementById('responsavelEvento').value,
+      recorrencia: recTipo,
+      dataFimRecorrencia: dataFim // Usado apenas no frontend para as lógicas abaixo
     };
 
-    let error;
     if (eventoId) {
-      const res = await db.from('eventos').update(payload).eq('id', eventoId);
-      error = res.error;
+      const evOriginal = todosEventos.find(e => String(e.id) === String(eventoId));
+      
+      if (evOriginal && evOriginal.recorrencia_id) {
+        acaoPendente = { tipo: 'edit', evento: evOriginal, payload: payloadBase };
+        document.getElementById('escopoTitulo').textContent = 'Editar Evento Recorrente';
+        document.getElementById('escopoMensagem').textContent = 'Este evento faz parte de uma série. Como deseja aplicar as alterações?';
+        document.getElementById('btnEscopoFuturos').style.display = 'block';
+        openModal('modalEscopo');
+        return; // Pausa até escolher o escopo
+      }
+
+      // Edição de evento único (não recorrente)
+      const payloadDB = { ...payloadBase };
+      delete payloadDB.dataFimRecorrencia; // 🔥 IMPEDE O ERRO DE COLUNA
+      
+      const res = await db.from('eventos').update(payloadDB).eq('id', eventoId);
+      if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+      
     } else {
-      const res = await db.from('eventos').insert([payload]);
-      error = res.error;
+      // Criação de novo evento
+      if (recTipo !== 'nenhuma') {
+        const recId = crypto.randomUUID();
+        const datas = gerarDatasRecorrentes(dataInicio, recTipo, dataFim);
+        
+        const payloads = datas.map(dataIso => {
+          let p = { ...payloadBase, data: dataIso, recorrencia_id: recId };
+          delete p.dataFimRecorrencia; // 🔥 IMPEDE O ERRO DE COLUNA
+          return p;
+        });
+
+        const res = await db.from('eventos').insert(payloads);
+        if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+      } else {
+        const payloadDB = { ...payloadBase };
+        delete payloadDB.dataFimRecorrencia; // 🔥 IMPEDE O ERRO DE COLUNA
+        
+        const res = await db.from('eventos').insert([payloadDB]);
+        if (res.error) return alert('Erro ao salvar: ' + res.error.message);
+      }
     }
 
-    if (error) { console.error(error); return alert('Erro ao salvar: ' + error.message); }
     closeModal('modalEvento');
     await carregarEventos();
   });
 
+  async function executarAcaoEscopo(escopo) {
+    closeModal('modalEscopo');
+    const { tipo, evento: ev, payload } = acaoPendente;
+    if (!ev) return;
+
+    const dataFim = payload.dataFimRecorrencia;
+    const recTipo = payload.recorrencia;
+
+    if (tipo === 'delete') {
+      if (escopo === 'este') {
+        await db.from('eventos').delete().eq('id', ev.id);
+      } else if (escopo === 'futuros') {
+        await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
+      } else if (escopo === 'todos') {
+        const hoje = formatarDataISO(new Date());
+        await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', hoje);
+      }
+    } 
+    else if (tipo === 'edit') {
+      if (escopo === 'este') {
+        // Desvincula este evento da série
+        const payloadUnico = { ...payload, recorrencia: 'nenhuma', recorrencia_id: null };
+        delete payloadUnico.dataFimRecorrencia;
+        await db.from('eventos').update(payloadUnico).eq('id', ev.id);
+      } else {
+        // Regenerar a série
+        if (escopo === 'futuros') {
+          await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
+        } else {
+          await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', formatarDataISO(new Date()));
+        }
+        
+        // Cria os novos
+        if (recTipo !== 'nenhuma') {
+          const datas = gerarDatasRecorrentes(payload.data, recTipo, dataFim);
+          const payloads = datas.map(dataIso => {
+            let p = { ...payload, data: dataIso, recorrencia_id: ev.recorrencia_id };
+            delete p.dataFimRecorrencia;
+            return p;
+          });
+          await db.from('eventos').insert(payloads);
+        } else {
+          // Virou um evento único
+          let p = { ...payload, recorrencia: 'nenhuma', recorrencia_id: null };
+          delete p.dataFimRecorrencia;
+          await db.from('eventos').insert([p]);
+        }
+      }
+    }
+
+    acaoPendente = { tipo: null, evento: null, payload: null };
+    await carregarEventos();
+  }
+
   async function excluirEventoDoModal() {
     const eventoId = document.getElementById('eventoId').value;
-    if (!eventoId || !confirm('Excluir este evento?')) return;
-    const { error } = await db.from('eventos').delete().eq('id', eventoId);
-    if (error) return alert('Erro: ' + error.message);
-    closeModal('modalEvento');
-    await carregarEventos();
+    if (!eventoId) return;
+
+    const ev = todosEventos.find(e => String(e.id) === String(eventoId));
+    if (!ev) return;
+
+    if (ev.recorrencia_id) {
+      acaoPendente = { tipo: 'delete', evento: ev, payload: null };
+      document.getElementById('escopoTitulo').textContent = 'Excluir Evento Recorrente';
+      document.getElementById('escopoMensagem').textContent = 'Este evento faz parte de uma série. Como deseja excluir?';
+      document.getElementById('btnEscopoFuturos').style.display = 'block';
+      document.getElementById('btnEscopoTodos').textContent = 'Todos os eventos futuros';
+      closeModal('modalEvento');
+      openModal('modalEscopo');
+    } else {
+      if (!confirm('Excluir este evento?')) return;
+      await db.from('eventos').delete().eq('id', eventoId);
+      closeModal('modalEvento');
+      await carregarEventos();
+    }
   }
 
   async function concluirEventoDoModal() {
@@ -764,14 +897,8 @@
     let tentativas = 0;
     const check = setInterval(() => {
       tentativas++;
-      if (window.currentUser) {
-        clearInterval(check);
-        initAgendaApp();
-      }
-      if (tentativas > 50) {
-        clearInterval(check);
-        console.error('Timeout: usuário não carregado pelo app.js');
-      }
+      if (window.currentUser) { clearInterval(check); initAgendaApp(); }
+      if (tentativas > 50) { clearInterval(check); console.error('Timeout: usuário não carregado pelo app.js'); }
     }, 200);
   });
 </script>
