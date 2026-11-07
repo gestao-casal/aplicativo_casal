@@ -135,7 +135,7 @@
     padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px; flex-wrap: wrap; gap: 10px;
   }
   .ics-preview-header h3 { margin: 0; font-size: 1rem; color: #1a1f2b; }
-  .ics-preview-actions { display: flex; gap: 8px; align-items: center; }
+  .ics-preview-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .ics-preview-count { font-size: 0.85rem; color: #6b7280; }
 
   .ics-list {
@@ -155,6 +155,13 @@
   .ics-item-warn { background: #fef3c7; color: #92400e; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; white-space: nowrap; }
   .ics-item-dup { background: #fcd34d; color: #78350f; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; white-space: nowrap; }
 
+  /* Seletor de responsável dentro do preview do ICS */
+  .ics-select-resp {
+    padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db;
+    font-size: 0.75rem; font-weight: 600; color: #374151; background: #fff;
+    cursor: pointer; outline: none; max-width: 110px; margin-left: auto;
+  }
+
   .ics-empty { padding: 30px; text-align: center; color: #9ca3af; font-size: 0.9rem; }
   .ics-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border); flex-wrap: wrap; }
   .ics-footer-info { font-size: 0.85rem; color: #6b7280; }
@@ -166,6 +173,8 @@
     .list-event-meta { align-items: flex-start; }
     .filter-tab { padding: 7px 12px; font-size: 0.8rem; }
     .toolbar-controls { width: 100%; justify-content: space-between; }
+    .ics-item { flex-wrap: wrap; }
+    .ics-select-resp { width: 100%; max-width: 100%; margin-top: 6px; margin-left: 0; }
   }
 </style>
 </head>
@@ -296,7 +305,15 @@
       </div>
       <div id="icsStep2" style="display:none;">
         <div class="ics-preview-header">
-          <h3>Pré-visualização</h3>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h3>Pré-visualização</h3>
+            <!-- Atalho para definir todos de uma vez -->
+            <select id="icsResponsavelGlobal" class="filter-select" onchange="aplicarResponsavelGlobalICS(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+              <option value="">Definir todos como...</option>
+              <option value="Casal">👫 Casal</option>
+              <!-- Membros via JS -->
+            </select>
+          </div>
           <div class="ics-preview-actions">
             <span class="ics-preview-count" id="icsPreviewCount"></span>
             <button class="week-btn" onclick="selecionarTodosICS(true)" style="padding:4px 10px;font-size:0.78rem;">Todos</button>
@@ -323,7 +340,7 @@
   let mapaFerias = {};
   let membrosCasal = [];
   let filtroAtual = 'semana';
-  let filtroResponsavel = 'Todos'; // NOVO: Estado do filtro
+  let filtroResponsavel = 'Todos';
   let referenciaPeriodo = new Date();
   let icsEventosPendentes = [];
 
@@ -392,18 +409,25 @@
       if (data) membrosCasal = data.map(m => m.nome);
     } catch (e) { console.error(e); }
 
-    // Popula o select de filtro
+    // 1. Popula o select de filtro principal
     const selectFiltro = document.getElementById('filtroResponsavelLista');
     selectFiltro.innerHTML = '<option value="Todos">👥 Todos os eventos</option><option value="Casal">👫 Apenas Casal</option>';
     membrosCasal.forEach(nome => {
       selectFiltro.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
     });
 
-    // Popula o select do modal
+    // 2. Popula o select do modal de criar/editar evento
     const selectModal = document.getElementById('responsavelEvento');
     selectModal.innerHTML = '<option value="Casal">👫 Casal</option>';
     membrosCasal.forEach(nome => {
       selectModal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+    });
+
+    // 3. Popula o select global do modal de importação
+    const selectIcsGlobal = document.getElementById('icsResponsavelGlobal');
+    selectIcsGlobal.innerHTML = '<option value="">Definir todos como...</option><option value="Casal">👫 Casal</option>';
+    membrosCasal.forEach(nome => {
+      selectIcsGlobal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
     });
   }
 
@@ -467,13 +491,11 @@
   function renderLista() {
     const hojeISO = formatarDataISO(new Date());
 
-    // 1. Filtra por Responsável
     let baseEventos = [...todosEventos];
     if (filtroResponsavel !== 'Todos') {
       baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
     }
 
-    // 2. Aplica filtro de período (Semana/Mês/Todas)
     let eventosParaMostrar = [];
     let titulo = '', subtitulo = '', navLabel = '';
 
@@ -565,7 +587,6 @@
     const hojeISO = formatarDataISO(new Date());
     let eventosParaExportar = [];
 
-    // Pega apenas os eventos que estão visíveis na tela no momento (respeitando o filtro de responsável)
     let baseEventos = [...todosEventos];
     if (filtroResponsavel !== 'Todos') {
       baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
@@ -750,6 +771,7 @@
     document.getElementById('icsStep1').style.display = 'block';
     document.getElementById('icsStep2').style.display = 'none';
     document.getElementById('icsFileInput').value = '';
+    document.getElementById('icsResponsavelGlobal').value = ''; // Reseta o seletor global
     openModal('modalImportICS');
   }
 
@@ -830,7 +852,8 @@
       resultado.push({
         selected: !duplicado, duplicado, recorrente: !!raw.rrule,
         summary: raw.summary || '(Sem título)', date: parsedDate.date, time: horaNorm, allDay: parsedDate.allDay,
-        location: raw.location || '', description: raw.description || '', uid: raw.uid || ''
+        location: raw.location || '', description: raw.description || '', uid: raw.uid || '',
+        responsavel: 'Casal' // Define Casal como padrão inicial
       });
     }
 
@@ -872,22 +895,49 @@
       const dataObj = new Date(ev.date + 'T00:00:00');
       const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
       const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      
       const badges = [];
       if (ev.duplicado) badges.push('<span class="ics-item-dup">já existe</span>');
       if (ev.recorrente) badges.push('<span class="ics-item-warn">⚠️ recorrente</span>');
+      
       const classes = ['ics-item', ev.duplicado ? 'duplicate' : ''].filter(Boolean).join(' ');
+
+      // Opções do seletor de responsável individual
+      const opcoesResp = `<option value="Casal" ${ev.responsavel === 'Casal' ? 'selected' : ''}>👫 Casal</option>` + 
+        membrosCasal.map(nome => `<option value="${nome}" ${ev.responsavel === nome ? 'selected' : ''}>👤 ${nome}</option>`).join('');
 
       return `<div class="${classes}" onclick="toggleICSItem(${i}, event)">
         <input type="checkbox" ${ev.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleICSItem(${i}, event)" />
+        
         <div class="ics-item-content">
           <div class="ics-item-name">${escapeHtml(ev.summary)}</div>
           <div class="ics-item-meta">${diaSemana} ${diaMes} ${ev.allDay ? '(dia inteiro)' : 'às ' + ev.time} ${ev.location ? ' • ' + escapeHtml(ev.location) : ''}</div>
         </div>
+
+        <!-- Seletor de Responsável por Evento -->
+        <select class="ics-select-resp" onclick="event.stopPropagation()" onchange="mudarResponsavelICS(${i}, this.value)">
+          ${opcoesResp}
+        </select>
+
         ${badges.join(' ')}
       </div>`;
     }).join('');
 
     atualizarContadoresICS();
+  }
+
+  // Função para mudar o responsável de um item individual na importação
+  function mudarResponsavelICS(index, valor) {
+    if (icsEventosPendentes[index]) {
+      icsEventosPendentes[index].responsavel = valor;
+    }
+  }
+
+  // Função para aplicar o responsável a todos os itens de uma vez
+  function aplicarResponsavelGlobalICS(valor) {
+    if (!valor) return;
+    icsEventosPendentes.forEach(ev => { ev.responsavel = valor; });
+    renderPreviewICS();
   }
 
   function atualizarContadoresICS() {
@@ -946,7 +996,7 @@
       valor_por_pessoa: 0,
       valor: 0,
       gastos_extras: [],
-      responsavel: 'Casal'
+      responsavel: ev.responsavel // Usa o responsável escolhido no preview
     }));
 
     let inseridos = 0, erros = 0;
