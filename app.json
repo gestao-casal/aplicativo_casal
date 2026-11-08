@@ -1,0 +1,39 @@
+{
+  "_editMe": "Edite os campos abaixo e rode: html2apk doctor && html2apk build",
+  "appName": "Site Casal",
+  "url": "https://gestao-casal.github.io/aplicativo_casal/agenda.html",
+  "packageId": "com.seuapp.sitecasal",
+  "version": "1.0.1",
+  "mode": "fullscreen",
+  "orientation": "default",
+  "minSdkVersion": 24,
+  "themeColor": "#126fff",
+  "themeMode": "fixed",
+  "oneSignalAppId": "",
+  "deepLinks": {
+    "schemes": [],
+    "appLinks": []
+  },
+  "icon": "logo.png",
+  "splash": "logo.png",
+  "permissions": [
+    "INTERNET",
+    "POST_NOTIFICATIONS",
+    "VIBRATE"
+  ],
+  "plugins": [],
+  "release": false,
+  "buildFormat": "apk",
+  "showRuntimeLogs": false,
+  "androidPlatform": "android@15.0.0",
+  "keystore": {
+    "path": "",
+    "alias": "",
+    "storePassword": "",
+    "keyPassword": ""
+  },
+  "debug": false,
+  "entryFile": "index.html",
+  "webRoot": ".",
+  "files": []
+}

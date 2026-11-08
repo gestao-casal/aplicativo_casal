@@ -52,6 +52,46 @@
   .btn-add-calc { background: transparent; color: #4f46e5; border: 1px dashed #4f46e5; padding: 6px 10px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.8rem; width: 100%; transition: background 0.2s; }
   .btn-add-calc:hover { background: #eef2ff; }
   .calc-total-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #cbd5e1; font-weight: bold; font-size: 1.1rem; color: #111827; }
+
+  /* =========================================
+     CORREÇÃO DE RESPONSIVIDADE (CELULAR)
+     ========================================= */
+  @media (max-width: 768px) {
+    .summary-grid {
+      grid-template-columns: 1fr; /* Empilha os cartões de resumo */
+    }
+
+    .filtro-container {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 8px !important;
+    }
+    
+    .filtro-container select {
+      width: 100% !important;
+    }
+
+    .topbar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+
+    .mov-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    
+    .mov-item-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .person-card {
+      min-width: 100%; /* Ocupa a tela toda no celular */
+    }
+  }
 </style>
 </head>
 <body data-page="financeiro">
@@ -72,7 +112,7 @@
     </div>
 
     <!-- FILTRO POR PESSOA -->
-    <div style="background: #fff; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+    <div class="filtro-container" style="background: #fff; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
       <label style="margin: 0; font-weight: 700; color: #333;">Filtrar por pessoa:</label>
       <select id="filtroPessoa" onchange="renderTudo()" style="width: 250px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; font-weight: 600;">
         <option value="todos">Mostrar Todos</option>
@@ -87,8 +127,8 @@
 
     <div class="person-summary" id="resumoPessoas"></div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <h3>Movimentações do Mês</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+      <h3 style="margin: 0;">Movimentações do Mês</h3>
       <button id="btnNovaMov" class="btn btn-primary" onclick="abrirModalMovimentacao()">+ Nova Movimentação</button>
     </div>
 
