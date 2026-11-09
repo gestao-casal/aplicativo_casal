@@ -4,20 +4,27 @@
 const SUPABASE_URL = "https://tzolokxetilunyfzovav.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_0HJWnbqDMg1LFwLuhaRLDg_FvEXwxZd";
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Configuração explícita para garantir que a sessão seja salva (persistida)
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+});
 window.db = db;
 
 let currentUser = null;
 
 // ==========================================
-// ADICIONAR FAVICON (ÍCONE) EM TODAS AS PÁGINAS
+// ADICIONAR FAVICON (LOGO.PNG) EM TODAS AS PÁGINAS
 // ==========================================
 (function adicionarFavicon() {
   if (!document.querySelector("link[rel*='icon']")) {
     const link = document.createElement('link');
     link.rel = 'icon';
     link.type = 'image/png';
-    link.href = 'logo.png'; // Nome do seu arquivo
+    link.href = 'logo.png'; 
     document.head.appendChild(link);
   }
 })();
@@ -102,13 +109,11 @@ async function initLogin() {
       return;
     }
 
-    // ========================================================
-    // AQUI ESTÁ A MÁGICA: VERIFICA SE É CELULAR OU COMPUTADOR
-    // ========================================================
+    // REDIRECIONAMENTO INTELIGENTE
     if (window.innerWidth <= 768) {
-      window.location.href = "home.html"; // Celular vai para a grade de botões
+      window.location.href = "home.html"; 
     } else {
-      window.location.href = "agenda.html"; // Computador vai direto para a Agenda
+      window.location.href = "agenda.html"; 
     }
   });
 }
@@ -143,7 +148,6 @@ async function logout() {
 function injetarBotaoMobile() {
   if (window.innerWidth <= 768) {
     const page = document.body.dataset.page;
-    // Não mostra o botão home na tela de login nem na própria home
     if (page !== 'login' && page !== 'home' && !document.querySelector('.btn-mobile-home')) {
       const btnHome = document.createElement('button');
       btnHome.className = 'btn-mobile-home';
@@ -162,17 +166,34 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   // 1. Tela de Login
   if (page === "login" || $("loginForm")) {
+    
+    // === AQUI ESTÁ A CORREÇÃO DO "PULAR LOGIN" ===
+    // Verifica se o usuário já tem uma sessão salva no celular
+    const { data: { session } } = await db.auth.getSession();
+    
+    if (session) {
+      // Se já estiver logado, vai direto para o app
+      if (window.innerWidth <= 768) {
+        window.location.href = "home.html";
+      } else {
+        window.location.href = "agenda.html";
+      }
+      return; // Para a execução aqui
+    }
+    // ===============================================
+
+    // Se não tiver sessão, mostra a tela de login normal
     await initLogin();
     return;
   }
 
-  // 2. Páginas Protegidas (Incluindo a própria Home)
+  // 2. Páginas Protegidas
   const paginasProtegidas = [
-    "home", // <--- Adicionado aqui
+    "home", 
     "ferias", "financeiro", "movimentacoes", "relatorio_detalhe", "membros",
     "checklists", "checklist_detalhe", "filmes", "listas_compras",
     "lista_detalhe", "restaurantes", "veiculos", "abastecimento", 
-    "historico_km", "manutencao", "agenda", "agenda-lista"
+    "historico_km", "manutencao", "agenda", "agenda-lista","tarefas"
   ];
   
   if (paginasProtegidas.includes(page)) {
@@ -180,8 +201,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     
     if (auth) {
       await loadMenu();
-      
-      // Se NÃO for a home, injeta o botão de voltar
       if (page !== "home") {
         injetarBotaoMobile();
       }

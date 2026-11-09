@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minhas Tarefas</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* --- ESTILOS GERAIS --- */
+  .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  .tab-btn { background: transparent; border: none; font-size: 1rem; font-weight: 700; color: #666; padding: 10px 15px; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+  .tab-btn:hover { background: #f1f5f9; }
+  .tab-btn.active { background: #eef2ff; color: #4f46e5; }
+  
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* --- ESTILOS DO CALENDÁRIO --- */
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
+  .calendar-day-name { text-align: center; font-weight: bold; color: #666; padding-bottom: 10px; font-size: 12px; text-transform: uppercase; }
+  .calendar-day { min-height: 100px; border: 1px solid #eee; border-radius: 8px; padding: 8px; background: #fafafa; transition: 0.2s; }
+  .calendar-day.today { border-color: #4f46e5; background: #eef2ff; }
+  .calendar-day.empty { background: transparent; border: none; }
+  .day-number { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 5px; }
+  
+  /* --- ESTILOS DAS TAREFAS --- */
+  .task-badge { display: block; width: 100%; text-align: left; border: none; font-size: 11px; padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .task-badge.alta { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+  .task-badge.media { background: #fef9c3; color: #854d0e; border-left: 3px solid #eab308; }
+  .task-badge.baixa { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+  .task-badge.done { opacity: 0.5; text-decoration: line-through; }
+
+  /* --- ESTILOS DA LISTA --- */
+  .task-list-item { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; transition: 0.2s; }
+  .task-list-item.done { opacity: 0.6; background: #f8fafc; }
+  .task-left { display: flex; align-items: center; gap: 15px; flex: 1; }
+  .task-left input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #4f46e5; }
+  .task-info { display: flex; flex-direction: column; }
+  .task-title { font-size: 1rem; font-weight: 600; color: #111827; }
+  .task-list-item.done .task-title { text-decoration: line-through; color: #666; }
+  .task-details { font-size: 0.8rem; color: #666; margin-top: 3px; display: flex; gap: 10px; align-items: center; }
+  
+  .badge-priority { padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .badge-priority.alta { background: #fee2e2; color: #dc2626; }
+  .badge-priority.media { background: #fef9c3; color: #ca8a04; }
+  .badge-priority.baixa { background: #dcfce7; color: #16a34a; }
+  
+  .btn-delete-task { background: #fef2f2; color: #dc2626; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+  .btn-delete-task:hover { background: #fee2e2; }
+
+  /* Botão Flutuante */
+  .fab-btn { position: fixed; bottom: 30px; right: 30px; background: #4f46e5; color: #fff; border: none; padding: 15px 25px; border-radius: 30px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); cursor: pointer; transition: transform 0.2s; z-index: 100; }
+  .fab-btn:hover { transform: scale(1.05); }
+</style>
+</head>
+<body data-page="tarefas">
+<div class="app">
+  <div id="menu"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Minhas Tarefas</h1>
+        <div class="muted">Gerencie suas tarefas diárias e pontuais</div>
+      </div>
+    </div>
+
+    <div class="tabs-container">
+      <button class="tab-btn active" onclick="mudarAba('lista')">📋 Lista de Tarefas</button>
+      <button class="tab-btn" onclick="mudarAba('calendario')">📅 Calendário</button>
+    </div>
+
+    <!-- CONTEÚDO: LISTA -->
+    <div id="aba-lista" class="tab-content active">
+      <div style="background: #fff; padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+        <label style="margin: 0; font-weight: 700; color: #333;">Ver tarefas de:</label>
+        <input type="date" id="filtroDataLista" onchange="carregarTarefasDaLista()" style="width: 200px; padding: 8px; border-radius: 8px; border: 1px solid #ccc;">
+      </div>
+      <div id="containerLista"></div>
+    </div>
+
+    <!-- CONTEÚDO: CALENDÁRIO -->
+    <div id="aba-calendario" class="tab-content">
+      <div class="calendar-header">
+        <button class="btn btn-secondary" onclick="mudarMes(-1)">← Mês Anterior</button>
+        <h2 id="mesAnoAtual" style="margin:0; font-size:20px;"></h2>
+        <button class="btn btn-secondary" onclick="mudarMes(1)">Próximo Mês →</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </main>
+</div>
+
+<button class="fab-btn" onclick="abrirModalNovaTarefa()">+ Nova Tarefa</button>
+
+<!-- MODAL DE TAREFA -->
+<div class="modal-overlay" id="modalTarefa">
+  <div class="modal-content" style="max-width: 450px;">
+    <div class="modal-header">
+      <h2 id="modalTarefaTitle">Nova Tarefa</h2>
+      <button class="btn-close" onclick="fecharModalTarefaReal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="tarefaForm">
+        <input type="hidden" id="tarefaEditId">
+        
+        <div class="field"><label>Título da Tarefa</label><input type="text" id="tarefaTitulo" required placeholder="Ex: Tomar remédio, Pagar conta..."></div>
+        
+        <div class="field">
+          <label>Tipo de Tarefa</label>
+          <select id="tarefaTipo" required onchange="toggleDataTarefa()">
+            <option value="unica">Única (Apenas para um dia específico)</option>
+            <option value="diaria">Diária (Repetir todos os dias)</option>
+          </select>
+        </div>
+
+        <div class="field" id="campoDataTarefa">
+          <label>Data da Tarefa</label>
+          <input type="date" id="tarefaData" required>
+        </div>
+
+        <div class="field">
+          <label>Prioridade</label>
+          <select id="tarefaPrioridade" required>
+            <option value="baixa">🟢 Baixa</option>
+            <option value="media" selected>🟡 Média</option>
+            <option value="alta">🔴 Alta</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; background: #4f46e5;">Salvar Tarefa</button>
+        <button type="button" class="btn-danger" id="btnExcluirTarefa" style="display: none; width: 100%; margin-top: 10px;" onclick="excluirTarefaDoModal()">Excluir Tarefa</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let dataAtual = new Date();
+  let tarefasDoMes = [];
+
+  function formatarDataIso(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function abrirModalTarefaReal() { document.getElementById('modalTarefa').classList.add('active'); }
+  function fecharModalTarefaReal() { document.getElementById('modalTarefa').classList.remove('active'); }
+
+  function mudarAba(aba) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+    
+    if (aba === 'lista') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('aba-lista').classList.add('active');
+      carregarTarefasDaLista();
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('aba-calendario').classList.add('active');
+      carregarTarefasDoCalendario();
+    }
+  }
+
+  // ==========================================
+  // LÓGICA DO CALENDÁRIO E LISTA (CRUZANDO DADOS)
+  // ==========================================
+
+  function mudarMes(delta) {
+    dataAtual.setMonth(dataAtual.getMonth() + delta);
+    carregarTarefasDoCalendario();
+  }
+
+  async function carregarTarefasDoCalendario() {
+    const ano = dataAtual.getFullYear();
+    const mes = dataAtual.getMonth();
+    const primeiroDia = formatarDataIso(new Date(ano, mes, 1));
+    const ultimoDia = formatarDataIso(new Date(ano, mes + 1, 0));
+
+    // 1. Busca as tarefas do mês ou diárias
+    const { data: tarefas } = await db.from('gestao_casal_tarefas')
+      .select('*')
+      .eq('user_id', window.currentUser.id)
+      .or(`and(is_recorrente.eq.false,data_tarefa.gte.${primeiroDia},data_tarefa.lte.${ultimoDia}),is_recorrente.eq.true`);
+
+    // 2. Busca o histórico de conclusões DO MÊS
+    const { data: historico } = await db.from('gestao_casal_tarefas_historico')
+      .select('*')
+      .eq('user_id', window.currentUser.id)
+      .gte('data_conclusao', primeiroDia)
+      .lte('data_conclusao', ultimoDia);
+
+    if (!tarefas) return;
+
+    // 3. Junta as informações
+    tarefasDoMes = tarefas.map(t => ({
+      ...t,
+      historicoConclusoes: (historico || []).filter(h => h.tarefa_id === t.id).map(h => h.data_conclusao)
+    }));
+
+    renderizarCalendario();
+  }
+
+  function renderizarCalendario() {
+    const ano = dataAtual.getFullYear();
+    const mes = dataAtual.getMonth();
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    document.getElementById("mesAnoAtual").textContent = `${meses[mes]} ${ano}`;
+
+    const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+    const hojeStr = formatarDataIso(new Date());
+
+    let html = "";
+    const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    diasSemana.forEach(d => { html += `<div class="calendar-day-name">${d}</div>`; });
+
+    for (let i = 0; i < primeiroDiaSemana; i++) {
+      html += `<div class="calendar-day empty"></div>`;
+    }
+
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+      const dataStr = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+      const isHoje = dataStr === hojeStr;
+
+      // Filtra tarefas: Diárias OU com data exata
+      const tarefasDoDia = tarefasDoMes.filter(t => t.is_recorrente || t.data_tarefa === dataStr);
+
+      html += `<div class="calendar-day ${isHoje ? 'today' : ''}">
+        <div class="day-number">${dia}</div>
+        ${tarefasDoDia.map(t => {
+          // Verifica se essa tarefa está no histórico para ESSE dia específico
+          const isDone = t.historicoConclusoes.includes(dataStr);
+          return `
+            <button class="task-badge ${t.prioridade} ${isDone ? 'done' : ''}" onclick="prepararEdicaoTarefa(${t.id})" title="${t.titulo}">
+              ${t.titulo}
+            </button>
+          `;
+        }).join('')}
+      </div>`;
+    }
+
+    document.getElementById("calendarGrid").innerHTML = html;
+  }
+
+  // ==========================================
+  // LISTA DIÁRIA
+  // ==========================================
+  async function carregarTarefasDaLista() {
+    let dataFiltro = document.getElementById("filtroDataLista").value;
+    if (!dataFiltro) {
+      dataFiltro = formatarDataIso(new Date());
+      document.getElementById("filtroDataLista").value = dataFiltro;
+    }
+
+    // 1. Pega tarefas
+    const { data: tarefas } = await db.from('gestao_casal_tarefas')
+      .select('*')
+      .eq('user_id', window.currentUser.id)
+      .or(`and(is_recorrente.eq.false,data_tarefa.eq.${dataFiltro}),is_recorrente.eq.true`);
+
+    // 2. Pega histórico APENAS deste dia
+    const { data: historico } = await db.from('gestao_casal_tarefas_historico')
+      .select('*')
+      .eq('user_id', window.currentUser.id)
+      .eq('data_conclusao', dataFiltro);
+
+    if (!tarefas) return;
+
+    const tarefasTratadas = tarefas.map(t => ({
+      ...t,
+      isDoneHoje: (historico || []).some(h => h.tarefa_id === t.id)
+    }));
+
+    renderizarLista(tarefasTratadas, dataFiltro);
+  }
+
+  function renderizarLista(tarefas, dataFiltro) {
+    const container = document.getElementById('containerLista');
+    if (tarefas.length === 0) {
+      container.innerHTML = `<div class="card" style="text-align: center; color: #666;"><h3>Nenhuma tarefa para este dia.</h3><p>Aproveite para descansar ou crie uma nova tarefa!</p></div>`;
+      return;
+    }
+
+    const pesoPrioridade = { alta: 1, media: 2, baixa: 3 };
+    tarefas.sort((a, b) => {
+      if (a.isDoneHoje !== b.isDoneHoje) return a.isDoneHoje ? 1 : -1;
+      return pesoPrioridade[a.prioridade] - pesoPrioridade[b.prioridade];
+    });
+
+    container.innerHTML = tarefas.map(t => `
+      <div class="task-list-item ${t.isDoneHoje ? 'done' : ''}">
+        <div class="task-left">
+          <input type="checkbox" ${t.isDoneHoje ? 'checked' : ''} onchange="toggleTarefaDia(${t.id}, '${dataFiltro}', this.checked)">
+          <div class="task-info">
+            <span class="task-title">${t.titulo}</span>
+            <div class="task-details">
+              <span class="badge-priority ${t.prioridade}">${t.prioridade}</span>
+              <span>${t.is_recorrente ? '🔄 Diária' : '📅 Data Única'}</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-delete-task" onclick="excluirTarefa(${t.id})">🗑️</button>
+      </div>
+    `).join("");
+  }
+
+  // MÁGICA: Em vez de alterar a tarefa, adiciona/remove do histórico do dia
+  async function toggleTarefaDia(tarefaId, dataStr, isChecked) {
+    if (isChecked) {
+      // Adiciona ao histórico
+      await db.from('gestao_casal_tarefas_historico').insert([{
+        tarefa_id: tarefaId,
+        user_id: window.currentUser.id,
+        data_conclusao: dataStr
+      }]);
+    } else {
+      // Remove do histórico
+      await db.from('gestao_casal_tarefas_historico')
+        .delete()
+        .eq('tarefa_id', tarefaId)
+        .eq('user_id', window.currentUser.id)
+        .eq('data_conclusao', dataStr);
+    }
+    carregarTarefasDaLista();
+    // Se estiver no calendário em background, atualiza tbm
+    carregarTarefasDoCalendario(); 
+  }
+
+  // ==========================================
+  // MODAL E CRIAÇÃO
+  // ==========================================
+  function toggleDataTarefa() {
+    const tipo = document.getElementById('tarefaTipo').value;
+    document.getElementById('campoDataTarefa').style.display = tipo === 'diaria' ? 'none' : 'block';
+  }
+
+  function abrirModalNovaTarefa() {
+    document.getElementById('tarefaForm').reset();
+    document.getElementById('tarefaEditId').value = '';
+    document.getElementById('modalTarefaTitle').textContent = 'Nova Tarefa';
+    document.getElementById('btnExcluirTarefa').style.display = 'none';
+    
+    document.getElementById('tarefaData').value = formatarDataIso(new Date());
+    document.getElementById('tarefaTipo').value = 'unica';
+    toggleDataTarefa();
+    abrirModalTarefaReal();
+  }
+
+  async function prepararEdicaoTarefa(id) {
+    document.getElementById('tarefaForm').reset();
+    document.getElementById('tarefaEditId').value = id;
+    document.getElementById('modalTarefaTitle').textContent = 'Editar Tarefa';
+    document.getElementById('btnExcluirTarefa').style.display = 'block';
+    
+    const { data: t } = await db.from('gestao_casal_tarefas').select('*').eq('id', id).single();
+    if (t) {
+      document.getElementById('tarefaTitulo').value = t.titulo;
+      document.getElementById('tarefaTipo').value = t.is_recorrente ? 'diaria' : 'unica';
+      document.getElementById('tarefaData').value = t.data_tarefa || formatarDataIso(new Date());
+      document.getElementById('tarefaPrioridade').value = t.prioridade;
+      toggleDataTarefa();
+    }
+    abrirModalTarefaReal();
+  }
+
+  document.getElementById('tarefaForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('tarefaEditId').value;
+    const tipo = document.getElementById('tarefaTipo').value;
+
+    const payload = {
+      user_id: window.currentUser.id,
+      titulo: document.getElementById('tarefaTitulo').value,
+      is_recorrente: tipo === 'diaria',
+      data_tarefa: tipo === 'diaria' ? null : document.getElementById('tarefaData').value,
+      prioridade: document.getElementById('tarefaPrioridade').value
+    };
+
+    if (id) {
+      await db.from('gestao_casal_tarefas').update(payload).eq('id', id);
+    } else {
+      await db.from('gestao_casal_tarefas').insert([payload]);
+    }
+
+    fecharModalTarefaReal();
+    carregarTarefasDaLista();
+    carregarTarefasDoCalendario();
+  });
+
+  async function excluirTarefa(id) {
+    if (!confirm('Excluir esta tarefa permanentemente?')) return;
+    await db.from('gestao_casal_tarefas').delete().eq('id', id);
+    // Exclui o histórico dela também
+    await db.from('gestao_casal_tarefas_historico').delete().eq('tarefa_id', id);
+    carregarTarefasDaLista();
+    carregarTarefasDoCalendario();
+  }
+
+  async function excluirTarefaDoModal() {
+    const id = document.getElementById('tarefaEditId').value;
+    if (!id || !confirm('Excluir esta tarefa permanentemente?')) return;
+    await db.from('gestao_casal_tarefas').delete().eq('id', id);
+    await db.from('gestao_casal_tarefas_historico').delete().eq('tarefa_id', id);
+    fecharModalTarefaReal();
+    carregarTarefasDaLista();
+    carregarTarefasDoCalendario();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    let tentativas = 0;
+    const verificar = setInterval(() => {
+      tentativas++;
+      if (window.currentUser) {
+        clearInterval(verificar);
+        carregarTarefasDaLista();
+      }
+      if (tentativas > 25) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>

@@ -5,19 +5,13 @@
   </div>
 
   <nav class="nav">
-    <!-- ITENS DIRETOS -->
-     
-    <!-- GRUPO: AGENDA -->
-    <div class="menu-group">
-      <button class="menu-dropdown-btn" onclick="toggleSubmenu('submenu-agenda', 'arrow-agenda')">
-        📅 Agenda
-        <span class="arrow" id="arrow-agenda">▼</span>
-      </button>
-      <div class="submenu" id="submenu-agenda">
-        <button data-page="agenda" onclick="go('agenda')">📋 Cronograma</button>
-        <button data-page="agenda-lista" onclick="go('agenda-lista')">📄 Lista</button>
-      </div>
-    </div>
+    
+    <!-- AGENDA (Agora como botão direto) -->
+    <button data-page="agenda" onclick="go('agenda')">📅 Minha Agenda</button>
+
+    <!-- TAREFAS -->
+    <button data-page="tarefas" onclick="go('tarefas')">📝 Minhas Tarefas</button>
+
     <button data-page="checklists" onclick="go('checklists')">✅ Check-List</button>
     <button data-page="ferias" onclick="go('ferias')">✈️ Minhas Viagens</button>
     <button data-page="filmes" onclick="go('filmes')">🎬 Filmes</button>

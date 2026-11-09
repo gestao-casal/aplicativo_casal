@@ -3,78 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agenda — Calendário</title>
+<title>Agenda — Gestão Casal</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .calendar-nav {
-    display: flex; justify-content: space-between; align-items: center;
-    background: #fff; border: 1px solid var(--border); border-radius: 10px;
-    padding: 15px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
-  }
+  /* =========================================
+     ESTILOS GERAIS E ABAS
+     ========================================= */
+  .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  .tab-btn { background: transparent; border: none; font-size: 1rem; font-weight: 700; color: #666; padding: 10px 15px; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+  .tab-btn:hover { background: #f1f5f9; }
+  .tab-btn.active { background: #eef2ff; color: #4f46e5; }
+  
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* =========================================
+     ESTILOS DO CALENDÁRIO
+     ========================================= */
+  .calendar-nav { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
   .calendar-nav-left { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
   .calendar-nav h2 { margin: 0; color: #1a1f2b; font-size: 1.3rem; min-width: 200px; }
   .calendar-nav-btns { display: flex; gap: 8px; }
-  .week-btn {
-    background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
-    padding: 8px 16px; cursor: pointer; font-weight: 600; color: #374151; transition: all 0.2s;
-  }
+  .week-btn { background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 600; color: #374151; transition: all 0.2s; }
   .week-btn:hover { background: #e5e7eb; }
   .week-btn-today { background: #4f46e5; color: #fff; border-color: #4f46e5; }
   .week-btn-today:hover { background: #4338ca; }
 
   .view-selector { display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 3px; }
-  .view-btn {
-    background: transparent; border: none; padding: 8px 20px; border-radius: 6px;
-    font-weight: 600; font-size: 0.9rem; color: #4b5563; cursor: pointer; transition: all 0.15s;
-  }
+  .view-btn { background: transparent; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; color: #4b5563; cursor: pointer; transition: all 0.15s; }
   .view-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-  .filter-resp {
-    background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
-    padding: 8px 12px; font-weight: 600; color: #374151; cursor: pointer;
-    outline: none; font-family: inherit;
-  }
+  .filter-resp { background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-weight: 600; color: #374151; cursor: pointer; outline: none; font-family: inherit; }
 
-  .resumo-box {
-    background: #fff; border: 1px solid var(--border); border-radius: 10px;
-    padding: 18px 20px; margin-bottom: 20px;
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
-  }
-  .resumo-item { display: flex; flex-direction: column; }
-  .resumo-item span { font-size: 0.78rem; color: #6b7280; }
-  .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
-  .resumo-item strong.total { color: #dc2626; }
-
-  .month-grid-wrapper {
-    background: #fff; border: 1px solid var(--border); border-radius: 10px;
-    overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 280px); min-height: 600px;
-  }
-  .month-header {
-    display: grid; grid-template-columns: repeat(7, 1fr); background: #f9fafb;
-    border-bottom: 2px solid var(--border); text-align: center; font-size: 0.8rem;
-    font-weight: 600; color: #374151; padding: 10px 0;
-  }
-  .month-body {
-    display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(5, 1fr);
-    flex: 1; overflow-y: auto;
-  }
-  .month-day {
-    border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;
-    padding: 6px; display: flex; flex-direction: column; gap: 4px;
-    cursor: pointer; transition: background 0.15s; position: relative;
-  }
+  .month-grid-wrapper { background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 350px); min-height: 500px; }
+  .month-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #f9fafb; border-bottom: 2px solid var(--border); text-align: center; font-size: 0.8rem; font-weight: 600; color: #374151; padding: 10px 0; }
+  .month-body { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(5, 1fr); flex: 1; overflow-y: auto; }
+  .month-day { border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 6px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: background 0.15s; position: relative; }
   .month-day:nth-child(7n) { border-right: none; }
   .month-day:hover { background: #f9fafb; }
   .month-day.outro-mes { background: #fafafa; color: #9ca3af; }
   .month-day.hoje .day-number { background: #4f46e5; color: #fff; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
   .day-number { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; align-self: flex-start; }
   
-  .month-event {
-    font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    background: #e0e7ff; color: #3730a3; border-left: 3px solid #4f46e5;
-    display: flex; justify-content: space-between; align-items: center;
-  }
+  .month-event { font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #e0e7ff; color: #3730a3; border-left: 3px solid #4f46e5; display: flex; justify-content: space-between; align-items: center; }
   .month-event.pago { background: #fee2e2; color: #991b1b; border-left-color: #dc2626; }
   .month-event.gratuito { background: #dcfce7; color: #166534; border-left-color: #16a34a; }
   .month-event.concluido { opacity: 0.5; text-decoration: line-through; }
@@ -82,42 +54,106 @@
 
   .agenda-wrapper { overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
   .agenda-table { width: 100%; border-collapse: collapse; min-width: 900px; }
-  .agenda-table th {
-    background: #f9fafb; padding: 12px 8px; border-bottom: 2px solid var(--border);
-    font-size: 0.8rem; color: #374151; text-align: center; font-weight: 600;
-  }
+  .agenda-table th { background: #f9fafb; padding: 12px 8px; border-bottom: 2px solid var(--border); font-size: 0.8rem; color: #374151; text-align: center; font-weight: 600; }
   .agenda-table th.dia-hoje { background: #eef2ff; color: #4f46e5; }
   .agenda-table th small { display: block; font-weight: 400; color: #9ca3af; font-size: 0.7rem; margin-top: 2px; }
   .agenda-table td { border: 1px solid #e5e7eb; height: 60px; padding: 4px; vertical-align: top; }
-  .agenda-table td.hora-col {
-    background: #f9fafb; text-align: center; font-size: 0.75rem; color: #6b7280;
-    font-weight: 600; width: 70px; vertical-align: middle;
-  }
+  .agenda-table td.hora-col { background: #f9fafb; text-align: center; font-size: 0.75rem; color: #6b7280; font-weight: 600; width: 70px; vertical-align: middle; }
   .evento-cell { cursor: pointer; position: relative; }
   .evento-cell:hover { background: #f9fafb; }
-  .evento-cell:hover::after {
-    content: '+'; position: absolute; top: 4px; right: 6px; color: #9ca3af; font-size: 1rem; font-weight: bold;
-  }
-  .evento-texto {
-    font-size: 0.72rem; padding: 4px 6px; border-radius: 5px; font-weight: 600;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    display: flex; align-items: center; gap: 4px;
-  }
+  .evento-cell:hover::after { content: '+'; position: absolute; top: 4px; right: 6px; color: #9ca3af; font-size: 1rem; font-weight: bold; }
+  .evento-texto { font-size: 0.72rem; padding: 4px 6px; border-radius: 5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
   .evento-texto.gratuito { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
   .evento-texto.pago { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
   .evento-texto.concluido { opacity: 0.55; text-decoration: line-through; }
   .evento-valor { font-size: 0.65rem; color: #374151; margin-top: 2px; font-weight: 700; }
   .evento-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
-  .tag-mini {
-    font-size: 0.6rem; padding: 1px 5px; border-radius: 6px; font-weight: 700;
-    display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
+  .tag-mini { font-size: 0.6rem; padding: 1px 5px; border-radius: 6px; font-weight: 700; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tag-viagem-mini { color: #4f46e5; background: #eef2ff; }
   .tag-resp-mini { color: #b45309; background: #fef3c7; }
 
   .legend-row { display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #374151; }
   .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+
+  /* =========================================
+     ESTILOS DA LISTA
+     ========================================= */
+  .toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .toolbar-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 180px; }
+  .toolbar-info h2 { margin: 0; color: #1a1f2b; font-size: 1.1rem; }
+  .toolbar-info small { color: #666; font-size: 0.8rem; }
+  .toolbar-controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .filter-select { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; font-weight: 600; color: #374151; cursor: pointer; outline: none; font-family: inherit; font-size: 0.85rem; }
+  .filter-tabs { display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 3px; }
+  .filter-tab { background: transparent; border: none; padding: 7px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; color: #4b5563; cursor: pointer; transition: all 0.15s; }
+  .filter-tab.active { background: #4f46e5; color: #fff; }
+  .toolbar-toggle { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #374151; cursor: pointer; }
+  .toolbar-toggle input { width: 16px; height: 16px; accent-color: #4f46e5; }
+  
+  .period-nav { display: none; justify-content: space-between; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .period-nav-btns { display: flex; gap: 10px; }
+  .period-nav-label { font-size: 0.9rem; font-weight: 700; color: #1a1f2b; }
+
+  .resumo-box { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+  .resumo-item { display: flex; flex-direction: column; }
+  .resumo-item span { font-size: 0.78rem; color: #6b7280; }
+  .resumo-item strong { font-size: 1.25rem; color: #1a1f2b; }
+  .resumo-item strong.total { color: #dc2626; }
+
+  .list-view { display: flex; flex-direction: column; gap: 10px; }
+  .list-event-row { background: #fff; border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: stretch; gap: 16px; padding: 14px 18px; cursor: pointer; transition: all 0.15s; }
+  .list-event-row:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.06); transform: translateY(-1px); border-color: #c7d2fe; }
+  .list-event-row.concluido { opacity: 0.65; }
+  .list-event-row.hoje { border-left: 4px solid #4f46e5; }
+  .list-event-row.passado { background: #fafafa; }
+  .list-event-date { flex-shrink: 0; width: 130px; display: flex; flex-direction: column; justify-content: center; padding-right: 16px; border-right: 1px solid #f3f4f6; }
+  .list-event-date .date-weekday { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; font-weight: 700; }
+  .list-event-date .date-day { font-weight: 700; color: #1a1f2b; font-size: 1rem; margin-top: 2px; }
+  .list-event-date .date-time { font-size: 0.9rem; color: #4f46e5; font-weight: 700; margin-top: 4px; }
+  .list-event-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  .list-event-name { font-weight: 600; color: #1a1f2b; font-size: 0.98rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .list-event-row.concluido .list-event-name { text-decoration: line-through; }
+  .list-event-location { font-size: 0.8rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-event-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .list-event-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .tag-viagem { color: #4f46e5; background: #eef2ff; }
+  .tag-responsavel { color: #b45309; background: #fef3c7; }
+  .tag-recorrente { color: #0284c7; background: #e0f2fe; }
+  .list-event-meta { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; }
+  .list-event-value { font-weight: 700; color: #dc2626; font-size: 1rem; white-space: nowrap; }
+  .list-event-value.gratuito { color: #16a34a; }
+  .list-event-badge { font-size: 0.7rem; padding: 2px 10px; border-radius: 10px; font-weight: 600; }
+  .list-event-badge.pendente { background: #fef3c7; color: #92400e; }
+  .list-event-badge.concluido { background: #dcfce7; color: #166534; }
+  .list-event-badge.passado { background: #e5e7eb; color: #6b7280; }
+  .list-empty-box { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 50px 20px; text-align: center; color: #9ca3af; font-size: 0.9rem; }
+
+  /* Modais ICS */
+  .ics-dropzone { border: 2px dashed #c7d2fe; border-radius: 12px; padding: 30px 20px; text-align: center; background: #f8faff; cursor: pointer; transition: all 0.15s; }
+  .ics-dropzone:hover { border-color: #4f46e5; background: #eef2ff; }
+  .ics-dropzone input[type="file"] { display: none; }
+  .ics-list { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; padding-right: 4px; }
+  .ics-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .ics-item:hover { background: #f3f4f6; }
+  .ics-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5; flex-shrink: 0; }
+  .ics-item-content { flex: 1; min-width: 0; }
+  .ics-item-name { font-weight: 600; color: #1a1f2b; font-size: 0.9rem; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ics-item-meta { font-size: 0.78rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ics-select-resp { padding: 4px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 0.75rem; font-weight: 600; color: #374151; background: #fff; cursor: pointer; outline: none; max-width: 110px; margin-left: auto; }
+  .ics-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .ics-footer-info { font-size: 0.85rem; color: #6b7280; }
+
+  @media (max-width: 600px) {
+    .list-event-row { flex-wrap: wrap; }
+    .list-event-date { width: 100%; border-right: none; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; flex-direction: row; align-items: center; gap: 8px; }
+    .list-event-date .date-day, .list-event-date .date-time { margin-top: 0; }
+    .list-event-meta { align-items: flex-start; }
+    .filter-tab { padding: 7px 12px; font-size: 0.8rem; }
+    .toolbar-controls { width: 100%; justify-content: space-between; }
+    .ics-item { flex-wrap: wrap; }
+    .ics-select-resp { width: 100%; max-width: 100%; margin-top: 6px; margin-left: 0; }
+  }
 </style>
 </head>
 <body data-page="agenda">
@@ -127,52 +163,109 @@
 
   <main class="main">
     <div class="topbar">
-      <h1>Agenda</h1>
-      <div class="user-info"><strong id="userName">Carregando...</strong></div>
-    </div>
-
-    <div class="header-green">
       <div>
-        <h1>Calendário</h1>
-        <p>Gerencie seus eventos por dia, semana ou mês</p>
+        <h1>Minha Agenda</h1>
+        <div class="user-info" style="margin-top:5px;"><strong id="userName">Carregando...</strong></div>
       </div>
-      <button class="btn-white" onclick="abrirModalConfig()">⚙️ Configurar Horários</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <!-- BOTÃO RESTAURADO AQUI -->
+        <button class="btn btn-secondary" onclick="abrirModalConfig()">⚙️ Configurar Horários</button>
+        <button class="btn btn-secondary" onclick="abrirModalImportICS()">📥 Importar</button>
+        <button class="btn btn-primary" onclick="novoEventoRapido()">+ Novo Evento</button>
+      </div>
     </div>
 
-    <div class="calendar-nav">
-      <div class="calendar-nav-left">
-        <button class="week-btn week-btn-today" onclick="irParaHoje()">Hoje</button>
-        <div class="calendar-nav-btns">
-          <button class="week-btn" onclick="navegar(-1)">←</button>
-          <button class="week-btn" onclick="navegar(1)">→</button>
+    <!-- ABAS -->
+    <div class="tabs-container">
+      <button class="tab-btn active" id="tabBtn-calendario" onclick="mudarAba('calendario')">📅 Calendário</button>
+      <button class="tab-btn" id="tabBtn-lista" onclick="mudarAba('lista')">📋 Lista de Eventos</button>
+    </div>
+
+    <!-- CONTEÚDO: CALENDÁRIO -->
+    <div id="aba-calendario" class="tab-content active">
+      <div class="calendar-nav">
+        <div class="calendar-nav-left">
+          <button class="week-btn week-btn-today" onclick="irParaHoje()">Hoje</button>
+          <div class="calendar-nav-btns">
+            <button class="week-btn" onclick="navegar(-1)">←</button>
+            <button class="week-btn" onclick="navegar(1)">→</button>
+          </div>
+          <h2 id="calendarTitle">Novembro de 2026</h2>
+          
+          <select id="filtroResponsavelAgenda" class="filter-resp" onchange="mudarFiltroResponsavel(this.value)">
+            <option value="Todos">👥 Todos os eventos</option>
+            <option value="Casal">👫 Apenas Casal</option>
+            <!-- Membros serão inseridos aqui via JS -->
+          </select>
         </div>
-        <h2 id="calendarTitle">Novembro de 2026</h2>
         
-        <select id="filtroResponsavelAgenda" class="filter-resp" onchange="mudarFiltroResponsavel(this.value)">
-          <option value="Todos">👥 Todos os eventos</option>
-          <option value="Casal">👫 Apenas Casal</option>
-        </select>
+        <div class="view-selector">
+          <button class="view-btn" id="btnViewDia" onclick="mudarVisualizacao('dia')">Dia</button>
+          <button class="view-btn" id="btnViewSemana" onclick="mudarVisualizacao('semana')">Semana</button>
+          <button class="view-btn active" id="btnViewMes" onclick="mudarVisualizacao('mes')">Mês</button>
+        </div>
       </div>
-      
-      <div class="view-selector">
-        <button class="view-btn" id="btnViewDia" onclick="mudarVisualizacao('dia')">Dia</button>
-        <button class="view-btn" id="btnViewSemana" onclick="mudarVisualizacao('semana')">Semana</button>
-        <button class="view-btn active" id="btnViewMes" onclick="mudarVisualizacao('mes')">Mês</button>
+
+      <div class="resumo-box">
+        <div class="resumo-item"><span>Eventos no período</span><strong id="resumoQtdCal">0</strong></div>
+        <div class="resumo-item"><span>Concluídos</span><strong id="resumoConcluidosCal">0</strong></div>
+        <div class="resumo-item"><span>Total gasto</span><strong class="total" id="resumoTotalCal">R$ 0,00</strong></div>
+      </div>
+
+      <div id="calendarContainer"></div>
+
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border-left:3px solid #16a34a;"></div> Evento Gratuito</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fee2e2;border-left:3px solid #dc2626;"></div> Evento Pago</div>
+        <div class="legend-item" style="color:#9ca3af;">Clique em um dia/célula vazia para adicionar</div>
       </div>
     </div>
 
-    <div class="resumo-box">
-      <div class="resumo-item"><span>Eventos no período</span><strong id="resumoQtd">0</strong></div>
-      <div class="resumo-item"><span>Concluídos</span><strong id="resumoConcluidos">0</strong></div>
-      <div class="resumo-item"><span>Total gasto</span><strong class="total" id="resumoTotal">R$ 0,00</strong></div>
-    </div>
+    <!-- CONTEÚDO: LISTA -->
+    <div id="aba-lista" class="tab-content">
+      <div class="toolbar">
+        <div class="toolbar-info">
+          <h2 id="toolbarTitle">Próximos eventos</h2>
+          <small id="toolbarSub">Carregando...</small>
+        </div>
+        <div class="toolbar-controls">
+          <button class="btn btn-secondary" onclick="exportarICS()">📤 Exportar .ics</button>
+          
+          <select id="filtroResponsavelLista" class="filter-select" onchange="mudarFiltroResponsavelLista(this.value)">
+            <option value="Todos">👥 Todos os eventos</option>
+            <option value="Casal">👫 Apenas Casal</option>
+            <!-- Membros serão inseridos aqui via JS -->
+          </select>
 
-    <div id="calendarContainer"></div>
+          <div class="filter-tabs" role="tablist">
+            <button class="filter-tab active" data-filter="semana" onclick="mudarFiltroLista('semana')">Semana</button>
+            <button class="filter-tab" data-filter="mes" onclick="mudarFiltroLista('mes')">Mês</button>
+            <button class="filter-tab" data-filter="todas" onclick="mudarFiltroLista('todas')">Todas</button>
+          </div>
+          
+          <label class="toolbar-toggle" id="togglePassadosWrap" style="display:none;">
+            <input type="checkbox" id="togglePassados" onchange="renderLista()">
+            Mostrar passados
+          </label>
+        </div>
+      </div>
 
-    <div class="legend-row">
-      <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border-left:3px solid #16a34a;"></div> Evento Gratuito</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fee2e2;border-left:3px solid #dc2626;"></div> Evento Pago</div>
-      <div class="legend-item" style="color:#9ca3af;">Clique em um dia/célula vazia para adicionar</div>
+      <div class="period-nav" id="periodNavLista">
+        <div class="period-nav-label" id="periodNavLabelLista">—</div>
+        <div class="period-nav-btns">
+          <button class="week-btn" onclick="mudarPeriodoLista(-1)">← <span id="periodPrevLabelLista">Anterior</span></button>
+          <button class="week-btn week-btn-today" onclick="irParaHojeLista()">Hoje</button>
+          <button class="week-btn" onclick="mudarPeriodoLista(1)"><span id="periodNextLabelLista">Próximo</span> →</button>
+        </div>
+      </div>
+
+      <div class="resumo-box">
+        <div class="resumo-item"><span>Total de eventos</span><strong id="resumoQtdLista">0</strong></div>
+        <div class="resumo-item"><span>Concluídos</span><strong id="resumoConcluidosLista">0</strong></div>
+        <div class="resumo-item"><span>Total gasto</span><strong class="total" id="resumoTotalLista">R$ 0,00</strong></div>
+      </div>
+
+      <div class="list-view" id="listView"></div>
     </div>
   </main>
 </div>
@@ -187,7 +280,7 @@
     <div class="modal-body">
       <form id="eventoForm">
         <input type="hidden" id="eventoId">
-
+        
         <div class="field" style="display: flex; gap: 10px;">
           <div style="flex: 1;">
             <label>Data Início</label>
@@ -205,6 +298,7 @@
           <label>Quem é o responsável?</label>
           <select id="responsavelEvento">
             <option value="Casal">👫 Casal</option>
+            <!-- Membros inseridos via JS -->
           </select>
         </div>
 
@@ -212,7 +306,7 @@
           <label>Repetir</label>
           <select id="recorrenciaEvento">
             <option value="nenhuma">Não repete (apenas este dia)</option>
-            <option value="diario">Todos os dias (ex: semana inteira)</option>
+            <option value="diario">Todos os dias</option>
             <option value="semanal">Toda semana</option>
             <option value="mensal">Todo mês</option>
             <option value="anual">Todo ano</option>
@@ -221,29 +315,20 @@
 
         <div class="field"><label>Endereço / Local</label><input type="text" id="endereco"></div>
         <div class="field"><label>Observações</label><textarea id="observacoes" placeholder="Detalhes..."></textarea></div>
-
+        
         <div class="field" style="display: flex; gap: 10px;">
-          <div style="flex: 1;">
-            <label>Qtd. Pessoas</label>
-            <input type="number" id="quantidade_pessoas" min="1" value="1" required>
-          </div>
-          <div style="flex: 1;">
-            <label>Valor por Pessoa (R$)</label>
-            <input type="number" step="0.01" id="valor_por_pessoa" value="0.00" required>
-          </div>
+          <div style="flex: 1;"><label>Qtd. Pessoas</label><input type="number" id="quantidade_pessoas" min="1" value="1" required></div>
+          <div style="flex: 1;"><label>Valor por Pessoa (R$)</label><input type="number" step="0.01" id="valor_por_pessoa" value="0.00" required></div>
         </div>
-
-        <div class="field">
-          <label>Horário Início</label>
-          <input type="time" id="horaInicio" required>
-        </div>
-
+        
+        <div class="field"><label>Horário Início</label><input type="time" id="horaInicio" required></div>
+        
         <div class="box-gastos">
           <h4>Outros Gastos (Estacionamento, Taxas, etc)</h4>
           <div id="listaGastosAtracao"></div>
           <button type="button" class="btn-add-gasto" onclick="adicionarCampoGasto()">+ Adicionar Outro Gasto</button>
         </div>
-
+        
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Salvar Evento</button>
         <button type="button" class="btn-conclude" id="btnConcluirEventoModal" onclick="concluirEventoDoModal()">Marcar como Concluído</button>
         <button type="button" class="btn-danger" id="btnExcluirEventoModal" onclick="excluirEventoDoModal()">Excluir Evento</button>
@@ -252,7 +337,7 @@
   </div>
 </div>
 
-<!-- MODAL ESCOPO (RECORRÊNCIA) -->
+<!-- MODAL ESCOPO -->
 <div class="modal-overlay" id="modalEscopo" style="z-index: 1050;">
   <div class="modal-content" style="max-width: 400px; text-align: center;">
     <div class="modal-header">
@@ -296,19 +381,79 @@
   </div>
 </div>
 
+<!-- MODAL IMPORTAR ICS -->
+<div class="modal-overlay" id="modalImportICS">
+  <div class="modal-content" style="max-width: 720px;">
+    <div class="modal-header">
+      <h2>📥 Importar arquivo .ics</h2>
+      <button class="btn-close" onclick="closeModal('modalImportICS')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="icsStep1">
+        <div class="ics-dropzone" id="icsDropzone" onclick="document.getElementById('icsFileInput').click()" ondragover="event.preventDefault(); this.classList.add('dragging');" ondragleave="this.classList.remove('dragging');" ondrop="handleICSDrop(event)">
+          <div style="font-size: 2rem; margin-bottom: 8px;">📅</div>
+          <div style="font-weight: 600; color: #1a1f2b; margin-bottom: 4px;">Clique ou arraste um arquivo .ics</div>
+          <div style="font-size: 0.8rem; color: #6b7280;">Google Calendar, Apple Calendar ou Outlook</div>
+          <input type="file" id="icsFileInput" accept=".ics,text/calendar" onchange="handleICSFileChange(event)">
+        </div>
+      </div>
+      <div id="icsStep2" style="display:none;">
+        <div class="ics-preview-header" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h3>Pré-visualização</h3>
+            <select id="icsResponsavelGlobal" class="filter-select" onchange="aplicarResponsavelGlobalICS(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+              <option value="">Definir todos como...</option>
+              <option value="Casal">👫 Casal</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span id="icsPreviewCount" style="font-size:0.85rem; color:#6b7280;"></span>
+            <button class="week-btn" onclick="selecionarTodosICS(true)" style="padding:4px 10px;font-size:0.78rem;">Todos</button>
+            <button class="week-btn" onclick="selecionarTodosICS(false)" style="padding:4px 10px;font-size:0.78rem;">Nenhum</button>
+          </div>
+        </div>
+        <div class="ics-list" id="icsList"></div>
+        <div class="ics-footer">
+          <div class="ics-footer-info" id="icsFooterInfo"></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary" onclick="voltarEtapaICS()">← Voltar</button>
+            <button class="btn btn-primary" id="icsBtnImportar" onclick="confirmarImportacao()">Importar selecionados</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <script>
+  // ==========================================
+  // VARIÁVEIS GLOBAIS
+  // ==========================================
   let todosEventos = [];
   let mapaFerias = {};
+  let membrosCasal = [];
+  
+  // Estados do Calendário
   let dataReferencia = new Date();
   let visualizacaoAtual = 'mes';
   let horaInicioDia = '05:00';
   let horaFimDia = '23:00';
-  let membrosCasal = [];
   let filtroResponsavel = 'Todos';
+  
+  // Estados da Lista
+  let filtroListaAtual = 'semana';
+  let referenciaPeriodoLista = new Date();
+  let filtroResponsavelLista = 'Todos';
+  
+  // Controles Globais
+  let icsEventosPendentes = [];
   let acaoPendente = { tipo: null, evento: null, payload: null };
 
+  // ==========================================
+  // HELPERS
+  // ==========================================
   function formatarDataISO(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -316,55 +461,45 @@
     return `${y}-${m}-${dia}`;
   }
 
-  function getInicioSemana(ref) {
-    const d = new Date(ref);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - d.getDay()); // 0=Dom, 1=Seg...
-    return d;
-  }
-
-  function fmtMoeda(v) {
-    return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-
+  function getInicioSemana(ref) { const d = new Date(ref); d.setHours(0,0,0,0); d.setDate(d.getDate() - d.getDay()); return d; }
+  
+  function fmtMoeda(v) { return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  
   function calcularValorEvento(ev) {
     const base = (Number(ev.quantidade_pessoas) || 1) * (Number(ev.valor_por_pessoa) || 0);
     let extras = 0;
-    if (Array.isArray(ev.gastos_extras)) {
-      extras = ev.gastos_extras.reduce((s, g) => s + (Number(g.valor) || 0), 0);
-    }
+    if (Array.isArray(ev.gastos_extras)) extras = ev.gastos_extras.reduce((s, g) => s + (Number(g.valor) || 0), 0);
     return base + extras;
   }
+  
+  function isPassado(ev, hojeISO) { return ev.data < hojeISO; }
 
-  function gerarDatasRecorrentes(dataInicioStr, tipo, dataFimStr) {
-    const datas = [];
-    let atual = new Date(dataInicioStr + 'T12:00:00');
-    const fim = new Date(dataFimStr + 'T12:00:00');
-    const diaOriginal = atual.getDate();
-    let limit = 500;
-
-    if (tipo === 'nenhuma') return [dataInicioStr];
-
-    while (atual <= fim && limit > 0) {
-      datas.push(formatarDataISO(atual));
-      if (tipo === 'diario') atual.setDate(atual.getDate() + 1);
-      else if (tipo === 'semanal') atual.setDate(atual.getDate() + 7);
-      else if (tipo === 'mensal') {
-        atual.setMonth(atual.getMonth() + 1);
-        if (atual.getDate() !== diaOriginal) atual.setDate(0);
-      }
-      else if (tipo === 'anual') atual.setFullYear(atual.getFullYear() + 1);
-      limit--;
-    }
-    return datas;
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  function mudarAba(aba) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+    
+    document.getElementById(`tabBtn-${aba}`).classList.add('active');
+    document.getElementById(`aba-${aba}`).classList.add('active');
+    
+    if (aba === 'lista') renderLista();
+    else renderizarCalendario();
+  }
+
+  // ==========================================
+  // INICIALIZAÇÃO
+  // ==========================================
   async function initAgendaApp() {
     if (!window.currentUser) return;
     document.getElementById('userName').textContent = window.currentUser.email;
     await carregarConfig();
     await carregarMembros();
     await carregarEventos();
+    renderizarCalendario();
+    renderLista();
   }
 
   async function carregarConfig() {
@@ -383,15 +518,21 @@
       if (data) membrosCasal = data.map(m => m.nome);
     } catch (e) {}
 
-    const selectFiltro = document.getElementById('filtroResponsavelAgenda');
+    const selectFiltroAgenda = document.getElementById('filtroResponsavelAgenda');
+    const selectFiltroLista = document.getElementById('filtroResponsavelLista');
     const selectModal = document.getElementById('responsavelEvento');
+    const selectIcs = document.getElementById('icsResponsavelGlobal');
     
-    selectFiltro.innerHTML = '<option value="Todos">👥 Todos os eventos</option><option value="Casal">👫 Apenas Casal</option>';
+    selectFiltroAgenda.innerHTML = '<option value="Todos">👥 Todos os eventos</option><option value="Casal">👫 Apenas Casal</option>';
+    selectFiltroLista.innerHTML = '<option value="Todos">👥 Todos os eventos</option><option value="Casal">👫 Apenas Casal</option>';
     selectModal.innerHTML = '<option value="Casal">👫 Casal</option>';
+    selectIcs.innerHTML = '<option value="">Definir todos como...</option><option value="Casal">👫 Casal</option>';
 
     membrosCasal.forEach(nome => {
-      selectFiltro.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+      selectFiltroAgenda.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+      selectFiltroLista.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
       selectModal.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
+      selectIcs.innerHTML += `<option value="${nome}">👤 ${nome}</option>`;
     });
   }
 
@@ -401,33 +542,9 @@
     const feriasIds = [];
     (viagens || []).forEach(f => { mapaFerias[f.id] = f.nome_ferias; feriasIds.push(f.id); });
 
-    let dataIni, dataFim;
-    const ano = dataReferencia.getFullYear();
-    const mes = dataReferencia.getMonth();
-
-    if (visualizacaoAtual === 'mes') {
-      const primeiroDiaMes = new Date(ano, mes, 1);
-      const startGrid = getInicioSemana(primeiroDiaMes);
-      const endGrid = new Date(startGrid);
-      endGrid.setDate(startGrid.getDate() + 41);
-      dataIni = formatarDataISO(startGrid);
-      dataFim = formatarDataISO(endGrid);
-    } else if (visualizacaoAtual === 'semana') {
-      const ini = getInicioSemana(dataReferencia);
-      const fim = new Date(ini);
-      fim.setDate(ini.getDate() + 6);
-      dataIni = formatarDataISO(ini);
-      dataFim = formatarDataISO(fim);
-    } else {
-      dataIni = dataFim = formatarDataISO(dataReferencia);
-    }
-
-    let query = db.from('eventos').select('*').gte('data', dataIni).lte('data', dataFim);
-    if (feriasIds.length > 0) {
-      query = query.or(`user_id.eq.${window.currentUser.id},ferias_id.in.(${feriasIds.join(',')})`);
-    } else {
-      query = query.eq('user_id', window.currentUser.id);
-    }
+    let query = db.from('eventos').select('*');
+    if (feriasIds.length > 0) query = query.or(`user_id.eq.${window.currentUser.id},ferias_id.in.(${feriasIds.join(',')})`);
+    else query = query.eq('user_id', window.currentUser.id);
 
     const { data, error } = await query.order('data').order('hora_inicio');
     if (error) { console.error(error); todosEventos = []; }
@@ -436,47 +553,48 @@
       (data || []).forEach(ev => { mapa[ev.id] = ev; });
       todosEventos = Object.values(mapa);
     }
-
-    renderizarCalendario();
   }
 
+  // ==========================================
+  // CALENDÁRIO (Aba 1)
+  // ==========================================
   function mudarVisualizacao(view) {
     visualizacaoAtual = view;
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`btnView${view.charAt(0).toUpperCase() + view.slice(1)}`).classList.add('active');
-    carregarEventos(); 
+    renderizarCalendario(); 
   }
 
   function navegar(delta) {
     if (visualizacaoAtual === 'mes') dataReferencia.setMonth(dataReferencia.getMonth() + delta);
     else if (visualizacaoAtual === 'semana') dataReferencia.setDate(dataReferencia.getDate() + (delta * 7));
     else dataReferencia.setDate(dataReferencia.getDate() + delta);
-    carregarEventos();
+    renderizarCalendario();
   }
 
-  function irParaHoje() { dataReferencia = new Date(); carregarEventos(); }
-
+  function irParaHoje() { dataReferencia = new Date(); renderizarCalendario(); }
+  
   function mudarFiltroResponsavel(valor) { filtroResponsavel = valor; renderizarCalendario(); }
 
   function renderizarCalendario() {
-    atualizarTitulo();
-    
     let eventosFiltrados = todosEventos;
-    if (filtroResponsavel !== 'Todos') {
-      eventosFiltrados = eventosFiltrados.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
-    }
+    if (filtroResponsavel !== 'Todos') eventosFiltrados = eventosFiltrados.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavel);
 
-    atualizarResumo(eventosFiltrados);
+    atualizarTituloCalendario();
+    atualizarResumoCalendario(eventosFiltrados);
 
     const container = document.getElementById('calendarContainer');
-    if (visualizacaoAtual === 'mes') {
-      container.innerHTML = renderizarMes(eventosFiltrados);
-    } else {
-      container.innerHTML = renderizarTimeline(eventosFiltrados);
-    }
+    if (visualizacaoAtual === 'mes') container.innerHTML = renderizarMes(eventosFiltrados);
+    else container.innerHTML = renderizarTimeline(eventosFiltrados);
   }
 
-  function atualizarTitulo() {
+  function abrirModalConfig() {
+   document.getElementById('configHoraInicio').value = horaInicioDia;
+   document.getElementById('configHoraFim').value = horaFimDia;
+   openModal('modalConfig');
+  }
+
+  function atualizarTituloCalendario() {
     const opcoesMes = { month: 'long', year: 'numeric' };
     const opcoesDia = { day: 'numeric', month: 'long', year: 'numeric' };
     let texto = '';
@@ -495,11 +613,11 @@
     document.getElementById('calendarTitle').textContent = texto;
   }
 
-  function atualizarResumo(eventos) {
+  function atualizarResumoCalendario(eventos) {
     const total = eventos.reduce((s, ev) => s + calcularValorEvento(ev), 0);
-    document.getElementById('resumoQtd').textContent = eventos.length;
-    document.getElementById('resumoConcluidos').textContent = eventos.filter(ev => ev.concluido).length;
-    document.getElementById('resumoTotal').textContent = fmtMoeda(total);
+    document.getElementById('resumoQtdCal').textContent = eventos.length;
+    document.getElementById('resumoConcluidosCal').textContent = eventos.filter(ev => ev.concluido).length;
+    document.getElementById('resumoTotalCal').textContent = fmtMoeda(total);
   }
 
   function renderizarMes(eventosFiltrados) {
@@ -508,42 +626,27 @@
     const mes = dataReferencia.getMonth();
     const startGrid = getInicioSemana(new Date(ano, mes, 1));
     
-    let html = `
-      <div class="month-grid-wrapper">
-        <div class="month-header">
-          <div>DOM.</div><div>SEG.</div><div>TER.</div><div>QUA.</div><div>QUI.</div><div>SEX.</div><div>SÁB.</div>
-        </div>
-        <div class="month-body">
-    `;
+    let html = `<div class="month-grid-wrapper"><div class="month-header"><div>DOM.</div><div>SEG.</div><div>TER.</div><div>QUA.</div><div>QUI.</div><div>SEX.</div><div>SÁB.</div></div><div class="month-body">`;
 
     for (let i = 0; i < 42; i++) {
-      const diaAtual = new Date(startGrid);
-      diaAtual.setDate(startGrid.getDate() + i);
+      const diaAtual = new Date(startGrid); diaAtual.setDate(startGrid.getDate() + i);
       const iso = formatarDataISO(diaAtual);
       const isOutroMes = diaAtual.getMonth() !== mes;
       const isHoje = iso === hojeStr;
       const evsDoDia = eventosFiltrados.filter(ev => ev.data === iso);
       
       let evsHtml = '';
-      const maxVisiveis = 3;
-      
-      evsDoDia.slice(0, maxVisiveis).forEach(ev => {
+      evsDoDia.slice(0, 3).forEach(ev => {
         const valor = calcularValorEvento(ev);
         const classe = (valor > 0 ? 'pago' : 'gratuito') + (ev.concluido ? ' concluido' : '');
         const isRec = ev.recorrencia_id ? ' 🔄' : '';
-        evsHtml += `<div class="month-event ${classe}" onclick="event.stopPropagation(); abrirModalEvento('${iso}', '${ev.hora_inicio}', ${ev.id})" title="${ev.nome_atracao}">
-          ${ev.nome_atracao}${isRec}
-        </div>`;
+        evsHtml += `<div class="month-event ${classe}" onclick="event.stopPropagation(); abrirModalEvento('${iso}', '${ev.hora_inicio}', ${ev.id})">${ev.nome_atracao}${isRec}</div>`;
       });
 
-      if (evsDoDia.length > maxVisiveis) evsHtml += `<div class="month-more">+ ${evsDoDia.length - maxVisiveis} mais</div>`;
+      if (evsDoDia.length > 3) evsHtml += `<div class="month-more">+ ${evsDoDia.length - 3} mais</div>`;
 
-      html += `
-        <div class="month-day ${isOutroMes ? 'outro-mes' : ''} ${isHoje ? 'hoje' : ''}" onclick="abrirModalEvento('${iso}', '12:00')">
-          <div class="day-number">${diaAtual.getDate()}</div>
-          ${evsHtml}
-        </div>
-      `;
+      html += `<div class="month-day ${isOutroMes ? 'outro-mes' : ''} ${isHoje ? 'hoje' : ''}" onclick="abrirModalEvento('${iso}', '12:00')">
+        <div class="day-number">${diaAtual.getDate()}</div>${evsHtml}</div>`;
     }
 
     html += `</div></div>`;
@@ -553,15 +656,10 @@
   function renderizarTimeline(eventosFiltrados) {
     const hojeStr = formatarDataISO(new Date());
     let dias = [];
-
     if (visualizacaoAtual === 'semana') {
       const ini = getInicioSemana(dataReferencia);
-      for(let i=0; i<7; i++) {
-        const d = new Date(ini); d.setDate(ini.getDate() + i); dias.push(d);
-      }
-    } else {
-      dias.push(dataReferencia);
-    }
+      for(let i=0; i<7; i++) { const d = new Date(ini); d.setDate(ini.getDate() + i); dias.push(d); }
+    } else dias.push(dataReferencia);
 
     const nomesDia = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const hIni = parseInt(horaInicioDia.split(':')[0], 10);
@@ -571,16 +669,12 @@
     dias.forEach(d => {
       const iso = formatarDataISO(d);
       const isHoje = iso === hojeStr;
-      theadHtml += `<th class="${isHoje ? 'dia-hoje' : ''}">
-        ${nomesDia[d.getDay()]}<small>${d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}${isHoje ? ' • HOJE' : ''}</small>
-      </th>`;
+      theadHtml += `<th class="${isHoje ? 'dia-hoje' : ''}">${nomesDia[d.getDay()]}<small>${d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}${isHoje ? ' • HOJE' : ''}</small></th>`;
     });
     theadHtml += '</tr>';
 
     const mapaEventos = {};
-    eventosFiltrados.forEach(ev => {
-      mapaEventos[`${ev.data}|${ev.hora_inicio.substring(0, 5)}`] = ev;
-    });
+    eventosFiltrados.forEach(ev => { mapaEventos[`${ev.data}|${ev.hora_inicio.substring(0, 5)}`] = ev; });
 
     let tbodyHtml = '';
     for (let h = hIni; h <= hFim; h++) {
@@ -597,7 +691,6 @@
           const tagsHtml = [];
           if (ev.ferias_id && mapaFerias[ev.ferias_id]) tagsHtml.push(`<div class="tag-mini tag-viagem-mini">✈️ ${mapaFerias[ev.ferias_id]}</div>`);
           if (ev.responsavel) tagsHtml.push(`<div class="tag-mini tag-resp-mini">👤 ${ev.responsavel}</div>`);
-
           const isRec = ev.recorrencia_id ? ' 🔄' : '';
 
           tbodyHtml += `<td class="evento-cell" onclick="abrirModalEvento('${iso}','${horaStr}',${ev.id})" title="${ev.nome_atracao}">
@@ -612,14 +705,132 @@
       tbodyHtml += '</tr>';
     }
 
-    return `
-      <div class="agenda-wrapper">
-        <table class="agenda-table">
-          <thead>${theadHtml}</thead>
-          <tbody>${tbodyHtml}</tbody>
-        </table>
-      </div>
-    `;
+    return `<div class="agenda-wrapper"><table class="agenda-table"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>`;
+  }
+
+  // ==========================================
+  // LISTA (Aba 2)
+  // ==========================================
+  function mudarFiltroLista(filtro) {
+    filtroListaAtual = filtro;
+    referenciaPeriodoLista = new Date();
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.toggle('active', b.dataset.filter === filtro));
+    document.getElementById('periodNavLista').style.display = (filtro === 'todas') ? 'none' : 'flex';
+    document.getElementById('togglePassadosWrap').style.display = (filtro === 'todas') ? 'flex' : 'none';
+    renderLista();
+  }
+
+  function mudarFiltroResponsavelLista(valor) {
+    filtroResponsavelLista = valor;
+    renderLista();
+  }
+
+  function mudarPeriodoLista(delta) {
+    if (filtroListaAtual === 'semana') referenciaPeriodoLista.setDate(referenciaPeriodoLista.getDate() + delta * 7);
+    else if (filtroListaAtual === 'mes') referenciaPeriodoLista.setMonth(referenciaPeriodoLista.getMonth() + delta);
+    renderLista();
+  }
+
+  function irParaHojeLista() { referenciaPeriodoLista = new Date(); renderLista(); }
+
+  function getPeriodoLista() {
+    if (filtroListaAtual === 'semana') {
+      const ini = getInicioSemana(referenciaPeriodoLista);
+      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+      const fmtCurto = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      return { ini: formatarDataISO(ini), fim: formatarDataISO(fim), label: `Semana de ${fmtCurto(ini)} a ${fmtCurto(fim)}` };
+    }
+    if (filtroListaAtual === 'mes') {
+      const ini = new Date(referenciaPeriodoLista.getFullYear(), referenciaPeriodoLista.getMonth(), 1);
+      const fim = new Date(referenciaPeriodoLista.getFullYear(), referenciaPeriodoLista.getMonth() + 1, 0);
+      const label = ini.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      return { ini: formatarDataISO(ini), fim: formatarDataISO(fim), label: label.charAt(0).toUpperCase() + label.slice(1) };
+    }
+    return null;
+  }
+
+  function renderLista() {
+    const hojeISO = formatarDataISO(new Date());
+    let baseEventos = [...todosEventos];
+    if (filtroResponsavelLista !== 'Todos') baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavelLista);
+
+    let eventosParaMostrar = [];
+    let titulo = '', subtitulo = '';
+
+    if (filtroListaAtual === 'todas') {
+      const mostrarPassados = document.getElementById('togglePassados').checked;
+      eventosParaMostrar = mostrarPassados ? baseEventos : baseEventos.filter(ev => !isPassado(ev, hojeISO));
+      titulo = mostrarPassados ? 'Todos os eventos' : 'Próximos eventos';
+    } else {
+      const p = getPeriodoLista();
+      eventosParaMostrar = baseEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
+      titulo = filtroListaAtual === 'semana' ? 'Semana' : 'Mês';
+      document.getElementById('periodNavLabelLista').textContent = p.label;
+      document.getElementById('periodPrevLabelLista').textContent = filtroListaAtual === 'semana' ? 'Semana Anterior' : 'Mês Anterior';
+      document.getElementById('periodNextLabelLista').textContent = filtroListaAtual === 'semana' ? 'Próxima Semana' : 'Próximo Mês';
+    }
+
+    const eventosOrdenados = eventosParaMostrar.sort((a, b) => `${a.data}T${a.hora_inicio}`.localeCompare(`${b.data}T${b.hora_inicio}`));
+    subtitulo = eventosOrdenados.length === 0 ? 'Nenhum evento encontrado' : `${eventosOrdenados.length} evento${eventosOrdenados.length !== 1 ? 's' : ''}`;
+    if (filtroResponsavelLista !== 'Todos') subtitulo += ` (${filtroResponsavelLista})`;
+
+    document.getElementById('toolbarTitle').textContent = titulo;
+    document.getElementById('toolbarSub').textContent = subtitulo;
+
+    const container = document.getElementById('listView');
+    if (eventosOrdenados.length === 0) {
+      container.innerHTML = `<div class="list-empty-box">Nenhum evento encontrado.<br><br><button class="btn btn-primary" onclick="novoEventoRapido()">+ Adicionar evento</button></div>`;
+    } else {
+      container.innerHTML = eventosOrdenados.map(ev => {
+        const valor = calcularValorEvento(ev);
+        const dataObj = new Date(ev.data + 'T00:00:00');
+        const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+        const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const hora = ev.hora_inicio.substring(0, 5);
+        const isHoje = ev.data === hojeISO;
+        const passado = isPassado(ev, hojeISO);
+        const nomeViagem = ev.ferias_id ? mapaFerias[ev.ferias_id] : null;
+        const responsavel = ev.responsavel || 'Casal';
+        const isRec = ev.recorrencia_id ? ' 🔄' : '';
+        
+        const rowClasses = ['list-event-row', ev.concluido ? 'concluido' : '', isHoje ? 'hoje' : '', passado ? 'passado' : ''].filter(Boolean).join(' ');
+        const badgeStatus = ev.concluido ? '<span class="list-event-badge concluido">✓ Concluído</span>' : (passado ? '<span class="list-event-badge passado">Passado</span>' : '<span class="list-event-badge pendente">Pendente</span>');
+
+        return `<div class="${rowClasses}" onclick="abrirModalEvento('${ev.data}','${hora}',${ev.id})">
+          <div class="list-event-date">
+            <span class="date-weekday">${diaSemana}${isHoje ? ' • HOJE' : ''}</span>
+            <span class="date-day">${diaMes}</span>
+            <span class="date-time">${hora}</span>
+          </div>
+          <div class="list-event-body">
+            <div class="list-event-name">${ev.nome_atracao}${isRec}</div>
+            ${ev.endereco ? `<div class="list-event-location">📍 ${ev.endereco}</div>` : ''}
+            ${ev.observacoes ? `<div class="list-event-notes">${ev.observacoes}</div>` : ''}
+            <div class="list-event-tags">
+              ${nomeViagem ? `<span class="list-event-tag tag-viagem">✈️ ${nomeViagem}</span>` : ''}
+              <span class="list-event-tag tag-responsavel">👤 ${responsavel}</span>
+            </div>
+          </div>
+          <div class="list-event-meta">
+            <span class="list-event-value ${valor > 0 ? '' : 'gratuito'}">${valor > 0 ? fmtMoeda(valor) : 'Grátis'}</span>
+            ${badgeStatus}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    const totalVisivel = eventosOrdenados.reduce((s, ev) => s + calcularValorEvento(ev), 0);
+    document.getElementById('resumoQtdLista').textContent = eventosOrdenados.length;
+    document.getElementById('resumoConcluidosLista').textContent = eventosOrdenados.filter(ev => ev.concluido).length;
+    document.getElementById('resumoTotalLista').textContent = fmtMoeda(totalVisivel);
+  }
+
+  // ==========================================
+  // CRUD E LÓGICA DE RECORRÊNCIA
+  // ==========================================
+  function novoEventoRapido() {
+    const agora = new Date();
+    abrirModalEvento(formatarDataISO(agora), String(agora.getHours()).padStart(2,'0') + ':00');
   }
 
   function adicionarCampoGasto(descricao = '', valor = '') {
@@ -627,16 +838,30 @@
     const div = document.createElement('div');
     div.className = 'gasto-item';
     div.innerHTML = `
-      <input type="text" placeholder="Descrição" value="${descricao}" class="gasto-desc">
-      <input type="number" step="0.01" placeholder="R$" value="${valor}" class="gasto-val">
-      <button type="button" class="btn-remove-gasto" onclick="this.parentElement.remove()">✕</button>
+      <input type="text" placeholder="Descrição" value="${descricao}" class="gasto-desc" style="flex:2;padding:8px;border:1px solid #ccc;border-radius:4px;">
+      <input type="number" step="0.01" placeholder="R$" value="${valor}" class="gasto-val" style="flex:1;width:90px;padding:8px;border:1px solid #ccc;border-radius:4px;">
+      <button type="button" class="btn-remove-gasto" onclick="this.parentElement.remove()" style="background:#ffebee;color:#d32f2f;border:none;width:36px;border-radius:4px;cursor:pointer;">✕</button>
     `;
     container.appendChild(div);
   }
 
+  function gerarDatasRecorrentes(dataInicioStr, tipo, dataFimStr) {
+    const datas = []; let atual = new Date(dataInicioStr + 'T12:00:00'); const fim = new Date(dataFimStr + 'T12:00:00');
+    const diaOriginal = atual.getDate(); let limit = 500;
+    if (tipo === 'nenhuma') return [dataInicioStr];
+    while (atual <= fim && limit > 0) {
+      datas.push(formatarDataISO(atual));
+      if (tipo === 'diario') atual.setDate(atual.getDate() + 1);
+      else if (tipo === 'semanal') atual.setDate(atual.getDate() + 7);
+      else if (tipo === 'mensal') { atual.setMonth(atual.getMonth() + 1); if (atual.getDate() !== diaOriginal) atual.setDate(0); }
+      else if (tipo === 'anual') atual.setFullYear(atual.getFullYear() + 1);
+      limit--;
+    }
+    return datas;
+  }
+
   function abrirModalEvento(dataStr, horaStr = '12:00', eventoId = null) {
     horaStr = horaStr.substring(0, 5);
-
     document.getElementById('eventoTitle').textContent = eventoId ? 'Editar Evento' : 'Adicionar Evento';
     document.getElementById('eventoForm').reset();
     document.getElementById('listaGastosAtracao').innerHTML = '';
@@ -671,16 +896,10 @@
           document.getElementById('recorrenciaEvento').disabled = true;
         }
 
-        if (Array.isArray(ev.gastos_extras)) {
-          ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
-        }
-        if (ev.concluido) {
-          btnConcluir.textContent = 'Desmarcar Conclusão';
-          btnConcluir.style.background = '#666';
-        } else {
-          btnConcluir.textContent = 'Marcar como Concluído';
-          btnConcluir.style.background = '#f57c00';
-        }
+        if (Array.isArray(ev.gastos_extras)) ev.gastos_extras.forEach(g => adicionarCampoGasto(g.descricao, g.valor));
+        
+        if (ev.concluido) { btnConcluir.textContent = 'Desmarcar Conclusão'; btnConcluir.style.background = '#666'; }
+        else { btnConcluir.textContent = 'Marcar como Concluído'; btnConcluir.style.background = '#f57c00'; }
       }
     } else {
       btnExcluir.style.display = 'none';
@@ -705,10 +924,7 @@
     const dataInicio = document.getElementById('dataEventoDisplay').value;
     const dataFim = document.getElementById('dataFimRecorrencia').value || dataInicio;
 
-    // 🔥 INTELIGÊNCIA: Se colocou data final diferente, cria todos os dias do período
-    if (recTipo === 'nenhuma' && dataFim !== dataInicio) {
-      recTipo = 'diario';
-    }
+    if (recTipo === 'nenhuma' && dataFim !== dataInicio) recTipo = 'diario';
 
     const gastosExtras = [];
     document.querySelectorAll('.gasto-item').forEach(item => {
@@ -718,25 +934,16 @@
     });
 
     const payloadBase = {
-      user_id: userId,
-      data: dataInicio,
-      hora_inicio: document.getElementById('horaInicio').value,
-      nome_atracao: document.getElementById('nomeAtracao').value,
-      endereco: document.getElementById('endereco').value,
-      observacoes: document.getElementById('observacoes').value,
-      quantidade_pessoas: qtd,
-      valor_por_pessoa: valorUnit,
-      valor: qtd * valorUnit,
-      gastos_extras: gastosExtras,
-      responsavel: document.getElementById('responsavelEvento').value,
-      recorrencia: recTipo,
-      dataFimRecorrencia: dataFim
+      user_id: userId, data: dataInicio, hora_inicio: document.getElementById('horaInicio').value,
+      nome_atracao: document.getElementById('nomeAtracao').value, endereco: document.getElementById('endereco').value,
+      observacoes: document.getElementById('observacoes').value, quantidade_pessoas: qtd, valor_por_pessoa: valorUnit,
+      valor: qtd * valorUnit, gastos_extras: gastosExtras, responsavel: document.getElementById('responsavelEvento').value,
+      recorrencia: recTipo, dataFimRecorrencia: dataFim
     };
 
     if (eventoId) {
       const evOriginal = todosEventos.find(e => String(e.id) === String(eventoId));
       
-      // Se o evento original JÁ É uma série, pergunta o escopo
       if (evOriginal && evOriginal.recorrencia_id) {
         acaoPendente = { tipo: 'edit', evento: evOriginal, payload: payloadBase };
         document.getElementById('escopoTitulo').textContent = 'Editar Evento Recorrente';
@@ -746,12 +953,8 @@
         return;
       }
 
-      // Se o evento era ÚNICO, mas agora ganhou recorrência ou Data Término
       if (recTipo !== 'nenhuma' || dataFim !== dataInicio) {
-        // Apaga o evento único antigo
         await db.from('eventos').delete().eq('id', eventoId);
-        
-        // Cria a nova série
         const recId = crypto.randomUUID();
         const datas = gerarDatasRecorrentes(dataInicio, recTipo === 'nenhuma' ? 'diario' : recTipo, dataFim);
         const payloads = datas.map(dataIso => {
@@ -764,13 +967,12 @@
         
         closeModal('modalEvento');
         await carregarEventos();
+        renderizarCalendario(); renderLista();
         return;
       }
 
-      // Edição normal de evento único (sem mudar período)
       const payloadDB = { ...payloadBase };
       delete payloadDB.dataFimRecorrencia; 
-      
       const res = await db.from('eventos').update(payloadDB).eq('id', eventoId);
       if (res.error) return alert('Erro ao salvar: ' + res.error.message);
       
@@ -778,19 +980,16 @@
       if (recTipo !== 'nenhuma') {
         const recId = crypto.randomUUID();
         const datas = gerarDatasRecorrentes(dataInicio, recTipo, dataFim);
-        
         const payloads = datas.map(dataIso => {
           let p = { ...payloadBase, data: dataIso, recorrencia_id: recId };
           delete p.dataFimRecorrencia; 
           return p;
         });
-
         const res = await db.from('eventos').insert(payloads);
         if (res.error) return alert('Erro ao salvar: ' + res.error.message);
       } else {
         const payloadDB = { ...payloadBase };
         delete payloadDB.dataFimRecorrencia; 
-        
         const res = await db.from('eventos').insert([payloadDB]);
         if (res.error) return alert('Erro ao salvar: ' + res.error.message);
       }
@@ -798,6 +997,7 @@
 
     closeModal('modalEvento');
     await carregarEventos();
+    renderizarCalendario(); renderLista();
   });
 
   async function executarAcaoEscopo(escopo) {
@@ -805,44 +1005,27 @@
     const { tipo, evento: ev, payload } = acaoPendente;
     if (!ev) return;
 
-    // 🔥 CORREÇÃO: Só tenta ler o payload se ele existir (evita erro no delete)
-    let dataFim = null;
-    let recTipo = null;
-
+    let dataFim = null, recTipo = null;
     if (payload) {
       dataFim = payload.dataFimRecorrencia;
       recTipo = payload.recorrencia;
-      // Se o usuário limpou a recorrência mas manteve a data final, transforma em diário
-      if (recTipo === 'nenhuma' && dataFim !== payload.data) {
-        recTipo = 'diario';
-      }
+      if (recTipo === 'nenhuma' && dataFim !== payload.data) recTipo = 'diario';
     }
 
     if (tipo === 'delete') {
-      if (escopo === 'este') {
-        await db.from('eventos').delete().eq('id', ev.id);
-      } else if (escopo === 'futuros') {
-        await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
-      } else if (escopo === 'todos') {
-        const hoje = formatarDataISO(new Date());
-        await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', hoje);
-      }
+      if (escopo === 'este') await db.from('eventos').delete().eq('id', ev.id);
+      else if (escopo === 'futuros') await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
+      else if (escopo === 'todos') await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', formatarDataISO(new Date()));
     } 
     else if (tipo === 'edit') {
       if (escopo === 'este') {
-        // Desvincula este evento da série
         const payloadUnico = { ...payload, recorrencia: 'nenhuma', recorrencia_id: null };
         delete payloadUnico.dataFimRecorrencia;
         await db.from('eventos').update(payloadUnico).eq('id', ev.id);
       } else {
-        // Regenerar a série
-        if (escopo === 'futuros') {
-          await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
-        } else {
-          await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', formatarDataISO(new Date()));
-        }
+        if (escopo === 'futuros') await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', ev.data);
+        else await db.from('eventos').delete().eq('recorrencia_id', ev.recorrencia_id).gte('data', formatarDataISO(new Date()));
         
-        // Cria os novos
         if (recTipo !== 'nenhuma') {
           const datas = gerarDatasRecorrentes(payload.data, recTipo, dataFim);
           const payloads = datas.map(dataIso => {
@@ -852,7 +1035,6 @@
           });
           await db.from('eventos').insert(payloads);
         } else {
-          // Virou um evento único
           let p = { ...payload, recorrencia: 'nenhuma', recorrencia_id: null };
           delete p.dataFimRecorrencia;
           await db.from('eventos').insert([p]);
@@ -861,15 +1043,12 @@
     }
 
     acaoPendente = { tipo: null, evento: null, payload: null };
-    await carregarEventos();
+    await carregarEventos(); renderizarCalendario(); renderLista();
   }
 
   async function excluirEventoDoModal() {
-    const eventoId = document.getElementById('eventoId').value;
-    if (!eventoId) return;
-
-    const ev = todosEventos.find(e => String(e.id) === String(eventoId));
-    if (!ev) return;
+    const eventoId = document.getElementById('eventoId').value; if (!eventoId) return;
+    const ev = todosEventos.find(e => String(e.id) === String(eventoId)); if (!ev) return;
 
     if (ev.recorrencia_id) {
       acaoPendente = { tipo: 'delete', evento: ev, payload: null };
@@ -877,58 +1056,316 @@
       document.getElementById('escopoMensagem').textContent = 'Este evento faz parte de uma série. Como deseja excluir?';
       document.getElementById('btnEscopoFuturos').style.display = 'block';
       document.getElementById('btnEscopoTodos').textContent = 'Todos os eventos futuros';
-      closeModal('modalEvento');
-      openModal('modalEscopo');
+      closeModal('modalEvento'); openModal('modalEscopo');
     } else {
       if (!confirm('Excluir este evento?')) return;
       await db.from('eventos').delete().eq('id', eventoId);
-      closeModal('modalEvento');
-      await carregarEventos();
+      closeModal('modalEvento'); await carregarEventos(); renderizarCalendario(); renderLista();
     }
   }
 
   async function concluirEventoDoModal() {
-    const eventoId = document.getElementById('eventoId').value;
-    if (!eventoId) return;
-    const ev = todosEventos.find(e => String(e.id) === String(eventoId));
-    if (!ev) return;
-    const { error } = await db.from('eventos').update({ concluido: !ev.concluido }).eq('id', eventoId);
-    if (error) return alert('Erro: ' + error.message);
-    closeModal('modalEvento');
-    await carregarEventos();
+    const eventoId = document.getElementById('eventoId').value; if (!eventoId) return;
+    const ev = todosEventos.find(e => String(e.id) === String(eventoId)); if (!ev) return;
+    await db.from('eventos').update({ concluido: !ev.concluido }).eq('id', eventoId);
+    closeModal('modalEvento'); await carregarEventos(); renderizarCalendario(); renderLista();
   }
 
-  function abrirModalConfig() {
-    document.getElementById('configHoraInicio').value = horaInicioDia;
-    document.getElementById('configHoraFim').value = horaFimDia;
-    openModal('modalConfig');
-  }
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+  // ==========================================
+  // CONFIG E IMPORTAÇÃO/EXPORTAÇÃO ICS
+  // ==========================================
   document.getElementById('configForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     horaInicioDia = document.getElementById('configHoraInicio').value;
     horaFimDia = document.getElementById('configHoraFim').value;
-
     try {
       const payload = { user_id: window.currentUser.id, hora_inicio: horaInicioDia, hora_fim: horaFimDia };
       const { data } = await db.from('config_agenda').select('id').eq('user_id', window.currentUser.id).maybeSingle();
       if (data) await db.from('config_agenda').update(payload).eq('id', data.id);
       else await db.from('config_agenda').insert([payload]);
     } catch (err) {}
-
     closeModal('modalConfig');
     renderizarCalendario();
   });
 
-  function openModal(id) { document.getElementById(id).classList.add('active'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+  function exportarICS() {
+    const hojeISO = formatarDataISO(new Date());
+    let eventosParaExportar = [];
+    let baseEventos = [...todosEventos];
+    if (filtroResponsavelLista !== 'Todos') baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavelLista);
+
+    if (filtroListaAtual === 'todas') {
+      const mostrarPassados = document.getElementById('togglePassados').checked;
+      eventosParaExportar = mostrarPassados ? baseEventos : baseEventos.filter(ev => !isPassado(ev, hojeISO));
+    } else {
+      const p = getPeriodoLista();
+      eventosParaExportar = baseEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
+    }
+
+    if (eventosParaExportar.length === 0) return alert("Não há eventos visíveis para exportar.");
+
+    let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Gestao Casal//Agenda//PT-BR\r\nCALSCALE:GREGORIAN\r\n";
+    const dtstamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    eventosParaExportar.forEach(ev => {
+      const dtstart = ev.data.replace(/-/g, '') + 'T' + ev.hora_inicio.replace(/:/g, '');
+      const summary = ev.nome_atracao.replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+      const location = (ev.endereco || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+      let description = ev.observacoes || '';
+      if (ev.responsavel) description += `\n\nResponsável: ${ev.responsavel}`;
+      description = description.replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+
+      icsContent += "BEGIN:VEVENT\r\n";
+      icsContent += `UID:${ev.id}-${dtstamp}@gestaocasal\r\nDTSTAMP:${dtstamp}\r\nDTSTART:${dtstart}\r\nSUMMARY:${summary}\r\n`;
+      if (location) icsContent += `LOCATION:${location}\r\n`;
+      if (description) icsContent += `DESCRIPTION:${description}\r\n`;
+      icsContent += "END:VEVENT\r\n";
+    });
+    icsContent += "END:VCALENDAR\r\n";
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    let sufixo = filtroListaAtual === 'semana' ? 'semana' : (filtroListaAtual === 'mes' ? 'mes' : 'eventos');
+    if (filtroResponsavelLista !== 'Todos') sufixo += `-${filtroResponsavelLista.toLowerCase().replace(/\s+/g, '-')}`;
+    a.download = `agenda-${sufixo}-${new Date().toISOString().split('T')[0]}.ics`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  function abrirModalImportICS() {
+    icsEventosPendentes = [];
+    document.getElementById('icsStep1').style.display = 'block';
+    document.getElementById('icsStep2').style.display = 'none';
+    document.getElementById('icsFileInput').value = '';
+    document.getElementById('icsResponsavelGlobal').value = '';
+    openModal('modalImportICS');
+  }
+
+  function voltarEtapaICS() {
+    icsEventosPendentes = [];
+    document.getElementById('icsStep1').style.display = 'block';
+    document.getElementById('icsStep2').style.display = 'none';
+    document.getElementById('icsFileInput').value = '';
+  }
+
+  function handleICSDrop(e) {
+    e.preventDefault();
+    document.getElementById('icsDropzone').classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) processarICSFile(file);
+  }
+
+  function handleICSFileChange(e) {
+    const file = e.target.files[0];
+    if (file) processarICSFile(file);
+  }
+
+  async function processarICSFile(file) {
+    if (!file.name.toLowerCase().endsWith('.ics')) return alert('Por favor, selecione um arquivo .ics.');
+    if (file.size > 5 * 1024 * 1024) return alert('Arquivo muito grande (máx. 5 MB).');
+
+    try {
+      const text = await file.text();
+      const eventos = parseICS(text);
+      if (eventos.length === 0) return alert('Nenhum evento encontrado no arquivo.');
+      if (eventos.length > 1000) return alert(`O arquivo contém ${eventos.length} eventos. Importe em lotes menores.`);
+
+      icsEventosPendentes = eventos;
+      renderPreviewICS();
+      document.getElementById('icsStep1').style.display = 'none';
+      document.getElementById('icsStep2').style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao ler o arquivo: ' + err.message);
+    }
+  }
+
+  function parseICS(content) {
+    const unfolded = content.replace(/\r?\n[ \t]/g, '');
+    const linhas = unfolded.split(/\r?\n/);
+    const rawEvents = [];
+    let atual = null;
+
+    for (const linha of linhas) {
+      if (linha === 'BEGIN:VEVENT') { atual = {}; continue; }
+      if (linha === 'END:VEVENT') { if (atual) rawEvents.push(atual); atual = null; continue; }
+      if (!atual) continue;
+
+      const idx = linha.indexOf(':');
+      if (idx === -1) continue;
+      const [chave] = linha.substring(0, idx).split(';');
+      const valor = linha.substring(idx + 1);
+
+      if (chave === 'DTSTART') atual.dtstart = valor;
+      else if (chave === 'SUMMARY') atual.summary = unescapeICS(valor);
+      else if (chave === 'LOCATION') atual.location = unescapeICS(valor);
+      else if (chave === 'DESCRIPTION') atual.description = unescapeICS(valor);
+      else if (chave === 'RRULE') atual.rrule = valor;
+      else if (chave === 'UID') atual.uid = valor;
+    }
+
+    const resultado = [];
+    for (const raw of rawEvents) {
+      if (!raw.dtstart) continue;
+      const parsedDate = parseICSDate(raw.dtstart);
+      if (!parsedDate) continue;
+
+      const horaNorm = parsedDate.time || '00:00';
+      const duplicado = todosEventos.some(ev =>
+        ev.data === parsedDate.date && ev.hora_inicio.substring(0, 5) === horaNorm && ev.nome_atracao === (raw.summary || '(Sem título)')
+      );
+
+      resultado.push({
+        selected: !duplicado, duplicado, recorrente: !!raw.rrule,
+        summary: raw.summary || '(Sem título)', date: parsedDate.date, time: horaNorm, allDay: parsedDate.allDay,
+        location: raw.location || '', description: raw.description || '', uid: raw.uid || '',
+        responsavel: 'Casal'
+      });
+    }
+
+    resultado.sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
+    return resultado;
+  }
+
+  function unescapeICS(s) {
+    if (!s) return '';
+    return s.replace(/\\n/gi, '\n').replace(/\\N/g, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
+  }
+
+  function parseICSDate(valor) {
+    const m = valor.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+    if (!m) return null;
+    const [, y, mo, d, hh, mi, ss, z] = m;
+
+    if (!hh) return { date: `${y}-${mo}-${d}`, time: null, allDay: true };
+
+    if (z) {
+      const utc = new Date(Date.UTC(parseInt(y, 10), parseInt(mo, 10) - 1, parseInt(d, 10), parseInt(hh, 10), parseInt(mi, 10), parseInt(ss, 10)));
+      return { date: formatarDataISO(utc), time: `${String(utc.getHours()).padStart(2, '0')}:${String(utc.getMinutes()).padStart(2, '0')}`, allDay: false };
+    }
+    return { date: `${y}-${mo}-${d}`, time: `${hh}:${mi}`, allDay: false };
+  }
+
+  function renderPreviewICS() {
+    const list = document.getElementById('icsList');
+    const count = document.getElementById('icsPreviewCount');
+    const info = document.getElementById('icsFooterInfo');
+    const btnImportar = document.getElementById('icsBtnImportar');
+
+    if (icsEventosPendentes.length === 0) {
+      list.innerHTML = `<div style="text-align:center;padding:20px;color:#999;">Nenhum evento no arquivo.</div>`;
+      btnImportar.disabled = true; return;
+    }
+
+    list.innerHTML = icsEventosPendentes.map((ev, i) => {
+      const dataObj = new Date(ev.date + 'T00:00:00');
+      const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+      const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      
+      const badges = [];
+      if (ev.duplicado) badges.push('<span style="background:#fcd34d;color:#78350f;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:8px;">já existe</span>');
+      if (ev.recorrente) badges.push('<span style="background:#fef3c7;color:#92400e;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:8px;">⚠️ recorrente</span>');
+      
+      const opcoesResp = `<option value="Casal" ${ev.responsavel === 'Casal' ? 'selected' : ''}>👫 Casal</option>` + 
+        membrosCasal.map(nome => `<option value="${nome}" ${ev.responsavel === nome ? 'selected' : ''}>👤 ${nome}</option>`).join('');
+
+      return `<div class="ics-item ${ev.duplicado ? 'duplicate' : ''}" onclick="toggleICSItem(${i}, event)">
+        <input type="checkbox" ${ev.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleICSItem(${i}, event)" />
+        <div class="ics-item-content">
+          <div class="ics-item-name">${escapeHtml(ev.summary)}</div>
+          <div class="ics-item-meta">${diaSemana} ${diaMes} ${ev.allDay ? '(dia inteiro)' : 'às ' + ev.time} ${ev.location ? ' • ' + escapeHtml(ev.location) : ''}</div>
+        </div>
+        <select class="ics-select-resp" onclick="event.stopPropagation()" onchange="mudarResponsavelICS(${i}, this.value)">
+          ${opcoesResp}
+        </select>
+        ${badges.join(' ')}
+      </div>`;
+    }).join('');
+
+    atualizarContadoresICS();
+  }
+
+  function mudarResponsavelICS(index, valor) {
+    if (icsEventosPendentes[index]) icsEventosPendentes[index].responsavel = valor;
+  }
+
+  function aplicarResponsavelGlobalICS(valor) {
+    if (!valor) return;
+    icsEventosPendentes.forEach(ev => { ev.responsavel = valor; });
+    renderPreviewICS();
+  }
+
+  function atualizarContadoresICS() {
+    const total = icsEventosPendentes.length;
+    const selecionados = icsEventosPendentes.filter(e => e.selected).length;
+    const duplicados = icsEventosPendentes.filter(e => e.duplicado).length;
+    const recorrentes = icsEventosPendentes.filter(e => e.recorrente).length;
+
+    document.getElementById('icsPreviewCount').textContent = `${selecionados} de ${total} selecionados`;
+    const partes = [];
+    if (duplicados > 0) partes.push(`${duplicados} já existem`);
+    if (recorrentes > 0) partes.push(`${recorrentes} recorrentes (só 1ª ocorrência)`);
+    document.getElementById('icsFooterInfo').textContent = partes.join(' • ');
+    document.getElementById('icsBtnImportar').disabled = selecionados === 0;
+  }
+
+  function toggleICSItem(i, e) {
+    if (e) e.stopPropagation();
+    icsEventosPendentes[i].selected = !icsEventosPendentes[i].selected;
+    renderPreviewICS();
+  }
+
+  function selecionarTodosICS(valor) {
+    icsEventosPendentes.forEach(ev => {
+      if (valor && ev.duplicado) return;
+      ev.selected = valor;
+    });
+    renderPreviewICS();
+  }
+
+  async function confirmarImportacao() {
+    const selecionados = icsEventosPendentes.filter(ev => ev.selected);
+    if (selecionados.length === 0) return alert('Nenhum evento selecionado.');
+
+    const { data: sessData } = await db.auth.getSession();
+    const userId = sessData?.session?.user?.id || window.currentUser?.id;
+    if (!userId) return alert('Sessão não encontrada.');
+
+    const btn = document.getElementById('icsBtnImportar');
+    btn.disabled = true;
+    btn.textContent = `Importando ${selecionados.length}...`;
+
+    const payloads = selecionados.map(ev => ({
+      user_id: userId, data: ev.date, hora_inicio: ev.time + ':00',
+      nome_atracao: ev.summary, endereco: ev.location, observacoes: ev.description,
+      quantidade_pessoas: 1, valor_por_pessoa: 0, valor: 0, gastos_extras: [], responsavel: ev.responsavel
+    }));
+
+    let inseridos = 0, erros = 0;
+    for (let i = 0; i < payloads.length; i += 50) {
+      const lote = payloads.slice(i, i + 50);
+      const { error } = await db.from('eventos').insert(lote);
+      if (error) erros += lote.length; else inseridos += lote.length;
+    }
+
+    btn.textContent = 'Importar selecionados'; btn.disabled = false;
+    closeModal('modalImportICS');
+    await carregarEventos(); renderizarCalendario(); renderLista();
+
+    if (erros === 0) alert(`✅ ${inseridos} evento(s) importado(s) com sucesso!`);
+    else alert(`⚠️ ${inseridos} importados, ${erros} com erro.`);
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     let tentativas = 0;
     const check = setInterval(() => {
       tentativas++;
       if (window.currentUser) { clearInterval(check); initAgendaApp(); }
-      if (tentativas > 50) { clearInterval(check); console.error('Timeout: usuário não carregado pelo app.js'); }
+      if (tentativas > 50) clearInterval(check);
     }, 200);
   });
 </script>

@@ -2,99 +2,169 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Início - Meu Sistema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Início - Gestão Casal</title>
   <link rel="stylesheet" href="style.css">
   
   <style>
-    /* Estilos específicos para a grade de botões da Home */
-    .home-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .home-header {
-      text-align: center;
-      margin-bottom: 30px;
-      margin-top: 20px;
-    }
-    
-    .home-header h1 {
-      font-size: 28px;
-      color: #111827;
-      margin-bottom: 8px;
-    }
-    
-    /* Títulos das categorias (Geral, Agenda, Veículos, etc) */
-    .category-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin: 25px 0 15px 0;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #e5e7eb;
+    /* Reset básico para a Home */
+    body {
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
+    /* Cabeçalho Superior Premium */
+    .app-header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      padding: 35px 20px 30px 20px;
+      border-bottom-left-radius: 32px;
+      border-bottom-right-radius: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    .user-greeting h1 {
+      font-size: 26px;
+      color: #ffffff;
+      margin: 0 0 6px 0;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .user-greeting p {
+      color: #94a3b8;
+      font-size: 14px;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .btn-logout-top {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fca5a5;
+      border: 1px solid rgba(252, 165, 165, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(4px);
+    }
+
+    .btn-logout-top:active {
+      transform: scale(0.95);
+      background: rgba(252, 165, 165, 0.2);
+    }
+
+    /* Container Principal sobrepondo o cabeçalho */
+    .home-container {
+      max-width: 900px;
+      margin: -25px auto 40px auto; 
+      padding: 0 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Títulos das categorias com linha */
+    .category-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin: 32px 0 16px 4px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .category-title::after {
+      content: "";
+      flex: 1;
+      height: 2px;
+      background: #e2e8f0;
+      border-radius: 2px;
+    }
+
+    /* Grade de botões */
     .home-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 14px;
     }
     
+    /* Cards de Aplicativo (Estilo iOS/Android) */
     .home-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px 10px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0,0,0,0.02);
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .home-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.06);
+      border-color: #e2e8f0;
     }
     
     .home-card:active {
-      transform: scale(0.95);
+      transform: scale(0.94);
     }
     
-    .home-card .icon {
-      font-size: 36px;
+    /* Caixinha do Ícone */
+    .icon-wrapper {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      transition: transform 0.2s;
     }
     
     .home-card .title {
       font-weight: 700;
       font-size: 14px;
-      color: #374151;
+      color: #1e293b;
+      line-height: 1.3;
     }
 
     /* Ajustes finos para celular */
     @media (max-width: 768px) {
+      .app-header {
+        padding: 30px 20px 25px 20px;
+      }
       .home-container {
-        padding: 15px;
+        padding: 0 16px;
       }
       .home-grid {
-        grid-template-columns: 1fr 1fr; /* Força 2 colunas no celular */
+        grid-template-columns: 1fr 1fr;
         gap: 12px;
       }
-      .home-header h1 {
-        font-size: 24px;
-      }
       .home-card {
-        padding: 15px 5px;
+        padding: 14px;
+        gap: 12px;
       }
-      .home-card .icon {
-        font-size: 32px;
+      .icon-wrapper {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+        border-radius: 12px;
       }
       .home-card .title {
         font-size: 13px;
@@ -102,35 +172,49 @@
     }
   </style>
 </head>
-<!-- O data-page="home" é importante para o app.js saber que esta é a Home -->
+<!-- data-page="home" para o app.js saber onde estamos -->
 <body data-page="home">
 
-  <div class="home-container">
-    <div class="home-header">
-      <h1>Bem-vindo(a)</h1>
-      <p style="color: #6b7280;">O que vamos fazer hoje?</p>
+  <!-- Cabeçalho Superior -->
+  <header class="app-header">
+    <div class="user-greeting">
+      <h1>Olá!</h1>
+      <p>O que vamos fazer hoje?</p>
     </div>
+    <button class="btn-logout-top" onclick="logout()">
+      <span>🚪</span> Sair
+    </button>
+  </header>
+
+  <!-- Container Principal -->
+  <div class="home-container">
 
     <!-- CATEGORIA: GERAL -->
     <div class="category-title">Geral</div>
     <div class="home-grid">
-      <div class="home-card" onclick="go('listas_compras')">
-        <span class="icon">✅</span>
-        <span class="title">Check-list</span>
+
+      <div class="home-card" onclick="go('checklists')">
+        <div class="icon-wrapper" style="background: #dcfce7; color: #166534;">✅</div>
+        <span class="title">Check-List</span>
       </div>
       
+      <div class="home-card" onclick="go('listas_compras')">
+        <div class="icon-wrapper" style="background: #e0e7ff; color: #3730a3;">🛒</div>
+        <span class="title">Lista de Compras</span>
+      </div>
+
       <div class="home-card" onclick="go('ferias')">
-        <span class="icon">✈️</span>
+        <div class="icon-wrapper" style="background: #dbeafe; color: #1e40af;">✈️</div>
         <span class="title">Minhas Viagens</span>
       </div>
       
       <div class="home-card" onclick="go('filmes')">
-        <span class="icon">🎬</span>
+        <div class="icon-wrapper" style="background: #f3e8ff; color: #6b21a8;">🎬</div>
         <span class="title">Filmes</span>
       </div>
       
       <div class="home-card" onclick="go('restaurantes')">
-        <span class="icon">🍔</span>
+        <div class="icon-wrapper" style="background: #ffedd5; color: #c2410c;">🍔</div>
         <span class="title">Restaurantes</span>
       </div>
     </div>
@@ -139,37 +223,14 @@
     <div class="category-title">Agenda</div>
     <div class="home-grid">
       <div class="home-card" onclick="go('agenda')">
-        <span class="icon">📅</span>
-        <span class="title">Agenda</span>
+        <div class="icon-wrapper" style="background: #ffe4e6; color: #be123c;">📋</div>
+        <span class="title">Cronograma</span>
       </div>
       
-      <div class="home-card" onclick="go('agenda-lista')">
-        <span class="icon">📝</span>
-        <span class="title">Lista da Agenda</span>
-      </div>
-    </div>
-
-    <!-- CATEGORIA: VEÍCULOS -->
-    <div class="category-title">Veículos</div>
-    <div class="home-grid">
-      <div class="home-card" onclick="go('veiculos')">
-        <span class="icon">🚗</span>
-        <span class="title">Veículos</span>
-      </div>
-      
-      <div class="home-card" onclick="go('manutencao')">
-        <span class="icon">🔧</span>
-        <span class="title">Manutenção</span>
-      </div>
-      
-      <div class="home-card" onclick="go('abastecimento')">
-        <span class="icon">⛽</span>
-        <span class="title">Abastecimento</span>
-      </div>
-
-      <div class="home-card" onclick="go('historico_km')">
-        <span class="icon">⏱️</span>
-        <span class="title">Histórico KM</span>
+      <!-- NOVO CARD: TAREFAS -->
+      <div class="home-card" onclick="go('tarefas')">
+        <div class="icon-wrapper" style="background: #ffedd5; color: #c2410c;">📝</div>
+        <span class="title">Minhas Tarefas</span>
       </div>
     </div>
 
@@ -177,32 +238,43 @@
     <div class="category-title">Financeiro</div>
     <div class="home-grid">
       <div class="home-card" onclick="go('financeiro')">
-        <span class="icon">💰</span>
-        <span class="title">Financeiro</span>
+        <div class="icon-wrapper" style="background: #ccfbf1; color: #0f766e;">📊</div>
+        <span class="title">Relatórios</span>
       </div>
       
       <div class="home-card" onclick="go('movimentacoes')">
-        <span class="icon">📊</span>
+        <div class="icon-wrapper" style="background: #cffafe; color: #0e7490;">🔄</div>
         <span class="title">Movimentações</span>
       </div>
       
       <div class="home-card" onclick="go('membros')">
-        <span class="icon">👥</span>
-        <span class="title">Membros</span>
+        <div class="icon-wrapper" style="background: #f1f5f9; color: #334155;">👥</div>
+        <span class="title">Membros do Casal</span>
       </div>
     </div>
 
-    <!-- BOTÃO SAIR -->
-    <div class="category-title" style="margin-top: 35px; border: none;"></div>
+    <!-- CATEGORIA: VEÍCULOS -->
+    <div class="category-title">Veículos</div>
     <div class="home-grid">
-      <div class="home-card" onclick="logout()" style="border-color: #fecaca; grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 15px; padding: 15px;">
-        <span class="icon" style="font-size: 24px;">🚪</span>
-        <span class="title" style="color: #dc2626; font-size: 16px;">Sair do Sistema</span>
+      <div class="home-card" onclick="go('veiculos')">
+        <div class="icon-wrapper" style="background: #e2e8f0; color: #1e293b;">🚘</div>
+        <span class="title">Meus Veículos</span>
+      </div>
+      
+      <div class="home-card" onclick="go('manutencao')">
+        <div class="icon-wrapper" style="background: #fef9c3; color: #a16207;">🔧</div>
+        <span class="title">Manutenções</span>
+      </div>
+      
+      <div class="home-card" onclick="go('abastecimento')">
+        <div class="icon-wrapper" style="background: #d1fae5; color: #047857;">⛽</div>
+        <span class="title">Abastecimento</span>
       </div>
     </div>
 
   </div>
 
+  <!-- Scripts do Sistema -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
