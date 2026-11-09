@@ -34,9 +34,9 @@
   /* --- ESTILOS DA LISTA --- */
   .task-list-item { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; transition: 0.2s; }
   .task-list-item.done { opacity: 0.6; background: #f8fafc; }
-  .task-left { display: flex; align-items: center; gap: 15px; flex: 1; }
-  .task-left input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #4f46e5; }
-  .task-info { display: flex; flex-direction: column; }
+  .task-left { display: flex; align-items: center; gap: 15px; flex: 1; cursor: pointer; }
+  .task-left input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #4f46e5; flex-shrink: 0; }
+  .task-info { display: flex; flex-direction: column; flex: 1; }
   .task-title { font-size: 1rem; font-weight: 600; color: #111827; }
   .task-list-item.done .task-title { text-decoration: line-through; color: #666; }
   .task-details { font-size: 0.8rem; color: #666; margin-top: 3px; display: flex; gap: 10px; align-items: center; }
@@ -46,8 +46,11 @@
   .badge-priority.media { background: #fef9c3; color: #ca8a04; }
   .badge-priority.baixa { background: #dcfce7; color: #16a34a; }
   
-  .btn-delete-task { background: #fef2f2; color: #dc2626; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
-  .btn-delete-task:hover { background: #fee2e2; }
+  .task-actions { display: flex; gap: 8px; }
+  .btn-icon-small { background: #f8fafc; border: 1px solid #e2e8f0; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .btn-icon-small:hover { background: #e2e8f0; }
+  .btn-icon-small.danger { background: #fef2f2; color: #dc2626; border-color: #fee2e2; }
+  .btn-icon-small.danger:hover { background: #fee2e2; }
 
   /* Botão Flutuante */
   .fab-btn { position: fixed; bottom: 30px; right: 30px; background: #4f46e5; color: #fff; border: none; padding: 15px 25px; border-radius: 30px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); cursor: pointer; transition: transform 0.2s; z-index: 100; }
@@ -166,28 +169,25 @@
     }
   }
 
-  // ==========================================
-  // LÓGICA DO CALENDÁRIO E LISTA (CRUZANDO DADOS)
-  // ==========================================
-
   function mudarMes(delta) {
     dataAtual.setMonth(dataAtual.getMonth() + delta);
     carregarTarefasDoCalendario();
   }
 
+  // ==========================================
+  // CALENDÁRIO
+  // ==========================================
   async function carregarTarefasDoCalendario() {
     const ano = dataAtual.getFullYear();
     const mes = dataAtual.getMonth();
     const primeiroDia = formatarDataIso(new Date(ano, mes, 1));
     const ultimoDia = formatarDataIso(new Date(ano, mes + 1, 0));
 
-    // 1. Busca as tarefas do mês ou diárias
     const { data: tarefas } = await db.from('gestao_casal_tarefas')
       .select('*')
       .eq('user_id', window.currentUser.id)
       .or(`and(is_recorrente.eq.false,data_tarefa.gte.${primeiroDia},data_tarefa.lte.${ultimoDia}),is_recorrente.eq.true`);
 
-    // 2. Busca o histórico de conclusões DO MÊS
     const { data: historico } = await db.from('gestao_casal_tarefas_historico')
       .select('*')
       .eq('user_id', window.currentUser.id)
@@ -196,7 +196,6 @@
 
     if (!tarefas) return;
 
-    // 3. Junta as informações
     tarefasDoMes = tarefas.map(t => ({
       ...t,
       historicoConclusoes: (historico || []).filter(h => h.tarefa_id === t.id).map(h => h.data_conclusao)
@@ -227,16 +226,14 @@
       const dataStr = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
       const isHoje = dataStr === hojeStr;
 
-      // Filtra tarefas: Diárias OU com data exata
       const tarefasDoDia = tarefasDoMes.filter(t => t.is_recorrente || t.data_tarefa === dataStr);
 
       html += `<div class="calendar-day ${isHoje ? 'today' : ''}">
         <div class="day-number">${dia}</div>
         ${tarefasDoDia.map(t => {
-          // Verifica se essa tarefa está no histórico para ESSE dia específico
           const isDone = t.historicoConclusoes.includes(dataStr);
           return `
-            <button class="task-badge ${t.prioridade} ${isDone ? 'done' : ''}" onclick="prepararEdicaoTarefa(${t.id})" title="${t.titulo}">
+            <button class="task-badge ${t.prioridade} ${isDone ? 'done' : ''}" onclick="prepararEdicaoTarefa(${t.id})" title="Editar: ${t.titulo}">
               ${t.titulo}
             </button>
           `;
@@ -257,13 +254,11 @@
       document.getElementById("filtroDataLista").value = dataFiltro;
     }
 
-    // 1. Pega tarefas
     const { data: tarefas } = await db.from('gestao_casal_tarefas')
       .select('*')
       .eq('user_id', window.currentUser.id)
       .or(`and(is_recorrente.eq.false,data_tarefa.eq.${dataFiltro}),is_recorrente.eq.true`);
 
-    // 2. Pega histórico APENAS deste dia
     const { data: historico } = await db.from('gestao_casal_tarefas_historico')
       .select('*')
       .eq('user_id', window.currentUser.id)
@@ -294,8 +289,8 @@
 
     container.innerHTML = tarefas.map(t => `
       <div class="task-list-item ${t.isDoneHoje ? 'done' : ''}">
-        <div class="task-left">
-          <input type="checkbox" ${t.isDoneHoje ? 'checked' : ''} onchange="toggleTarefaDia(${t.id}, '${dataFiltro}', this.checked)">
+        <div class="task-left" onclick="prepararEdicaoTarefa(${t.id})" title="Clique para editar">
+          <input type="checkbox" ${t.isDoneHoje ? 'checked' : ''} onchange="toggleTarefaDia(${t.id}, '${dataFiltro}', this.checked)" onclick="event.stopPropagation()">
           <div class="task-info">
             <span class="task-title">${t.titulo}</span>
             <div class="task-details">
@@ -304,22 +299,24 @@
             </div>
           </div>
         </div>
-        <button class="btn-delete-task" onclick="excluirTarefa(${t.id})">🗑️</button>
+        
+        <!-- BOTÕES DE AÇÃO ADICIONADOS AQUI -->
+        <div class="task-actions">
+          <button class="btn-icon-small" onclick="prepararEdicaoTarefa(${t.id})" title="Editar">✏️</button>
+          <button class="btn-icon-small danger" onclick="excluirTarefa(${t.id})" title="Excluir">🗑️</button>
+        </div>
       </div>
     `).join("");
   }
 
-  // MÁGICA: Em vez de alterar a tarefa, adiciona/remove do histórico do dia
   async function toggleTarefaDia(tarefaId, dataStr, isChecked) {
     if (isChecked) {
-      // Adiciona ao histórico
       await db.from('gestao_casal_tarefas_historico').insert([{
         tarefa_id: tarefaId,
         user_id: window.currentUser.id,
         data_conclusao: dataStr
       }]);
     } else {
-      // Remove do histórico
       await db.from('gestao_casal_tarefas_historico')
         .delete()
         .eq('tarefa_id', tarefaId)
@@ -327,7 +324,6 @@
         .eq('data_conclusao', dataStr);
     }
     carregarTarefasDaLista();
-    // Se estiver no calendário em background, atualiza tbm
     carregarTarefasDoCalendario(); 
   }
 
@@ -395,7 +391,6 @@
   async function excluirTarefa(id) {
     if (!confirm('Excluir esta tarefa permanentemente?')) return;
     await db.from('gestao_casal_tarefas').delete().eq('id', id);
-    // Exclui o histórico dela também
     await db.from('gestao_casal_tarefas_historico').delete().eq('tarefa_id', id);
     carregarTarefasDaLista();
     carregarTarefasDoCalendario();
