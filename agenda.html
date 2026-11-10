@@ -168,7 +168,6 @@
         <div class="user-info" style="margin-top:5px;"><strong id="userName">Carregando...</strong></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <!-- BOTÃO RESTAURADO AQUI -->
         <button class="btn btn-secondary" onclick="abrirModalConfig()">⚙️ Configurar Horários</button>
         <button class="btn btn-secondary" onclick="abrirModalImportICS()">📥 Importar</button>
         <button class="btn btn-primary" onclick="novoEventoRapido()">+ Novo Evento</button>
@@ -195,7 +194,6 @@
           <select id="filtroResponsavelAgenda" class="filter-resp" onchange="mudarFiltroResponsavel(this.value)">
             <option value="Todos">👥 Todos os eventos</option>
             <option value="Casal">👫 Apenas Casal</option>
-            <!-- Membros serão inseridos aqui via JS -->
           </select>
         </div>
         
@@ -234,7 +232,6 @@
           <select id="filtroResponsavelLista" class="filter-select" onchange="mudarFiltroResponsavelLista(this.value)">
             <option value="Todos">👥 Todos os eventos</option>
             <option value="Casal">👫 Apenas Casal</option>
-            <!-- Membros serão inseridos aqui via JS -->
           </select>
 
           <div class="filter-tabs" role="tablist">
@@ -243,7 +240,7 @@
             <button class="filter-tab" data-filter="todas" onclick="mudarFiltroLista('todas')">Todas</button>
           </div>
           
-          <label class="toolbar-toggle" id="togglePassadosWrap" style="display:none;">
+          <label class="toolbar-toggle" id="togglePassadosWrap">
             <input type="checkbox" id="togglePassados" onchange="renderLista()">
             Mostrar passados
           </label>
@@ -298,7 +295,6 @@
           <label>Quem é o responsável?</label>
           <select id="responsavelEvento">
             <option value="Casal">👫 Casal</option>
-            <!-- Membros inseridos via JS -->
           </select>
         </div>
 
@@ -715,8 +711,8 @@
     filtroListaAtual = filtro;
     referenciaPeriodoLista = new Date();
     document.querySelectorAll('.filter-tab').forEach(b => b.classList.toggle('active', b.dataset.filter === filtro));
+    // O checkbox "Mostrar passados" agora aparece em TODOS os filtros
     document.getElementById('periodNavLista').style.display = (filtro === 'todas') ? 'none' : 'flex';
-    document.getElementById('togglePassadosWrap').style.display = (filtro === 'todas') ? 'flex' : 'none';
     renderLista();
   }
 
@@ -751,15 +747,24 @@
 
   function renderLista() {
     const hojeISO = formatarDataISO(new Date());
+    const mostrarPassados = document.getElementById('togglePassados').checked;
+
     let baseEventos = [...todosEventos];
-    if (filtroResponsavelLista !== 'Todos') baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavelLista);
+    if (filtroResponsavelLista !== 'Todos') {
+      baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavelLista);
+    }
+
+    // Se "Mostrar passados" NÃO estiver marcado, esconde passados E concluídos
+    // Se estiver marcado, mostra tudo (passados e concluídos) no período
+    if (!mostrarPassados) {
+      baseEventos = baseEventos.filter(ev => !isPassado(ev, hojeISO) && !ev.concluido);
+    }
 
     let eventosParaMostrar = [];
     let titulo = '', subtitulo = '';
 
     if (filtroListaAtual === 'todas') {
-      const mostrarPassados = document.getElementById('togglePassados').checked;
-      eventosParaMostrar = mostrarPassados ? baseEventos : baseEventos.filter(ev => !isPassado(ev, hojeISO));
+      eventosParaMostrar = baseEventos;
       titulo = mostrarPassados ? 'Todos os eventos' : 'Próximos eventos';
     } else {
       const p = getPeriodoLista();
@@ -794,7 +799,11 @@
         const isRec = ev.recorrencia_id ? ' 🔄' : '';
         
         const rowClasses = ['list-event-row', ev.concluido ? 'concluido' : '', isHoje ? 'hoje' : '', passado ? 'passado' : ''].filter(Boolean).join(' ');
-        const badgeStatus = ev.concluido ? '<span class="list-event-badge concluido">✓ Concluído</span>' : (passado ? '<span class="list-event-badge passado">Passado</span>' : '<span class="list-event-badge pendente">Pendente</span>');
+        
+        let badgeStatus;
+        if (ev.concluido) badgeStatus = '<span class="list-event-badge concluido">✓ Concluído</span>';
+        else if (passado) badgeStatus = '<span class="list-event-badge passado">Passado</span>';
+        else badgeStatus = '<span class="list-event-badge pendente">Pendente</span>';
 
         return `<div class="${rowClasses}" onclick="abrirModalEvento('${ev.data}','${hora}',${ev.id})">
           <div class="list-event-date">
@@ -1093,13 +1102,17 @@
 
   function exportarICS() {
     const hojeISO = formatarDataISO(new Date());
+    const mostrarPassados = document.getElementById('togglePassados').checked;
     let eventosParaExportar = [];
     let baseEventos = [...todosEventos];
     if (filtroResponsavelLista !== 'Todos') baseEventos = baseEventos.filter(ev => (ev.responsavel || 'Casal') === filtroResponsavelLista);
 
+    if (!mostrarPassados) {
+      baseEventos = baseEventos.filter(ev => !isPassado(ev, hojeISO) && !ev.concluido);
+    }
+
     if (filtroListaAtual === 'todas') {
-      const mostrarPassados = document.getElementById('togglePassados').checked;
-      eventosParaExportar = mostrarPassados ? baseEventos : baseEventos.filter(ev => !isPassado(ev, hojeISO));
+      eventosParaExportar = baseEventos;
     } else {
       const p = getPeriodoLista();
       eventosParaExportar = baseEventos.filter(ev => ev.data >= p.ini && ev.data <= p.fim);
