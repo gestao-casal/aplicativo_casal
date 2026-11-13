@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     "ferias", "financeiro", "movimentacoes", "relatorio_detalhe", "membros",
     "checklists", "checklist_detalhe", "filmes", "listas_compras",
     "lista_detalhe", "restaurantes", "veiculos", "abastecimento", 
-    "historico_km", "manutencao", "agenda", "agenda-lista","tarefas", "agua"
+    "historico_km", "manutencao", "agenda", "agenda-lista","tarefas", "agua","simulador_viagem"
   ];
   
   if (paginasProtegidas.includes(page)) {

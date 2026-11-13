@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simulador de Viagem - Gestão Casal</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .simulator-container { max-width: 600px; margin: 0 auto; }
+  .card-glass { background: #fff; border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+  
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 0.9rem; font-weight: 700; color: #334155; margin-bottom: 8px; }
+  .form-group input, .form-group select { 
+    width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: 1rem; outline: none; transition: border 0.2s; box-sizing: border-box;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: #4f46e5; }
+  
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+  .result-box { 
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+  }
+  .result-box.destaque { background: #eef2ff; border-color: #c7d2fe; grid-column: 1 / -1; }
+  
+  .result-label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .result-value { font-size: 1.8rem; font-weight: 900; color: #1e293b; }
+  .result-box.destaque .result-value { font-size: 2.5rem; color: #4f46e5; }
+  .result-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 5px; }
+  
+  .btn-calcular { background: #4f46e5; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.2s; margin-top: 10px; }
+  .btn-calcular:hover { background: #4338ca; }
+</style>
+</head>
+<!-- ATENÇÃO AO data-page="simulador_viagem" PARA O MENU MARCAR O ITEM CERTO -->
+<body data-page="simulador_viagem">
+
+<div class="app">
+  <!-- A div do menu PRECISA existir para o app.js injetar o HTML -->
+  <div id="menu"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>⛽ Simulador de Viagem</h1>
+        <div class="user-info" style="margin-top:5px;">Calcule o custo estimado de combustível</div>
+      </div>
+    </div>
+
+    <div class="simulator-container">
+      
+      <div class="card-glass">
+        <form id="formSimulador" onsubmit="calcularViagem(event)">
+          
+          <div class="form-group">
+            <label>Selecione o Veículo</label>
+            <select id="simVeiculo" required onchange="preencherMedia()">
+              <option value="">Carregando veículos...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Distância da Viagem (KM)</label>
+            <input type="number" id="simDistancia" step="0.1" min="1" placeholder="Ex: 700" required oninput="calcularViagem(event)">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label>Média (KM/L)</label>
+              <input type="number" id="simMedia" step="0.1" min="1" placeholder="Ex: 12" required oninput="calcularViagem(event)">
+              <small class="muted" style="font-size: 0.75rem; color: #94a3b8;">Pode ser alterada manualmente.</small>
+            </div>
+            
+            <div class="form-group">
+              <label>Preço do Litro (R$)</label>
+              <input type="number" id="simPreco" step="0.01" min="0.01" placeholder="Ex: 5.80" required oninput="calcularViagem(event)">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-calcular">Calcular Gasto</button>
+        </form>
+      </div>
+
+      <!-- Resultados -->
+      <div class="card-glass" id="resultadoCard" style="display: none;">
+        <h3 style="margin-top:0; color:#334155; text-align:center; margin-bottom:20px;">Resultado da Simulação</h3>
+        
+        <div class="results-grid">
+          <div class="result-box">
+            <span class="result-label">Litros Necessários</span>
+            <span class="result-value" id="resLitros">0 L</span>
+          </div>
+          
+          <div class="result-box">
+            <span class="result-label">Custo por KM</span>
+            <span class="result-value" id="resCustoKm">R$ 0,00</span>
+          </div>
+          
+          <div class="result-box destaque">
+            <span class="result-label">Custo Total da Viagem</span>
+            <span class="result-value" id="resCustoTotal">R$ 0,00</span>
+            <span class="result-sub" id="resDetalhe">0 km / 0 km/L * R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+  let veiculosSim = [];
+
+  async function carregarVeiculosSimulador() {
+    if (!window.currentUser) return;
+    
+    const { data, error } = await db.from('gestao_casal_veiculos')
+      .select('id, modelo, placa, media_km_l')
+      .eq('user_id', window.currentUser.id)
+      .order('modelo');
+
+    if (!error && data) {
+      veiculosSim = data;
+      const select = document.getElementById('simVeiculo');
+      
+      if (data.length === 0) {
+        select.innerHTML = '<option value="">Nenhum veículo cadastrado</option>';
+      } else {
+        select.innerHTML = '<option value="">Selecione um veículo</option>' + 
+          data.map(v => `<option value="${v.id}" data-media="${v.media_km_l || 10}">${escapeHtml(v.modelo)} (${escapeHtml(v.placa)})</option>`).join('');
+      }
+    }
+  }
+
+  function preencherMedia() {
+    const select = document.getElementById('simVeiculo');
+    const option = select.options[select.selectedIndex];
+    
+    if (option && option.value) {
+      const media = option.getAttribute('data-media');
+      if (media) {
+        document.getElementById('simMedia').value = media;
+      }
+    }
+    calcularViagem();
+  }
+
+  function calcularViagem(e) {
+    if (e) e.preventDefault();
+
+    const distancia = parseFloat(document.getElementById('simDistancia').value) || 0;
+    const media = parseFloat(document.getElementById('simMedia').value) || 0;
+    const preco = parseFloat(document.getElementById('simPreco').value) || 0;
+
+    const cardResultado = document.getElementById('resultadoCard');
+
+    if (distancia > 0 && media > 0 && preco > 0) {
+      const litros = distancia / media;
+      const custoTotal = litros * preco;
+      const custoKm = preco / media;
+
+      document.getElementById('resLitros').textContent = litros.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' L';
+      document.getElementById('resCustoKm').textContent = custoKm.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('resCustoTotal').textContent = custoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      
+      document.getElementById('resDetalhe').textContent = `${distancia.toLocaleString('pt-BR')} km / ${media} km/L × R$ ${preco.toFixed(2).replace('.', ',')}`;
+
+      cardResultado.style.display = 'block';
+    } else {
+      cardResultado.style.display = 'none';
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+  }
+
+  // Inicialização blindada
+  document.addEventListener('DOMContentLoaded', () => {
+    let tentativas = 0;
+    const verificar = setInterval(async () => {
+      tentativas++;
+      
+      // Verifica se o currentUser já foi carregado pelo app.js
+      if (window.currentUser) {
+        clearInterval(verificar);
+        
+        // Garante que o menu seja renderizado (caso o app.js não tenha feito)
+        if (typeof loadMenu === 'function') {
+          try { await loadMenu(); } catch(e) {}
+        }
+        if (typeof setActiveNav === 'function') {
+          try { setActiveNav(); } catch(e) {}
+        }
+
+        // Carrega os dados da página
+        carregarVeiculosSimulador();
+      }
+      
+      if (tentativas > 50) clearInterval(verificar);
+    }, 200);
+  });
+</script>
+</body>
+</html>
