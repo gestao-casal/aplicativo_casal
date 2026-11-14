@@ -46,39 +46,20 @@
   /* Barra de Progresso Estilo Jogo */
   .progress-wrapper { background: #e2e8f0; border-radius: 20px; padding: 5px; position: relative; margin: 25px 0; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); }
   .progress-container { height: 35px; background: transparent; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; }
-  .progress-bar { 
-    height: 100%; 
-    background: linear-gradient(90deg, #38bdf8, #2563eb); 
-    width: 0%; 
-    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
-    border-radius: 15px; 
-  }
-  .progress-bar.full { 
-    background: linear-gradient(90deg, #4ade80, #16a34a); 
-    box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); 
-    width: 100% !important;
-  }
-  
-  .progress-text {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1rem; color: #334155;
-    pointer-events: none;
-    z-index: 2;
-    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-  }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, #38bdf8, #2563eb); width: 0%; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 15px; }
+  .progress-bar.full { background: linear-gradient(90deg, #4ade80, #16a34a); box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); width: 100% !important; }
+  .progress-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: #334155; pointer-events: none; z-index: 2; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
   
   .meta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
   .btn-edit-meta { background: #f1f5f9; border: none; color: #3b82f6; cursor: pointer; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; transition: 0.2s; }
   .btn-edit-meta:hover { background: #e2e8f0; }
 
   /* Botões de Água */
-  .quick-add-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 12px; margin-top: 20px; }
+  .quick-add-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-top: 20px; }
   .btn-water { background: #fff; border: 2px solid #e0f2fe; border-radius: 16px; padding: 15px 5px; font-size: 1.5rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; flex-direction: column; align-items: center; gap: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
   .btn-water:hover { border-color: #38bdf8; transform: translateY(-5px) scale(1.05); box-shadow: 0 10px 15px rgba(56, 189, 248, 0.15); }
   .btn-water:active { transform: scale(0.95); }
-  .btn-water small { font-size: 0.85rem; font-weight: 700; color: #64748b; }
+  .btn-water small { font-size: 0.8rem; font-weight: 700; color: #64748b; }
   
   /* Histórico */
   .history-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; }
@@ -111,7 +92,7 @@
   
   /* Visual do Ranking Melhorado */
   .ranking-filters { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
-  .ranking-select { padding: 10px 15px; border-radius: 10px; border: none; font-weight: 800; color: #1e293b; background: #f8fafc; font-family: inherit; cursor: pointer; flex: 1; }
+  .ranking-select { padding: 10px 15px; border-radius: 10px; border: none; font-weight: 800; color: #1e293b; background: #f8fafc; font-family: inherit; cursor: pointer; flex: 1; min-width: 120px; }
   .btn-hide { background: rgba(255,255,255,0.1); color: #cbd5e1; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .btn-hide:hover { background: rgba(255,255,255,0.2); color: white; }
 
@@ -224,6 +205,7 @@
             <button class="btn-water" onclick="adicionarAgua(300)">🥤<small>300 ml</small></button>
             <button class="btn-water" onclick="adicionarAgua(500)">🍶<small>500 ml</small></button>
             <button class="btn-water" onclick="adicionarAgua(700)">🫙<small>700 ml</small></button>
+            <button class="btn-water" onclick="adicionarAgua(900)">🪣<small>900 ml</small></button>
             <button class="btn-water" onclick="promptAguaCustom()" style="border-style:dashed;">✏️<small>Outro</small></button>
           </div>
 
@@ -261,22 +243,29 @@
           <div id="rankingUnlockedArea" style="display:none;">
             
             <div class="ranking-filters">
-              <select id="modoVisualizacao" class="ranking-select" onchange="alternarModoVisualizacao()">
-                <option value="semanal">📅 Resumo Semanal</option>
-                <option value="diario">📊 Resumo Diário</option>
+              <!-- Seletor de Mês -->
+              <select id="mesSelect" class="ranking-select" onchange="mudarMes()">
+                <!-- Preenchido via JS -->
               </select>
-              
-              <select id="semanaSelect" class="ranking-select" onchange="renderRanking()" style="display:none;">
-                <option value="atual">Semana Atual</option>
-                <option value="anterior">Semana Passada</option>
+
+              <!-- Seletor de Filtro (Mês / Semana / Dia) -->
+              <select id="modoVisualizacao" class="ranking-select" onchange="alternarModoVisualizacao()">
+                <option value="mes">📅 Resumo do Mês</option>
+                <option value="semana">🗓️ Resumo Semanal</option>
+                <option value="diario">📊 Resumo Diário</option>
               </select>
               
               <button class="btn-hide" onclick="ocultarRanking()">Ocultar 🔒</button>
             </div>
 
-            <!-- Resumo Semanal (Lista) -->
-            <div id="viewSemanal">
-              <div id="rankingList"></div>
+            <!-- Resumo Mensal (Lista) -->
+            <div id="viewMes">
+              <div id="rankingListMes"></div>
+            </div>
+
+            <!-- Resumo Semanal (Lista de Semanas) -->
+            <div id="viewSemana" style="display:none;">
+              <div id="rankingListSemana"></div>
             </div>
 
             <!-- Resumo Diário (Gráfico) -->
@@ -315,12 +304,35 @@
   let usuarioLogado = "";
   let metaUsuarioLogado = 2000;
   let registrosHoje = [];
-  let todosRegistrosSemana = [];
+  let todosRegistrosDoMes = [];
   let configsGlobais = [];
   
   let intervaloNotificacao = null;
   let loopNotificacaoId = null;
   let minutosLembrete = 60;
+
+  // Variáveis de controle do Ranking
+  let mesReferencia = new Date(); // Mês atual selecionado
+  let mesAnoSelecionado = ""; // String YYYY-MM
+
+  // ==========================================
+  // FUNÇÕES DE DATA (FORÇANDO FUSO BRASIL)
+  // ==========================================
+  
+  function getHojeBR() {
+    // Cria a data forçando o fuso de Brasília e formata para YYYY-MM-DD
+    const dataFormatada = new Intl.DateTimeFormat('fr-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+    return dataFormatada;
+  }
+
+  function getMesAnoAtualBR() {
+    return getHojeBR().substring(0, 7); // Retorna YYYY-MM
+  }
 
   async function initAguaApp() {
     if (!window.currentUser) return;
@@ -408,6 +420,9 @@
     document.getElementById('nomeLogado').textContent = nome;
     document.getElementById('metaLabel').textContent = `Meta: ${metaUsuarioLogado} ml`;
 
+    mesAnoSelecionado = getMesAnoAtualBR();
+    preencherSeletorMeses();
+
     ocultarRanking();
     
     const notifyStatus = localStorage.getItem(`agua_notify_${usuarioLogado}`);
@@ -416,8 +431,6 @@
       document.getElementById('tempoLembrete').value = minutosLembrete;
       ativarNotificacaoUI(true);
       
-      // Se estiver no APK, o loop nativo do html2apk já está rodando em background.
-      // Se estiver no navegador, reinicia o timer.
       if (!window.agendarLoopNotificacoes) {
         iniciarTimerNotificacaoNavegador();
       }
@@ -438,25 +451,46 @@
     abrirTelaLogin();
   }
 
+  // ==========================================
+  // CARREGAMENTO DE DADOS E INTERFACE
+  // ==========================================
+
   async function carregarDados() {
-    const hoje = new Date();
-    const inicioSemana = new Date(hoje.setDate(hoje.getDate() - hoje.getDay()));
-    const isoInicio = inicioSemana.toISOString().split('T')[0];
-    const isoHoje = new Date().toISOString().split('T')[0];
+    const hojeStr = getHojeBR(); // YYYY-MM-DD no fuso BR
+
+    // Para o histórico diário (só os de hoje)
+    const { data: dataHoje } = await db.from('registros_agua')
+      .select('*')
+      .eq('user_id', window.currentUser.id)
+      .eq('data_registro', hojeStr)
+      .order('hora_registro', { ascending: true });
+
+    if (dataHoje) {
+      registrosHoje = dataHoje.filter(r => r.nome_membro === usuarioLogado);
+    }
+    
+    atualizarInterface();
+    await carregarDadosMes(mesAnoSelecionado);
+  }
+
+  async function carregarDadosMes(mesAno) {
+    // mesAno = "YYYY-MM"
+    const [ano, mes] = mesAno.split('-');
+    const primeiroDia = `${ano}-${mes}-01`;
+    
+    const ultimoDiaDate = new Date(ano, mes, 0);
+    const ultimoDia = `${ano}-${mes}-${String(ultimoDiaDate.getDate()).padStart(2, '0')}`;
 
     const { data } = await db.from('registros_agua')
       .select('*')
       .eq('user_id', window.currentUser.id)
-      .gte('data_registro', isoInicio)
+      .gte('data_registro', primeiroDia)
+      .lte('data_registro', ultimoDia)
       .order('data_registro', { ascending: true })
       .order('hora_registro', { ascending: true });
 
-    if (data) {
-      todosRegistrosSemana = data;
-      registrosHoje = data.filter(r => r.data_registro === isoHoje && r.nome_membro === usuarioLogado);
-    }
-    
-    atualizarInterface();
+    todosRegistrosDoMes = data || [];
+    renderRanking();
   }
 
   function atualizarInterface() {
@@ -499,20 +533,27 @@
 
   async function adicionarAgua(ml) {
     if (!ml || ml <= 0) return;
-    const agora = new Date();
-    const horaStr = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0') + ':00';
+    
+    // Força a data e hora do Brasil para não pular o dia
+    const agoraBR = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const dataStr = getHojeBR(); 
+    const horaStr = String(agoraBR.getHours()).padStart(2,'0') + ':' + 
+                    String(agoraBR.getMinutes()).padStart(2,'0') + ':' + 
+                    String(agoraBR.getSeconds()).padStart(2,'0');
     
     const payload = {
       user_id: window.currentUser.id,
       nome_membro: usuarioLogado,
-      data_registro: agora.toISOString().split('T')[0],
+      data_registro: dataStr,
       hora_registro: horaStr,
       quantidade_ml: ml
     };
 
     const { error } = await db.from('registros_agua').insert([payload]);
     if (error) alert("Erro: " + error.message);
-    else await carregarDados();
+    else {
+      await carregarDados();
+    }
   }
 
   function promptAguaCustom() {
@@ -542,26 +583,21 @@
   }
 
   // ==========================================
-  // SISTEMA DE LEMBRETES (COMPATÍVEL COM HTML2APK)
+  // SISTEMA DE LEMBRETES
   // ==========================================
   
   async function toggleNotificacoes() {
     const isAtivo = localStorage.getItem(`agua_notify_${usuarioLogado}`) === 'true';
 
     if (isAtivo) {
-      // --- DESATIVAR ---
       localStorage.setItem(`agua_notify_${usuarioLogado}`, 'false');
       ativarNotificacaoUI(false);
       
-      // Cancela no APK (html2apk)
       if (window.cancelarNotificacao && loopNotificacaoId) {
-        try {
-          await window.cancelarNotificacao(loopNotificacaoId);
-        } catch(e) { console.log("Erro ao cancelar loop:", e); }
+        try { await window.cancelarNotificacao(loopNotificacaoId); } catch(e) {}
         loopNotificacaoId = null;
       }
       
-      // Cancela no navegador
       if (intervaloNotificacao) {
         clearInterval(intervaloNotificacao);
         intervaloNotificacao = null;
@@ -569,9 +605,6 @@
       return;
     }
 
-    // --- ATIVAR ---
-    
-    // 1. Verifica se estamos no APK (html2apk) e se a função existe
     if (window.agendarLoopNotificacoes && typeof window.agendarLoopNotificacoes === 'function') {
       try {
         if (window.solicitarPermissaoNotificacoes) {
@@ -592,27 +625,22 @@
           loopNotificacaoId = loop.id;
           localStorage.setItem(`agua_notify_${usuarioLogado}`, 'true');
           ativarNotificacaoUI(true);
-          alert(`Lembretes ativados! Você será avisado a cada ${minutosLembrete} minutos, mesmo com o app fechado.`);
+          alert(`Lembretes ativados! Você será avisado a cada ${minutosLembrete} minutos.`);
         }
       } catch (error) {
-        console.error("Erro ao agendar notificação no APK:", error);
-        alert("Não foi possível agendar o lembrete. Verifique as permissões de notificação do app.");
+        console.error("Erro ao agendar notificação:", error);
+        alert("Não foi possível agendar o lembrete.");
       }
       return;
     }
 
-    // 2. Fallback para Navegador (PC)
     if (!("Notification" in window)) return alert("Seu navegador não suporta notificações.");
     
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       localStorage.setItem(`agua_notify_${usuarioLogado}`, 'true');
       ativarNotificacaoUI(true);
-      
-      new Notification("Lembretes Ativados! 💧", { 
-        body: `Avisaremos você a cada ${minutosLembrete} minutos!` 
-      });
-      
+      new Notification("Lembretes Ativados! 💧", { body: `Avisaremos você a cada ${minutosLembrete} minutos!` });
       iniciarTimerNotificacaoNavegador();
     } else {
       alert("Você precisa permitir as notificações no navegador.");
@@ -650,21 +678,19 @@
     localStorage.setItem(`agua_intervalo_${usuarioLogado}`, minutosLembrete);
 
     if (localStorage.getItem(`agua_notify_${usuarioLogado}`) === 'true') {
-      // Se estiver ativo, precisamos reiniciar para aplicar o novo tempo
       if (window.agendarLoopNotificacoes) {
-        // No APK, cancela o antigo e agenda um novo
-        toggleNotificacoes(); // Desativa
-        setTimeout(() => toggleNotificacoes(), 100); // Reativa com o novo tempo
+        toggleNotificacoes(); 
+        setTimeout(() => toggleNotificacoes(), 100); 
       } else {
-        // No navegador, apenas reinicia o timer
         iniciarTimerNotificacaoNavegador();
       }
     }
   }
 
   // ==========================================
-  // SISTEMA DE REVELAÇÃO DO GANHADOR
+  // SISTEMA DE RANKING E REVELAÇÃO
   // ==========================================
+  
   async function solicitarRevelacao() {
     const outroMembro = membrosCasal.find(n => n !== usuarioLogado);
     if (!outroMembro) return alert("Erro ao encontrar o parceiro.");
@@ -679,7 +705,7 @@
       document.getElementById('rankingUnlockedArea').style.display = 'block';
       renderRanking();
     } else {
-      alert("Senha do parceiro(a) incorreta. O resultado não será revelado.");
+      alert("Senha do parceiro(a) incorreta.");
     }
   }
 
@@ -688,101 +714,69 @@
     document.getElementById('rankingUnlockedArea').style.display = 'none';
   }
 
-  function alternarModoVisualizacao() {
-    const modo = document.getElementById('modoVisualizacao').value;
-    const selectSemana = document.getElementById('semanaSelect');
+  function preencherSeletorMeses() {
+    const select = document.getElementById('mesSelect');
+    const hoje = new Date();
+    let optionsHtml = "";
     
-    if (modo === 'diario') {
-      selectSemana.style.display = 'none';
-      document.getElementById('viewSemanal').style.display = 'none';
-      document.getElementById('viewDiario').style.display = 'block';
-      renderGraficoDiario();
-    } else {
-      selectSemana.style.display = 'block';
-      document.getElementById('viewSemanal').style.display = 'block';
-      document.getElementById('viewDiario').style.display = 'none';
-      renderRanking();
+    // Gera os últimos 12 meses para o seletor
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const valor = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      const isSelected = valor === mesAnoSelecionado ? 'selected' : '';
+      
+      optionsHtml += `<option value="${valor}" ${isSelected}>${label.charAt(0).toUpperCase() + label.slice(1)}</option>`;
     }
+    select.innerHTML = optionsHtml;
   }
 
-  function renderGraficoDiario() {
-    const chartContainer = document.getElementById('dailyChart');
-    const legendContainer = document.getElementById('chartLegend');
+  async function mudarMes() {
+    mesAnoSelecionado = document.getElementById('mesSelect').value;
+    await carregarDadosMes(mesAnoSelecionado);
+  }
+
+  function alternarModoVisualizacao() {
+    const modo = document.getElementById('modoVisualizacao').value;
     
-    const hoje = new Date();
-    const inicioSemana = new Date(hoje.setDate(hoje.getDate() - hoje.getDay()));
-    const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    
-    let totais = {};
-    membrosCasal.forEach(m => {
-      totais[m] = { Dom: 0, Seg: 0, Ter: 0, Qua: 0, Qui: 0, Sex: 0, Sáb: 0 };
-    });
+    document.getElementById('viewMes').style.display = 'none';
+    document.getElementById('viewSemana').style.display = 'none';
+    document.getElementById('viewDiario').style.display = 'none';
 
-    todosRegistrosSemana.forEach(r => {
-      if (r.data_registro >= inicioSemana.toISOString().split('T')[0]) {
-        const dataObj = new Date(r.data_registro + 'T12:00:00');
-        const diaNome = diasSemana[dataObj.getDay()];
-        if (totais[r.nome_membro]) {
-          totais[r.nome_membro][diaNome] += r.quantidade_ml;
-        }
-      }
-    });
-
-    let maxValor = 1000;
-    membrosCasal.forEach(m => {
-      Object.values(totais[m]).forEach(val => { if (val > maxValor) maxValor = val; });
-    });
-
-    chartContainer.innerHTML = diasSemana.map(dia => {
-      const val1 = totais[membrosCasal[0]][dia] || 0;
-      const val2 = membrosCasal[1] ? (totais[membrosCasal[1]][dia] || 0) : 0;
-      
-      const altura1 = Math.max((val1 / maxValor) * 100, 2);
-      const altura2 = Math.max((val2 / maxValor) * 100, 2);
-
-      return `
-        <div class="chart-col">
-          <div class="chart-bars">
-            <div class="bar m1" style="height: ${altura1}%" title="${membrosCasal[0]}: ${val1}ml"></div>
-            ${membrosCasal[1] ? `<div class="bar m2" style="height: ${altura2}%" title="${membrosCasal[1]}: ${val2}ml"></div>` : ''}
-          </div>
-          <div class="chart-label">${dia}</div>
-        </div>
-      `;
-    }).join('');
-
-    legendContainer.innerHTML = `
-      <span><span class="legend-color" style="background:#38bdf8;"></span> ${membrosCasal[0]}</span>
-      ${membrosCasal[1] ? `<span><span class="legend-color" style="background:#a78bfa;"></span> ${membrosCasal[1]}</span>` : ''}
-    `;
+    if (modo === 'mes') {
+      document.getElementById('viewMes').style.display = 'block';
+      renderRankingMes();
+    } else if (modo === 'semana') {
+      document.getElementById('viewSemana').style.display = 'block';
+      renderRankingSemana();
+    } else {
+      document.getElementById('viewDiario').style.display = 'block';
+      renderGraficoDiario();
+    }
   }
 
   function renderRanking() {
-    const select = document.getElementById('semanaSelect').value;
-    const container = document.getElementById('rankingList');
-    let dataInicio = new Date();
-    let dataFim = new Date();
+    // Renderiza o modo atual selecionado
+    const modo = document.getElementById('modoVisualizacao').value;
+    if (modo === 'mes') renderRankingMes();
+    else if (modo === 'semana') renderRankingSemana();
+    else renderGraficoDiario();
+  }
 
-    if (select === 'atual') {
-      dataInicio.setDate(dataInicio.getDate() - dataInicio.getDay());
-      dataFim.setDate(dataInicio.getDate() + 6);
-    } else {
-      dataInicio.setDate(dataInicio.getDate() - dataInicio.getDay() - 7);
-      dataFim.setDate(dataInicio.getDate() + 6);
-    }
-
-    const isoIni = dataInicio.toISOString().split('T')[0];
-    const isoFim = dataFim.toISOString().split('T')[0];
-
-    const filtrados = todosRegistrosSemana.filter(r => r.data_registro >= isoIni && r.data_registro <= isoFim);
+  // FUNÇÃO: Ranking Mensal (Soma total de todos os dias do mês)
+  function renderRankingMes() {
+    const container = document.getElementById('rankingListMes');
     const totais = {};
     membrosCasal.forEach(nome => totais[nome] = 0);
-    filtrados.forEach(r => { if (totais[r.nome_membro] !== undefined) totais[r.nome_membro] += r.quantidade_ml; });
+    
+    todosRegistrosDoMes.forEach(r => { 
+      if (totais[r.nome_membro] !== undefined) totais[r.nome_membro] += r.quantidade_ml; 
+    });
 
     const ranking = Object.entries(totais).sort((a, b) => b[1] - a[1]);
 
-    if (filtrados.length === 0) {
-      container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding: 20px; font-weight: 600;">Nenhum registro nesta semana.</div>`;
+    if (todosRegistrosDoMes.length === 0) {
+      container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding: 20px;">Nenhum registro neste mês.</div>`;
       return;
     }
 
@@ -798,6 +792,128 @@
         </div>
       `;
     }).join('');
+  }
+
+  // FUNÇÃO: Ranking Semanal (Mostra a soma de cada semana do mês)
+  function renderRankingSemana() {
+    const container = document.getElementById('rankingListSemana');
+    
+    // Agrupa os registros por semana do mês
+    const semanas = {};
+    
+    todosRegistrosDoMes.forEach(r => {
+      const dataObj = new Date(r.data_registro + 'T12:00:00');
+      // Calcula a semana do mês (1 a 5)
+      const dia = dataObj.getDate();
+      const semanaNum = Math.ceil(dia / 7); 
+      
+      if (!semanas[semanaNum]) {
+        semanas[semanaNum] = { membros: {} };
+        membrosCasal.forEach(m => semanas[semanaNum].membros[m] = 0);
+      }
+      
+      if (semanas[semanaNum].membros[r.nome_membro] !== undefined) {
+        semanas[semanaNum].membros[r.nome_membro] += r.quantidade_ml;
+      }
+    });
+
+    const chavesOrdenadas = Object.keys(semanas).sort((a,b) => a - b);
+
+    if (chavesOrdenadas.length === 0) {
+      container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding: 20px;">Nenhum registro neste mês.</div>`;
+      return;
+    }
+
+    container.innerHTML = chavesOrdenadas.map(semanaNum => {
+      const dadosSemana = semanas[semanaNum];
+      const ranking = Object.entries(dadosSemana.membros).sort((a, b) => b[1] - a[1]);
+      
+      // Descobre o vencedor da semana
+      const vencedor = ranking[0][1] > 0 ? ranking[0][0] : null;
+
+      return `
+        <div style="margin-bottom: 25px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px;">
+          <h4 style="color: #94a3b8; margin: 0 0 15px 0; font-size: 0.9rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+            Semana ${semanaNum} 
+            ${vencedor ? `<span style="color: #fbbf24; margin-left: 10px;">👑 ${vencedor} venceu!</span>` : ''}
+          </h4>
+          
+          ${ranking.map((item, index) => {
+            const medalha = index === 0 && item[1] > 0 ? '🥇' : (index === 1 ? '🥈' : '');
+            const litros = (item[1] / 1000).toFixed(2).replace('.', ',') + ' L';
+            return `
+              <div class="ranking-row" style="padding: 10px; margin-bottom: 8px; background: ${index === 0 && item[1] > 0 ? 'rgba(251, 191, 36, 0.1)' : 'transparent'};">
+                <div class="rank-pos ${index === 0 && item[1] > 0 ? 'gold' : ''}" style="font-size: 1.2rem;">${medalha || (index + 1)}</div>
+                <div class="rank-name" style="font-size: 1rem;">👤 ${item[0]}</div>
+                <div class="rank-value" style="font-size: 1.1rem;">${litros}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // FUNÇÃO: Gráfico Diário (Mostra dia a dia do mês)
+  function renderGraficoDiario() {
+    const chartContainer = document.getElementById('dailyChart');
+    const legendContainer = document.getElementById('chartLegend');
+    
+    const [ano, mes] = mesAnoSelecionado.split('-');
+    const diasNoMes = new Date(ano, mes, 0).getDate();
+    
+    // Inicializa os totais de cada membro para cada dia (1 a 31)
+    let totais = {};
+    membrosCasal.forEach(m => {
+      totais[m] = {};
+      for (let i = 1; i <= diasNoMes; i++) totais[m][i] = 0;
+    });
+
+    // Preenche os dados
+    todosRegistrosDoMes.forEach(r => {
+      const dataObj = new Date(r.data_registro + 'T12:00:00');
+      const dia = dataObj.getDate();
+      if (totais[r.nome_membro] && totais[r.nome_membro][dia] !== undefined) {
+        totais[r.nome_membro][dia] += r.quantidade_ml;
+      }
+    });
+
+    // Descobre o máximo para escalar o gráfico
+    let maxValor = 1000;
+    membrosCasal.forEach(m => {
+      Object.values(totais[m]).forEach(val => { if (val > maxValor) maxValor = val; });
+    });
+
+    // Gera o HTML das barras (pode ficar apertado se tiver 31 dias, então usamos rolagem horizontal)
+    let chartHtml = '<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; align-items:flex-end; height:100%; width:100%;">';
+    
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+      const val1 = totais[membrosCasal[0]][dia] || 0;
+      const val2 = membrosCasal[1] ? (totais[membrosCasal[1]][dia] || 0) : 0;
+      
+      const altura1 = Math.max((val1 / maxValor) * 100, 2);
+      const altura2 = Math.max((val2 / maxValor) * 100, 2);
+
+      chartHtml += `
+        <div class="chart-col" style="min-width: 25px;">
+          <div class="chart-bars">
+            <div class="bar m1" style="height: ${altura1}%" title="${membrosCasal[0]}: ${val1}ml"></div>
+            ${membrosCasal[1] ? `<div class="bar m2" style="height: ${altura2}%" title="${membrosCasal[1]}: ${val2}ml"></div>` : ''}
+          </div>
+          <div class="chart-label" style="font-size: 0.65rem;">${dia}</div>
+        </div>
+      `;
+    }
+    chartHtml += '</div>';
+    
+    // Substitui o container para aplicar o flex horizontal
+    chartContainer.style.display = 'block';
+    chartContainer.innerHTML = chartHtml;
+
+    legendContainer.innerHTML = `
+      <span><span class="legend-color" style="background:#38bdf8;"></span> ${membrosCasal[0]}</span>
+      ${membrosCasal[1] ? `<span><span class="legend-color" style="background:#a78bfa;"></span> ${membrosCasal[1]}</span>` : ''}
+    `;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
