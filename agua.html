@@ -130,46 +130,21 @@
   <main class="main">
     <div class="water-container">
       
-      <!-- TELA 1: LOGIN -->
+      <!-- TELA 1: SELECIONAR USUÁRIO -->
       <div id="screenLogin" class="card-glass" style="display:none;">
         <div class="lock-screen">
           <div class="lock-icon">💧</div>
           <h2 style="font-size: 2rem; font-weight: 900; color: #1e293b; margin-bottom: 5px;">Desafio da Água</h2>
-          <p style="color:#64748b; font-weight: 600;">Quem está pronto para se hidratar?</p>
+          <p style="color:#64748b; font-weight: 600;">Quem está acessando?</p>
           
           <div class="lock-inputs" style="margin-top: 30px;">
             <select id="loginNomeMembro" style="font-size: 1.1rem;"></select>
-            <input type="password" id="loginSenha" placeholder="Sua senha secreta">
-            <button class="btn-reveal" style="width: 100%; justify-content: center; margin-top: 10px;" onclick="fazerLogin()">Entrar no Jogo</button>
-            <p id="erroLogin" style="color:#ef4444; font-weight: bold; display:none; margin-top:10px;">Senha incorreta. Tente novamente!</p>
-            <button class="btn-edit-meta" style="margin-top:15px; background:transparent; text-decoration: underline;" onclick="abrirTelaSetup()">Primeiro Acesso (Criar Senhas)</button>
+            <button class="btn-reveal" style="width: 100%; justify-content: center; margin-top: 10px;" onclick="fazerLogin()">Entrar</button>
           </div>
         </div>
       </div>
 
-      <!-- TELA 2: CONFIGURAÇÃO INICIAL -->
-      <div id="screenSetup" class="card-glass" style="display:none;">
-        <div class="lock-screen">
-          <div class="lock-icon">⚙️</div>
-          <h2 style="font-size: 1.8rem; font-weight: 900; color: #1e293b;">Configuração Inicial</h2>
-          <p style="color:#64748b; font-weight: 600; max-width: 300px;">Defina suas senhas e metas para começar a competição.</p>
-          
-          <div class="lock-inputs" style="max-width:400px; text-align:left; margin-top: 25px;">
-            <h4 style="margin:0; color:#0ea5e9; font-size: 1.1rem;">Membro 1</h4>
-            <input type="password" id="setupSenha1" placeholder="Senha do Membro 1">
-            <input type="number" id="setupMeta1" value="2000" placeholder="Meta (ml)">
-            
-            <h4 style="margin:15px 0 0 0; color:#8b5cf6; font-size: 1.1rem;">Membro 2</h4>
-            <input type="password" id="setupSenha2" placeholder="Senha do Membro 2">
-            <input type="number" id="setupMeta2" value="2000" placeholder="Meta (ml)">
-
-            <button class="btn-reveal" onclick="salvarConfiguracaoInicial()" style="margin-top:25px; width: 100%; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);">Salvar e Iniciar</button>
-            <button class="btn-edit-meta" style="margin-top:15px; background:transparent; text-decoration: underline; width: 100%; text-align: center;" onclick="abrirTelaLogin()">Voltar para Login</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TELA 3: APLICATIVO -->
+      <!-- TELA 2: APLICATIVO -->
       <div id="screenApp" style="display:none;">
         
         <!-- Header do Jogo -->
@@ -178,7 +153,7 @@
           <p>Beba, registre e vença!</p>
           <div class="user-badge">
             <span>👤 Olá, <span id="nomeLogado"></span>!</span>
-            <button class="btn-logout" onclick="fazerLogout()" style="padding: 4px 8px; font-size: 0.75rem;">Sair</button>
+            <button class="btn-logout" onclick="fazerLogout()" style="padding: 4px 8px; font-size: 0.75rem; margin-left: 10px;">Trocar</button>
           </div>
         </div>
 
@@ -311,118 +286,104 @@
   let loopNotificacaoId = null;
   let minutosLembrete = 60;
 
-  // Variáveis de controle do Ranking
-  let mesReferencia = new Date(); // Mês atual selecionado
-  let mesAnoSelecionado = ""; // String YYYY-MM
+  let mesAnoSelecionado = ""; 
 
-  // ==========================================
-  // FUNÇÕES DE DATA (FORÇANDO FUSO BRASIL)
-  // ==========================================
-  
   function getHojeBR() {
-    // Cria a data forçando o fuso de Brasília e formata para YYYY-MM-DD
-    const dataFormatada = new Intl.DateTimeFormat('fr-CA', {
+    return new Intl.DateTimeFormat('fr-CA', {
       timeZone: 'America/Sao_Paulo',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     }).format(new Date());
-    return dataFormatada;
   }
 
   function getMesAnoAtualBR() {
-    return getHojeBR().substring(0, 7); // Retorna YYYY-MM
+    return getHojeBR().substring(0, 7);
   }
 
   async function initAguaApp() {
     if (!window.currentUser) return;
     
     try {
-      const { data } = await db.from('gestao_casal_membros').select('nome').eq('user_id', window.currentUser.id);
-      if (data && data.length > 0) membrosCasal = data.map(m => m.nome);
-      else membrosCasal = ["Membro 1", "Membro 2"];
+      const { data: membros } = await db.from('gestao_casal_membros').select('nome').eq('user_id', window.currentUser.id);
+      
+      if (membros && membros.length > 0) {
+        membrosCasal = membros.map(m => m.nome);
+      } else {
+        membrosCasal = ["Membro 1", "Membro 2"];
+      }
     } catch (e) {
       membrosCasal = ["Membro 1", "Membro 2"];
     }
 
-    const { data: configs } = await db.from('config_agua').select('*').eq('user_id', window.currentUser.id);
-    
-    if (!configs || configs.length < 2) {
-      document.getElementById('screenSetup').style.display = 'block';
-    } else {
-      configsGlobais = configs;
-      abrirTelaLogin();
-    }
-  }
-
-  function abrirTelaLogin() {
-    document.getElementById('screenSetup').style.display = 'none';
-    document.getElementById('screenLogin').style.display = 'block';
-    document.getElementById('screenApp').style.display = 'none';
-
+    // Preenche o select com os nomes
     const select = document.getElementById('loginNomeMembro');
     select.innerHTML = membrosCasal.map(nome => `<option value="${nome}">${nome}</option>`).join('');
-  }
 
-  function abrirTelaSetup() {
-    document.getElementById('screenLogin').style.display = 'none';
-    document.getElementById('screenSetup').style.display = 'block';
+    // Verifica se a pessoa já tinha logado antes
+    const membroSalvo = localStorage.getItem(`agua_usuario_logado_${window.currentUser.id}`);
     
-    const h4s = document.querySelectorAll('#screenSetup h4');
-    if(h4s.length >= 2) {
-      h4s[0].textContent = membrosCasal[0] || "Membro 1";
-      h4s[1].textContent = membrosCasal[1] || "Membro 2";
+    if (membroSalvo && membrosCasal.includes(membroSalvo)) {
+      usuarioLogado = membroSalvo;
+      await iniciarApp();
+    } else {
+      document.getElementById('screenLogin').style.display = 'block';
+      document.getElementById('screenApp').style.display = 'none';
     }
-  }
-
-  async function salvarConfiguracaoInicial() {
-    const s1 = document.getElementById('setupSenha1').value;
-    const m1 = parseInt(document.getElementById('setupMeta1').value) || 2000;
-    const s2 = document.getElementById('setupSenha2').value;
-    const m2 = parseInt(document.getElementById('setupMeta2').value) || 2000;
-
-    if (!s1 || !s2) return alert("Preencha todas as senhas.");
-    if (s1 === s2) return alert("As senhas precisam ser diferentes.");
-
-    await db.from('config_agua').delete().eq('user_id', window.currentUser.id);
-    
-    const payload = [
-      { user_id: window.currentUser.id, nome_membro: membrosCasal[0], meta_ml: m1, senha: btoa(s1) },
-      { user_id: window.currentUser.id, nome_membro: membrosCasal[1], meta_ml: m2, senha: btoa(s2) }
-    ];
-    
-    const { error } = await db.from('config_agua').insert(payload);
-    if (error) return alert("Erro ao salvar: " + error.message);
-
-    alert("Configuração salva! Faça login.");
-    location.reload();
   }
 
   async function fazerLogin() {
-    const nome = document.getElementById('loginNomeMembro').value;
-    const senha = document.getElementById('loginSenha').value;
-    
-    const config = configsGlobais.find(c => c.nome_membro === nome);
-    if (!config) return alert("Usuário não encontrado.");
+    const nomeSelecionado = document.getElementById('loginNomeMembro').value;
+    if (!nomeSelecionado) return;
 
-    if (btoa(senha) !== config.senha) {
-      document.getElementById('erroLogin').style.display = 'block';
-      return;
+    usuarioLogado = nomeSelecionado;
+    
+    // Salva a escolha no celular
+    localStorage.setItem(`agua_usuario_logado_${window.currentUser.id}`, usuarioLogado);
+    
+    await iniciarApp();
+  }
+
+  function fazerLogout() {
+    // Limpa a escolha salva e volta para a tela de seleção
+    localStorage.removeItem(`agua_usuario_logado_${window.currentUser.id}`);
+    usuarioLogado = "";
+    
+    if (intervaloNotificacao) {
+      clearInterval(intervaloNotificacao);
+      intervaloNotificacao = null;
+    }
+    
+    document.getElementById('screenApp').style.display = 'none';
+    document.getElementById('screenLogin').style.display = 'block';
+  }
+
+  async function iniciarApp() {
+    // Puxa as configurações (metas e senhas)
+    const { data: configs } = await db.from('config_agua').select('*').eq('user_id', window.currentUser.id);
+    
+    if (!configs || configs.length === 0) {
+      // Se não tiver config, cria uma padrão para os membros
+      const payload = [
+        { user_id: window.currentUser.id, nome_membro: membrosCasal[0], meta_ml: 2000, senha: btoa('1234') },
+        { user_id: window.currentUser.id, nome_membro: membrosCasal[1], meta_ml: 2000, senha: btoa('1234') }
+      ];
+      const { data: novasConfigs } = await db.from('config_agua').insert(payload).select();
+      configsGlobais = novasConfigs || [];
+    } else {
+      configsGlobais = configs;
     }
 
-    usuarioLogado = nome;
-    metaUsuarioLogado = config.meta_ml;
-    
-    document.getElementById('erroLogin').style.display = 'none';
-    document.getElementById('loginSenha').value = '';
+    const minhaConfig = configsGlobais.find(c => c.nome_membro === usuarioLogado);
+    metaUsuarioLogado = minhaConfig ? minhaConfig.meta_ml : 2000;
+
     document.getElementById('screenLogin').style.display = 'none';
     document.getElementById('screenApp').style.display = 'block';
-    document.getElementById('nomeLogado').textContent = nome;
+    document.getElementById('nomeLogado').textContent = usuarioLogado;
     document.getElementById('metaLabel').textContent = `Meta: ${metaUsuarioLogado} ml`;
 
     mesAnoSelecionado = getMesAnoAtualBR();
     preencherSeletorMeses();
-
     ocultarRanking();
     
     const notifyStatus = localStorage.getItem(`agua_notify_${usuarioLogado}`);
@@ -439,26 +400,9 @@
     await carregarDados();
   }
 
-  function fazerLogout() {
-    usuarioLogado = "";
-    document.getElementById('screenApp').style.display = 'none';
-    
-    if (intervaloNotificacao) {
-      clearInterval(intervaloNotificacao);
-      intervaloNotificacao = null;
-    }
-    
-    abrirTelaLogin();
-  }
-
-  // ==========================================
-  // CARREGAMENTO DE DADOS E INTERFACE
-  // ==========================================
-
   async function carregarDados() {
-    const hojeStr = getHojeBR(); // YYYY-MM-DD no fuso BR
+    const hojeStr = getHojeBR();
 
-    // Para o histórico diário (só os de hoje)
     const { data: dataHoje } = await db.from('registros_agua')
       .select('*')
       .eq('user_id', window.currentUser.id)
@@ -474,7 +418,6 @@
   }
 
   async function carregarDadosMes(mesAno) {
-    // mesAno = "YYYY-MM"
     const [ano, mes] = mesAno.split('-');
     const primeiroDia = `${ano}-${mes}-01`;
     
@@ -534,7 +477,6 @@
   async function adicionarAgua(ml) {
     if (!ml || ml <= 0) return;
     
-    // Força a data e hora do Brasil para não pular o dia
     const agoraBR = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
     const dataStr = getHojeBR(); 
     const horaStr = String(agoraBR.getHours()).padStart(2,'0') + ':' + 
@@ -700,7 +642,10 @@
 
     const configOutro = configsGlobais.find(c => c.nome_membro === outroMembro);
     
-    if (configOutro && btoa(senhaOutro) === configOutro.senha) {
+    // Se por acaso não tiver config, tenta 1234 como fallback
+    const senhaCorreta = configOutro ? configOutro.senha : btoa('1234');
+    
+    if (btoa(senhaOutro) === senhaCorreta) {
       document.getElementById('rankingLockedArea').style.display = 'none';
       document.getElementById('rankingUnlockedArea').style.display = 'block';
       renderRanking();
@@ -719,7 +664,6 @@
     const hoje = new Date();
     let optionsHtml = "";
     
-    // Gera os últimos 12 meses para o seletor
     for (let i = 0; i < 12; i++) {
       const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const valor = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -756,14 +700,12 @@
   }
 
   function renderRanking() {
-    // Renderiza o modo atual selecionado
     const modo = document.getElementById('modoVisualizacao').value;
     if (modo === 'mes') renderRankingMes();
     else if (modo === 'semana') renderRankingSemana();
     else renderGraficoDiario();
   }
 
-  // FUNÇÃO: Ranking Mensal (Soma total de todos os dias do mês)
   function renderRankingMes() {
     const container = document.getElementById('rankingListMes');
     const totais = {};
@@ -794,16 +736,13 @@
     }).join('');
   }
 
-  // FUNÇÃO: Ranking Semanal (Mostra a soma de cada semana do mês)
   function renderRankingSemana() {
     const container = document.getElementById('rankingListSemana');
     
-    // Agrupa os registros por semana do mês
     const semanas = {};
     
     todosRegistrosDoMes.forEach(r => {
       const dataObj = new Date(r.data_registro + 'T12:00:00');
-      // Calcula a semana do mês (1 a 5)
       const dia = dataObj.getDate();
       const semanaNum = Math.ceil(dia / 7); 
       
@@ -828,7 +767,6 @@
       const dadosSemana = semanas[semanaNum];
       const ranking = Object.entries(dadosSemana.membros).sort((a, b) => b[1] - a[1]);
       
-      // Descobre o vencedor da semana
       const vencedor = ranking[0][1] > 0 ? ranking[0][0] : null;
 
       return `
@@ -854,7 +792,6 @@
     }).join('');
   }
 
-  // FUNÇÃO: Gráfico Diário (Mostra dia a dia do mês)
   function renderGraficoDiario() {
     const chartContainer = document.getElementById('dailyChart');
     const legendContainer = document.getElementById('chartLegend');
@@ -862,14 +799,12 @@
     const [ano, mes] = mesAnoSelecionado.split('-');
     const diasNoMes = new Date(ano, mes, 0).getDate();
     
-    // Inicializa os totais de cada membro para cada dia (1 a 31)
     let totais = {};
     membrosCasal.forEach(m => {
       totais[m] = {};
       for (let i = 1; i <= diasNoMes; i++) totais[m][i] = 0;
     });
 
-    // Preenche os dados
     todosRegistrosDoMes.forEach(r => {
       const dataObj = new Date(r.data_registro + 'T12:00:00');
       const dia = dataObj.getDate();
@@ -878,13 +813,11 @@
       }
     });
 
-    // Descobre o máximo para escalar o gráfico
     let maxValor = 1000;
     membrosCasal.forEach(m => {
       Object.values(totais[m]).forEach(val => { if (val > maxValor) maxValor = val; });
     });
 
-    // Gera o HTML das barras (pode ficar apertado se tiver 31 dias, então usamos rolagem horizontal)
     let chartHtml = '<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; align-items:flex-end; height:100%; width:100%;">';
     
     for (let dia = 1; dia <= diasNoMes; dia++) {
@@ -906,7 +839,6 @@
     }
     chartHtml += '</div>';
     
-    // Substitui o container para aplicar o flex horizontal
     chartContainer.style.display = 'block';
     chartContainer.innerHTML = chartHtml;
 
